@@ -55,6 +55,10 @@ def validate(pack_path: Path, export_path: Path | None = None) -> None:
     if export_path:
         exported = json.loads(export_path.read_text())
         assert exported["format"] == "Pepsiman TOD rig v3", "unexpected browser export version"
+        setup_by_id = {item["id"]: item for item in exported["setup"]["objects"]}
+        assert setup_by_id[1001]["parentId"] is None, "root 1001 must be parentless"
+        assert setup_by_id[1001]["frames"] == [], "root 1001 must remain an identity transform"
+        assert setup_by_id[1]["parentId"] == 1001, "pelvis joint 1 must be parented to root 1001"
         assert exported["clips"] == clips, "browser animation export is stale"
     suffix = " and the browser export" if export_path else ""
     print(f"Validated 50 clips, 16 joints per frame, all 16 golden frames of clip 4{suffix}")

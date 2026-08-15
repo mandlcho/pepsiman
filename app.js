@@ -74,8 +74,7 @@ async function loadCharacter() {
   try { overrides=JSON.parse(localStorage.getItem("pepsiman-skeleton-overrides-v1")||"{}").joints||{}; } catch { overrides={}; }
 
   for (const setup of animations.setup.objects) {
-    if (setup.id===1001) continue;
-    const node=new THREE.Group(); node.name=`joint-${setup.id}`; nodes.set(setup.id,node);
+    const node=new THREE.Group(); node.name=setup.id===1001?"root-1001":`joint-${setup.id}`; nodes.set(setup.id,node);
     const frame=setup.frames[0]||{};
     const t=frame.translation||[0,0,0], r=frame.rotation||[0,0,0], s=frame.scale||[1,1,1];
     node.position.set(t[0]/4,-t[1]/4,-t[2]/4); node.rotation.set(r[0],-r[1],-r[2],"XYZ"); node.scale.set(...s);

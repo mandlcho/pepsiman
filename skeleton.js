@@ -3,7 +3,7 @@ import { TransformControls } from "three/addons/controls/TransformControls.js";
 
 const ASSET_ROOT="./assets/ripped/pepsiman/";
 const STORAGE_KEY="pepsiman-skeleton-overrides-v1";
-const JOINT_NAMES={1:"pelvis",2:"torso",3:"right shoulder",4:"right elbow",5:"right hand",6:"left shoulder",7:"left elbow",8:"left hand",9:"neck",10:"head",11:"right hip",12:"right knee",13:"right foot",14:"left hip",15:"left knee",16:"left foot"};
+const JOINT_NAMES={1001:"root",1:"pelvis",2:"torso",3:"right shoulder",4:"right elbow",5:"right hand",6:"left shoulder",7:"left elbow",8:"left hand",9:"neck",10:"head",11:"right hip",12:"right knee",13:"right foot",14:"left hip",15:"left knee",16:"left foot"};
 const $=selector=>document.querySelector(selector);
 
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
@@ -20,7 +20,7 @@ const debug=new THREE.Group();scene.add(debug);
 const transformControls=new TransformControls(camera,renderer.domElement);transformControls.setSpace("local");transformControls.setSize(.7);scene.add(transformControls.getHelper());
 
 const nodes=new Map(),markers=new Map(),labels=new Map(),setupById=new Map(),baseTransforms=new Map(),bindTransforms=new Map(),meshes=[];
-let boneLines,selectedId=1,animationsData,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false,savedSnapshot="",dragStartSnapshot="";
+let boneLines,selectedId=1001,animationsData,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false,savedSnapshot="",dragStartSnapshot="";
 const editHistory=[];
 
 const target=new THREE.Vector3(0,.95,0);let radius=4,theta=0,phi=1.48;
@@ -103,18 +103,18 @@ async function loadRig(){
   texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
   const material=new THREE.MeshPhongMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05,shininess:25}),overrides=savedOverrides();
   for(const setup of animations.setup.objects){
-    setupById.set(setup.id,setup);if(setup.id===1001)continue;const frame=setup.frames[0]||{},t=frame.translation||[0,0,0],r=frame.rotation||[0,0,0];
-    const node=new THREE.Group();node.name=`joint-${setup.id}`;node.position.set(t[0]/4,-t[1]/4,-t[2]/4);node.rotation.set(r[0],-r[1],-r[2],"XYZ");nodes.set(setup.id,node);baseTransforms.set(setup.id,cloneTransform(node));
+    setupById.set(setup.id,setup);const frame=setup.frames[0]||{},t=frame.translation||[0,0,0],r=frame.rotation||[0,0,0];
+    const node=new THREE.Group();node.name=setup.id===1001?"root-1001":`joint-${setup.id}`;node.position.set(t[0]/4,-t[1]/4,-t[2]/4);node.rotation.set(r[0],-r[1],-r[2],"XYZ");nodes.set(setup.id,node);baseTransforms.set(setup.id,cloneTransform(node));
     const override=overrides[setup.id];if(override?.position)node.position.fromArray(override.position);if(override?.rotation)node.rotation.set(...override.rotation,"XYZ");bindTransforms.set(setup.id,cloneTransform(node));
   }
   for(const setup of animations.setup.objects)if(nodes.has(setup.id))(nodes.get(setup.parentId)||rig).add(nodes.get(setup.id));
   for(const part of model.objects.slice(0,16)){const geometry=new THREE.BufferGeometry();geometry.setAttribute("position",new THREE.Float32BufferAttribute(part.positions,3));geometry.setAttribute("uv",new THREE.Float32BufferAttribute(part.uvs,2));geometry.computeVertexNormals();const mesh=new THREE.Mesh(geometry,material);mesh.userData.jointId=part.id;nodes.get(part.id).add(mesh);meshes.push(mesh);}
   const jointSelect=$("#joint-select");
-  for(const id of nodes.keys()){jointSelect.add(new Option(`${id} · ${JOINT_NAMES[id].toUpperCase()}`,id));const marker=new THREE.Mesh(new THREE.SphereGeometry(.035,12,8),new THREE.MeshBasicMaterial({color:id===1?0xf02a42:0x38a2ff,depthTest:false}));marker.renderOrder=4;marker.userData.jointId=id;debug.add(marker);markers.set(id,marker);const label=document.createElement("span");label.className="joint-label";label.textContent=id;$("#labels").append(label);labels.set(id,label);}
+  for(const id of nodes.keys()){jointSelect.add(new Option(`${id} · ${JOINT_NAMES[id].toUpperCase()}`,id));const marker=new THREE.Mesh(new THREE.SphereGeometry(id===1001 ? .05 : .035,12,8),new THREE.MeshBasicMaterial({color:id===1001?0x62c990:id===1?0xf02a42:0x38a2ff,depthTest:false}));marker.renderOrder=4;marker.userData.jointId=id;debug.add(marker);markers.set(id,marker);const label=document.createElement("span");label.className="joint-label";label.textContent=id===1001?"R":id;$("#labels").append(label);labels.set(id,label);}
   for(const clip of animations.clips){const item=document.createElement("button");item.className="animation-item";item.dataset.clip=clip.id;item.textContent=`CLIP ${clip.id} · ${clip.frameCount}F`;item.title=`Clip ${clip.id} · ${clip.frameCount} frames at ${clip.fps} FPS`;$("#animation-list").append(item);}
   const linePositions=[];for(const [id] of nodes)if(nodes.has(setupById.get(id).parentId))linePositions.push(0,0,0,0,0,0);
   const lineGeometry=new THREE.BufferGeometry();lineGeometry.setAttribute("position",new THREE.Float32BufferAttribute(linePositions,3));boneLines=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({color:0xffd86a,depthTest:false,transparent:true,opacity:.9}));boneLines.renderOrder=3;debug.add(boneLines);
-  savedSnapshot=currentSnapshot();selectJoint(1);updateDebugGeometry();updateSaveState();$("#status").textContent="BIND RIG EDITOR READY";
+  savedSnapshot=currentSnapshot();selectJoint(1001);updateDebugGeometry();updateSaveState();$("#status").textContent="ROOT → PELVIS RIG READY";
 }
 
 function updateDebugGeometry(){
