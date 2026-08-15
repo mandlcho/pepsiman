@@ -56,9 +56,8 @@ for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
   }
 }
 
-let rig, animationData, activeClip, material;
+let rig, material;
 const nodes = new Map();
-const baseTransforms = new Map();
 
 async function loadCharacter() {
   const [model, animations, texture] = await Promise.all([
@@ -68,17 +67,14 @@ async function loadCharacter() {
   ]);
   texture.colorSpace=THREE.SRGBColorSpace; texture.magFilter=THREE.NearestFilter; texture.minFilter=THREE.NearestFilter;
   material=new THREE.MeshLambertMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
-  animationData=animations;
   rig=new THREE.Group(); rig.scale.setScalar(.0175); rig.rotation.y=Math.PI; scene.add(rig);
 
-  const setupById=new Map(animations.setup.objects.map(item=>[item.id,item]));
   for (const setup of animations.setup.objects) {
     if (setup.id===1001) continue;
     const node=new THREE.Group(); node.name=`joint-${setup.id}`; nodes.set(setup.id,node);
     const frame=setup.frames[0]||{};
     const t=frame.translation||[0,0,0], r=frame.rotation||[0,0,0], s=frame.scale||[1,1,1];
     node.position.set(t[0]/4,-t[1]/4,-t[2]/4); node.rotation.set(r[0],-r[1],-r[2],"XYZ"); node.scale.set(...s);
-    baseTransforms.set(setup.id,{position:node.position.clone(),rotation:node.rotation.clone(),scale:node.scale.clone()});
   }
   for (const setup of animations.setup.objects) {
     if (!nodes.has(setup.id)) continue;
@@ -93,28 +89,8 @@ async function loadCharacter() {
     nodes.get(part.id)?.add(mesh);
   }
   rig.position.set(0,.02,1.3);
-  activeClip=animations.clips.find(clip=>clip.id===4)||animations.clips[0];
-  ui.loading.textContent=`ORIGINAL MODEL READY · ${animations.clips.length} MOTION CLIPS`;
+  ui.loading.textContent="ORIGINAL 16-JOINT BIND RIG READY · MOTION QUARANTINED";
   ui.button.disabled=false;
-}
-
-function sampleAnimation(time) {
-  if (!rig||!activeClip) return;
-  const frame=(time*activeClip.fps)%activeClip.frameCount;
-  for (const track of activeClip.objects) {
-    const node=nodes.get(track.id), base=baseTransforms.get(track.id); if(!node||!track.frames.length) continue;
-    let a=track.frames[0],b=a;
-    for(let i=0;i<track.frames.length;i++) if(track.frames[i].time<=frame){a=track.frames[i];b=track.frames[(i+1)%track.frames.length]||a;}
-    const span=((b.time-a.time+activeClip.frameCount)%activeClip.frameCount)||1;
-    const mix=((frame-a.time+activeClip.frameCount)%activeClip.frameCount)/span;
-    const ar=a.rotation||[base.rotation.x,base.rotation.y,base.rotation.z];
-    const br=b.rotation||ar;
-    node.rotation.set(
-      THREE.MathUtils.lerp(ar[0],br[0],mix),
-      -THREE.MathUtils.lerp(ar[1],br[1],mix),
-      -THREE.MathUtils.lerp(ar[2],br[2],mix),"XYZ"
-    );
-  }
 }
 
 const entities=[];
@@ -166,7 +142,7 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     state.speed=Math.min(25,12+state.distance/500);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
     state.vy-=20*dt;state.y=Math.max(0,state.y+state.vy*dt);if(state.y===0)state.vy=0;state.slide=Math.max(0,state.slide-dt);
     rig.position.x=THREE.MathUtils.damp(rig.position.x,state.targetX,12,dt);rig.position.y=.02+state.y;rig.scale.y=state.slide>0?.0105:.0175;
-    sampleAnimation(now*1.15);rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
+    rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
     for(let i=entities.length-1;i>=0;i--){const e=entities[i];e.position.z+=state.speed*dt;if(e.userData.kind==="can"){e.rotation.y+=dt*4;e.rotation.z=Math.sin(now*3)*.12;}
       const close=Math.abs(e.position.z-rig.position.z)<.85&&Math.abs(e.position.x-rig.position.x)<.8;
@@ -175,7 +151,7 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     }
     const farthest=entities.reduce((min,e)=>Math.min(min,e.position.z),0);if(farthest>-90)spawnRow(farthest-10-Math.random()*3);
     updateHud();
-  } else if(rig){rig.visible=true;sampleAnimation(now*.25);}
+  } else if(rig){rig.visible=true;}
   camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2,5,dt);renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);

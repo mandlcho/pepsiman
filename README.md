@@ -7,7 +7,7 @@ The player character uses data decoded from the supplied Japanese disc:
 - original 17-part TMD character mesh
 - original 256×256 VRAM texture page
 - original TOD parent/child joint hierarchy
-- 50 decoded compact animation clips
+- 50 extracted compact animation clips (currently quarantined pending decoder validation)
 - original CD-audio music track
 - 2,170 TIM textures extracted as PNG for continued level reconstruction
 
@@ -18,6 +18,8 @@ python3 serve.py
 ```
 
 Open <http://127.0.0.1:8080>.
+
+Inspect the untouched original bind skeleton at <http://127.0.0.1:8080/skeleton.html>. The lab exposes all 16 TOD joints, parent links, raw transforms, and attached TMD mesh segments with animation deliberately disabled.
 
 ### Controls
 
@@ -58,7 +60,7 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 ## Technical notes
 
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
-- Animation: original segmented joint hierarchy with decoded TOD Euler tracks
+- Rigging: original 16-joint TOD hierarchy and bind transforms; compact motion playback is disabled until the decoder is validated
 - Gameplay: deterministic lane runner, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 

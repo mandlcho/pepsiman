@@ -27,7 +27,7 @@ button { font:inherit; }
 .start-screen::before { content:""; position:absolute; inset:-40%; background:repeating-conic-gradient(from 10deg,rgba(50,144,255,.12) 0 2deg,transparent 2deg 9deg); animation:spin 45s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .start-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-.title-lockup,.start-button,.controls-copy,.loading { position:relative; z-index:1; }
+.title-lockup,.start-button,.controls-copy,.loading,.rig-lab-link { position:relative; z-index:1; }
 .kicker { margin:0 0 8px; color:#83c3ff; font:800 10px/1 Inter; letter-spacing:.42em; }
 h1 { margin:0; font:italic 900 clamp(86px,15vw,190px)/.68 "Barlow Condensed"; letter-spacing:-.07em; text-shadow:0 7px 0 #063979,0 18px 55px rgba(0,0,0,.5); transform:skew(-4deg); }
 h1 span { color:var(--red); }
@@ -43,6 +43,8 @@ h1 span { color:var(--red); }
 .controls-copy { display:flex; gap:24px; color:#8eafd4; font-size:9px; font-weight:800; letter-spacing:.12em; }
 kbd { display:inline-grid; place-items:center; min-width:24px; height:24px; margin-right:3px; border:1px solid #6689b4; border-bottom-width:3px; border-radius:4px; color:white; background:#0d2b58; font:700 11px Inter; }
 .loading { min-height:13px; margin:26px 0 0; color:#4e719c; font-size:8px; letter-spacing:.18em; }
+.rig-lab-link { margin-top:12px; color:#78b9f8; font:800 8px/1 Inter; letter-spacing:.16em; text-decoration:none; border-bottom:1px solid rgba(120,185,248,.4); padding-bottom:4px; }
+.rig-lab-link:hover { color:white; }
 
 .game-over[hidden] { display:none; }
 .game-over { z-index:15; background:rgba(1,8,23,.91); }

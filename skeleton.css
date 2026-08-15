@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,800;0,900&family=Inter:wght@600;700;800&display=swap");
+:root { color-scheme:dark; --red:#f02a42; --blue:#38a2ff; --panel:rgba(7,10,17,.88); }
+* { box-sizing:border-box; }
+html,body,#viewport { width:100%; height:100%; }
+body { margin:0; overflow:hidden; color:#f6f8fc; background:#080c14; font-family:Inter,system-ui,sans-serif; }
+#viewport,#viewport canvas { position:fixed; inset:0; display:block; width:100%; height:100%; }
+header { position:fixed; z-index:5; top:0; left:0; right:0; display:flex; align-items:center; gap:20px; padding:20px 24px; background:linear-gradient(to bottom,rgba(3,5,10,.92),transparent); pointer-events:none; }
+header a { pointer-events:auto; color:#9ba8b9; font-size:10px; font-weight:800; letter-spacing:.12em; text-decoration:none; }
+header div { margin-right:auto; }
+header p { margin:0; color:var(--blue); font-size:8px; font-weight:800; letter-spacing:.2em; }
+header h1 { margin:1px 0 0; font:italic 900 30px/.9 "Barlow Condensed"; letter-spacing:.02em; }
+#status { color:#7f8b99; font-size:8px; font-weight:800; letter-spacing:.14em; }
+aside { position:fixed; z-index:5; top:96px; left:20px; width:205px; padding:16px; border:1px solid rgba(255,255,255,.12); background:var(--panel); backdrop-filter:blur(12px); }
+.readout { display:grid; grid-template-columns:58px 1fr; gap:6px 8px; margin-bottom:15px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.1); }
+.readout span { color:#687587; font-size:7px; font-weight:800; letter-spacing:.13em; }
+.readout strong { color:#dce6f4; font-size:8px; letter-spacing:.08em; }
+label { display:block; margin:11px 0; color:#aeb9c8; font-size:8px; font-weight:800; letter-spacing:.1em; cursor:pointer; }
+input { accent-color:var(--red); vertical-align:middle; margin-right:7px; }
+button { width:31%; margin-top:8px; padding:8px 2px; border:1px solid #2c3848; color:#aeb9c8; background:#101722; font:800 7px Inter; letter-spacing:.05em; cursor:pointer; }
+button:hover { color:white; border-color:#52759a; }
+.help { margin:14px 0 0; color:#526174; font-size:7px; line-height:1.8; letter-spacing:.1em; }
+#inspector { position:fixed; z-index:5; right:20px; bottom:20px; min-width:220px; padding:14px 16px; border-left:3px solid var(--red); background:var(--panel); }
+#inspector span { display:block; color:#758295; font-size:7px; font-weight:800; letter-spacing:.16em; }
+#inspector strong { display:block; margin:4px 0 8px; font:900 22px "Barlow Condensed"; }
+#inspector code { display:block; color:#92b6db; font:10px/1.6 monospace; white-space:pre; }
+#labels { position:fixed; inset:0; z-index:4; pointer-events:none; }
+.joint-label { position:absolute; width:22px; height:22px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.72); border-radius:50%; color:white; background:rgba(8,12,20,.8); font:800 8px Inter; transform:translate(-50%,-50%); }
+.joint-label.selected { color:#07101d; background:#fff; border-color:#fff; }
+@media (max-width:700px) { aside { top:auto; bottom:12px; left:12px; width:185px; } .readout,.help { display:none; } header { padding:14px; } #inspector { top:80px; right:12px; bottom:auto; min-width:170px; } }

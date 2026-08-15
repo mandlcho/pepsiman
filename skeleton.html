@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070a11" />
+    <title>Pepsiman — Original Skeleton Lab</title>
+    <link rel="stylesheet" href="skeleton.css" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  </head>
+  <body>
+    <main id="viewport" aria-label="Interactive Pepsiman skeleton viewer"></main>
+    <header>
+      <a href="index.html">← GAME</a>
+      <div><p>ORIGINAL PS1 CHARACTER</p><h1>SKELETON LAB</h1></div>
+      <span id="status">LOADING…</span>
+    </header>
+    <aside>
+      <div class="readout">
+        <span>RIG</span><strong>16 JOINTS</strong>
+        <span>UNITS</span><strong>TOD ÷ 4</strong>
+        <span>POSE</span><strong>BIND / FRAME 0</strong>
+      </div>
+      <label><input id="show-mesh" type="checkbox" checked /> ORIGINAL MESH</label>
+      <label><input id="show-bones" type="checkbox" checked /> BONES</label>
+      <label><input id="show-joints" type="checkbox" checked /> JOINTS + IDS</label>
+      <label><input id="show-axes" type="checkbox" /> WORLD AXES</label>
+      <button id="front">FRONT</button>
+      <button id="side">SIDE</button>
+      <button id="reset">RESET VIEW</button>
+      <p class="help">DRAG TO ORBIT<br />WHEEL TO ZOOM<br />CLICK A JOINT TO INSPECT</p>
+    </aside>
+    <section id="inspector" hidden>
+      <span>SELECTED JOINT</span><strong id="joint-name">—</strong><code id="joint-data"></code>
+    </section>
+    <div id="labels" aria-hidden="true"></div>
+    <script type="module" src="skeleton.js"></script>
+  </body>
+</html>
