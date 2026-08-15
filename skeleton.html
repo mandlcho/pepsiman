@@ -25,15 +25,39 @@
       <label><input id="show-bones" type="checkbox" checked /> BONES</label>
       <label><input id="show-joints" type="checkbox" checked /> JOINTS + IDS</label>
       <label><input id="show-axes" type="checkbox" /> WORLD AXES</label>
-      <button id="front">FRONT</button>
-      <button id="side">SIDE</button>
-      <button id="reset">RESET VIEW</button>
-      <p class="help">DRAG TO ORBIT<br />WHEEL TO ZOOM<br />CLICK A JOINT TO INSPECT</p>
+      <div class="button-row"><button id="front">FRONT</button><button id="side">SIDE</button><button id="reset-view">RESET VIEW</button></div>
+      <p class="help">DRAG TO ORBIT · WHEEL TO ZOOM<br />CLICK A JOINT OR USE THE SELECTOR</p>
     </aside>
-    <section id="inspector" hidden>
-      <span>SELECTED JOINT</span><strong id="joint-name">—</strong><code id="joint-data"></code>
+    <section id="inspector">
+      <span>SELECTED JOINT</span>
+      <select id="joint-select" aria-label="Joint"></select>
+      <div class="mode-row"><button id="translate-mode" class="active">MOVE (W)</button><button id="rotate-mode">ROTATE (E)</button></div>
+      <fieldset>
+        <legend>LOCAL POSITION</legend>
+        <label>X <input id="position-x" type="number" step="0.05" /></label>
+        <label>Y <input id="position-y" type="number" step="0.05" /></label>
+        <label>Z <input id="position-z" type="number" step="0.05" /></label>
+      </fieldset>
+      <fieldset>
+        <legend>LOCAL ROTATION · DEGREES</legend>
+        <label>X <input id="rotation-x" type="number" step="0.1" /></label>
+        <label>Y <input id="rotation-y" type="number" step="0.1" /></label>
+        <label>Z <input id="rotation-z" type="number" step="0.1" /></label>
+      </fieldset>
+      <div class="editor-actions"><button id="reset-joint">RESET JOINT</button><button id="reset-all">RESET ALL</button><button id="export-rig">EXPORT JSON</button></div>
+      <p id="save-state">CHANGES AUTOSAVE AND APPLY TO THE GAME AFTER RELOAD</p>
+    </section>
+    <section id="animation-panel">
+      <span>ANIMATION PREVIEW · EXTRACTED DECODER CANDIDATES</span>
+      <div id="animation-list" role="listbox" aria-label="Animation clips"><button class="animation-item active" data-clip="bind">DEFAULT · T-POSE</button></div>
+      <div class="animation-row"><button id="play-animation">PLAY</button><select id="playback-speed" aria-label="Playback speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>
+      <input id="animation-frame" type="range" min="0" max="1" value="0" step="0.01" />
+      <output id="frame-readout">FRAME 0 / 0</output>
     </section>
     <div id="labels" aria-hidden="true"></div>
+    <script type="importmap">
+      {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
+    </script>
     <script type="module" src="skeleton.js"></script>
   </body>
 </html>

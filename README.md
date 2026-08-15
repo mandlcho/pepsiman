@@ -19,7 +19,7 @@ python3 serve.py
 
 Open <http://127.0.0.1:8080>.
 
-Inspect the untouched original bind skeleton at <http://127.0.0.1:8080/skeleton.html>. The lab exposes all 16 TOD joints, parent links, raw transforms, and attached TMD mesh segments with animation deliberately disabled.
+Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>. The lab exposes all 16 TOD joints, parent links, transform gizmos, exact local values, persistent browser overrides, JSON export, and a clickable preview list for every extracted motion clip. `DEFAULT · T-POSE` always restores the editable bind pose.
 
 ### Controls
 

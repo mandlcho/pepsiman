@@ -68,6 +68,8 @@ async function loadCharacter() {
   texture.colorSpace=THREE.SRGBColorSpace; texture.magFilter=THREE.NearestFilter; texture.minFilter=THREE.NearestFilter;
   material=new THREE.MeshLambertMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
   rig=new THREE.Group(); rig.scale.setScalar(.0175); rig.rotation.y=Math.PI; scene.add(rig);
+  let overrides={};
+  try { overrides=JSON.parse(localStorage.getItem("pepsiman-skeleton-overrides-v1")||"{}").joints||{}; } catch { overrides={}; }
 
   for (const setup of animations.setup.objects) {
     if (setup.id===1001) continue;
@@ -75,6 +77,9 @@ async function loadCharacter() {
     const frame=setup.frames[0]||{};
     const t=frame.translation||[0,0,0], r=frame.rotation||[0,0,0], s=frame.scale||[1,1,1];
     node.position.set(t[0]/4,-t[1]/4,-t[2]/4); node.rotation.set(r[0],-r[1],-r[2],"XYZ"); node.scale.set(...s);
+    const override=overrides[setup.id];
+    if(override?.position)node.position.fromArray(override.position);
+    if(override?.rotation)node.rotation.fromArray([...override.rotation,"XYZ"]);
   }
   for (const setup of animations.setup.objects) {
     if (!nodes.has(setup.id)) continue;
