@@ -30,7 +30,11 @@ legend { padding:0 5px; color:#718096; font-size:7px; font-weight:800; letter-sp
 #inspector input { width:100%; margin:4px 0 0; padding:6px 3px; border:1px solid #2c3a4c; color:#badafa; background:#0b111b; font:9px monospace; }
 .editor-actions { margin-top:10px; }.editor-actions button { flex:1; }
 #export-rig { color:white; border-color:#335f8c; background:#124b7f; }
+#undo-edit:disabled { opacity:.35; cursor:not-allowed; }
+#save-rig { color:#07101d; border-color:#62c990; background:#62c990; }
+.primary-actions button { font-size:8px; }
 #save-state { margin:10px 0 0; color:#4f718f; font-size:6px; line-height:1.6; letter-spacing:.09em; }
+#save-state.dirty { color:#f5cb58; }
 #animation-panel { position:fixed; z-index:5; left:20px; bottom:20px; width:390px; padding:13px 15px; border-top:2px solid #e2b43c; background:var(--panel); backdrop-filter:blur(12px); }
 #animation-panel>span { display:block; margin-bottom:8px; color:#d0a83f; font-size:7px; font-weight:800; letter-spacing:.12em; }
 .animation-row { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }

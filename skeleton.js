@@ -20,7 +20,8 @@ const debug=new THREE.Group();scene.add(debug);
 const transformControls=new TransformControls(camera,renderer.domElement);transformControls.setSpace("local");transformControls.setSize(.7);scene.add(transformControls.getHelper());
 
 const nodes=new Map(),markers=new Map(),labels=new Map(),setupById=new Map(),baseTransforms=new Map(),bindTransforms=new Map(),meshes=[];
-let boneLines,selectedId=1,animationsData,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false;
+let boneLines,selectedId=1,animationsData,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false,savedSnapshot="",dragStartSnapshot="";
+const editHistory=[];
 
 const target=new THREE.Vector3(0,1.35,0);let radius=5.7,theta=0,phi=1.48;
 function placeCamera(){camera.position.set(target.x+radius*Math.sin(phi)*Math.sin(theta),target.y+radius*Math.cos(phi),target.z+radius*Math.sin(phi)*Math.cos(theta));camera.lookAt(target);}
@@ -41,14 +42,24 @@ function serializeRig(){
   for(const [id,transform] of bindTransforms)joints[id]={parentId:setupById.get(id).parentId,position:transform.position.toArray(),rotation:[transform.rotation.x,transform.rotation.y,transform.rotation.z]};
   return{version:1,space:"three-local",source:"Pepsiman TOD bind setup",joints};
 }
-function persistRig(message="SAVED · GAME WILL USE THIS RIG AFTER RELOAD"){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(serializeRig()));$("#save-state").textContent=message;
+function currentSnapshot(){return JSON.stringify(serializeRig());}
+function updateSaveState(message){
+  const dirty=currentSnapshot()!==savedSnapshot;$("#save-state").classList.toggle("dirty",dirty);$("#save-state").textContent=message||(dirty?"UNSAVED CHANGES · PRESS SAVE TO APPLY TO THE GAME":"SAVED · GAME WILL USE THIS RIG AFTER RELOAD");$("#undo-edit").disabled=editHistory.length===0;
+}
+function pushHistory(snapshot=currentSnapshot()){
+  if(editHistory.at(-1)===snapshot)return;editHistory.push(snapshot);if(editHistory.length>20)editHistory.shift();$("#undo-edit").disabled=false;
+}
+function restoreSnapshot(snapshot){
+  const data=JSON.parse(snapshot);for(const [idString,value] of Object.entries(data.joints)){const id=Number(idString);bindTransforms.get(id).position.fromArray(value.position);bindTransforms.get(id).rotation.set(...value.rotation,"XYZ");}enterBindMode();selectJoint(selectedId);updateSaveState("UNDO APPLIED · PRESS SAVE TO KEEP IT");
+}
+function saveRig(){
+  const data=serializeRig();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));savedSnapshot=JSON.stringify(data);updateSaveState("SAVED · RELOAD THE GAME TO USE THIS RIG");
 }
 
 function applyBindPose(){for(const [id,node] of nodes)copyTransform(node,bindTransforms.get(id));}
 function enterBindMode(){
   activeClip=null;isPlaying=false;animationFrame=0;markAnimationItem("bind");$("#play-animation").textContent="PLAY";$("#animation-frame").value=0;$("#animation-frame").max=1;$("#frame-readout").textContent="FRAME 0 / 0";
-  applyBindPose();if(nodes.has(selectedId))transformControls.attach(nodes.get(selectedId));$("#status").textContent="EDITING BIND RIG · AUTOSAVE ON";
+  applyBindPose();if(nodes.has(selectedId))transformControls.attach(nodes.get(selectedId));$("#status").textContent="EDITING BIND RIG";
 }
 function setEditorValues(){
   const transform=bindTransforms.get(selectedId);if(!transform)return;
@@ -100,7 +111,7 @@ async function loadRig(){
   for(const clip of animations.clips){const item=document.createElement("button");item.className="animation-item";item.dataset.clip=clip.id;item.textContent=`CLIP ${clip.id} · ${clip.frameCount}F`;item.title=`Clip ${clip.id} · ${clip.frameCount} frames at ${clip.fps} FPS`;$("#animation-list").append(item);}
   const linePositions=[];for(const [id] of nodes)if(nodes.has(setupById.get(id).parentId))linePositions.push(0,0,0,0,0,0);
   const lineGeometry=new THREE.BufferGeometry();lineGeometry.setAttribute("position",new THREE.Float32BufferAttribute(linePositions,3));boneLines=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({color:0xffd86a,depthTest:false,transparent:true,opacity:.9}));boneLines.renderOrder=3;debug.add(boneLines);
-  selectJoint(1);updateDebugGeometry();$("#status").textContent="BIND RIG EDITOR READY · AUTOSAVE ON";
+  savedSnapshot=currentSnapshot();selectJoint(1);updateDebugGeometry();updateSaveState();$("#status").textContent="BIND RIG EDITOR READY";
 }
 
 function updateDebugGeometry(){
@@ -111,18 +122,20 @@ function updateDebugGeometry(){
 $("#show-mesh").onchange=event=>meshes.forEach(mesh=>mesh.visible=event.target.checked);$("#show-bones").onchange=event=>boneLines.visible=event.target.checked;$("#show-joints").onchange=event=>{for(const marker of markers.values())marker.visible=event.target.checked;$("#labels").hidden=!event.target.checked;};$("#show-axes").onchange=event=>axes.visible=event.target.checked;
 $("#joint-select").onchange=event=>selectJoint(event.target.value);$("#translate-mode").onclick=()=>setMode("translate");$("#rotate-mode").onclick=()=>setMode("rotate");
 for(const axis of ["x","y","z"]){
-  $(`#position-${axis}`).onchange=event=>{enterBindMode();bindTransforms.get(selectedId).position[axis]=Number(event.target.value);applyBindPose();persistRig();setEditorValues();};
-  $(`#rotation-${axis}`).onchange=event=>{enterBindMode();bindTransforms.get(selectedId).rotation[axis]=THREE.MathUtils.degToRad(Number(event.target.value));applyBindPose();persistRig();setEditorValues();};
+  $(`#position-${axis}`).onchange=event=>{enterBindMode();pushHistory();bindTransforms.get(selectedId).position[axis]=Number(event.target.value);applyBindPose();setEditorValues();updateSaveState();};
+  $(`#rotation-${axis}`).onchange=event=>{enterBindMode();pushHistory();bindTransforms.get(selectedId).rotation[axis]=THREE.MathUtils.degToRad(Number(event.target.value));applyBindPose();setEditorValues();updateSaveState();};
 }
-$("#reset-joint").onclick=()=>{enterBindMode();bindTransforms.set(selectedId,{position:baseTransforms.get(selectedId).position.clone(),rotation:baseTransforms.get(selectedId).rotation.clone()});applyBindPose();persistRig("JOINT RESET · SAVED");selectJoint(selectedId);};
-$("#reset-all").onclick=()=>{enterBindMode();for(const [id,base] of baseTransforms)bindTransforms.set(id,{position:base.position.clone(),rotation:base.rotation.clone()});applyBindPose();localStorage.removeItem(STORAGE_KEY);$("#save-state").textContent="ORIGINAL EXTRACTED BIND RIG RESTORED";selectJoint(selectedId);};
+$("#undo-edit").onclick=()=>{const snapshot=editHistory.pop();if(snapshot)restoreSnapshot(snapshot);};
+$("#save-rig").onclick=saveRig;
+$("#reset-joint").onclick=()=>{enterBindMode();pushHistory();bindTransforms.set(selectedId,{position:baseTransforms.get(selectedId).position.clone(),rotation:baseTransforms.get(selectedId).rotation.clone()});applyBindPose();selectJoint(selectedId);updateSaveState("JOINT RESET · UNSAVED");};
+$("#reset-all").onclick=()=>{enterBindMode();pushHistory();for(const [id,base] of baseTransforms)bindTransforms.set(id,{position:base.position.clone(),rotation:base.rotation.clone()});applyBindPose();selectJoint(selectedId);updateSaveState("ORIGINAL BIND RIG RESTORED · UNSAVED");};
 $("#export-rig").onclick=()=>{const blob=new Blob([JSON.stringify(serializeRig(),null,2)],{type:"application/json"}),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="pepsiman-skeleton-overrides.json";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);};
 $("#animation-list").onclick=event=>{const item=event.target.closest(".animation-item");if(item)chooseClip(item.dataset.clip);};$("#play-animation").onclick=()=>{if(!activeClip)return;isPlaying=!isPlaying;$("#play-animation").textContent=isPlaying?"PAUSE":"PLAY";};
 $("#animation-frame").oninput=event=>{if(!activeClip)return;isPlaying=false;$("#play-animation").textContent="PLAY";animationFrame=Number(event.target.value);applyAnimationFrame();};$("#playback-speed").onchange=event=>playbackSpeed=Number(event.target.value);
-transformControls.addEventListener("dragging-changed",event=>{gizmoDragging=event.value;if(!event.value&&selectedId){bindTransforms.set(selectedId,cloneTransform(nodes.get(selectedId)));persistRig();setEditorValues();}});transformControls.addEventListener("objectChange",()=>{if(selectedId){bindTransforms.set(selectedId,cloneTransform(nodes.get(selectedId)));setEditorValues();}});
+transformControls.addEventListener("dragging-changed",event=>{gizmoDragging=event.value;if(event.value){dragStartSnapshot=currentSnapshot();}else if(selectedId){bindTransforms.set(selectedId,cloneTransform(nodes.get(selectedId)));if(dragStartSnapshot!==currentSnapshot())pushHistory(dragStartSnapshot);dragStartSnapshot="";setEditorValues();updateSaveState();}});transformControls.addEventListener("objectChange",()=>{if(selectedId){bindTransforms.set(selectedId,cloneTransform(nodes.get(selectedId)));setEditorValues();updateSaveState();}});
 
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();renderer.domElement.addEventListener("click",event=>{if(moved||gizmoDragging)return;pointer.set(event.clientX/innerWidth*2-1,-event.clientY/innerHeight*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects([...markers.values()])[0];if(hit)selectJoint(hit.object.userData.jointId);});
-addEventListener("keydown",event=>{if(event.target.matches("input,select"))return;if(event.key.toLowerCase()==="w")setMode("translate");if(event.key.toLowerCase()==="e")setMode("rotate");});
+addEventListener("keydown",event=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="z"){event.preventDefault();const snapshot=editHistory.pop();if(snapshot)restoreSnapshot(snapshot);return;}if(event.target.matches("input,select"))return;if(event.key.toLowerCase()==="w")setMode("translate");if(event.key.toLowerCase()==="e")setMode("rotate");});
 
 let previous=performance.now()/1000;
 function render(nowMs){requestAnimationFrame(render);const now=nowMs/1000,dt=Math.min(.1,now-previous);previous=now;if(activeClip&&isPlaying){animationFrame=(animationFrame+dt*activeClip.fps*playbackSpeed)%activeClip.frameCount;applyAnimationFrame();}updateDebugGeometry();const projected=new THREE.Vector3();for(const [id,marker] of markers){marker.getWorldPosition(projected);projected.project(camera);const label=labels.get(id),visible=projected.z>-1&&projected.z<1;label.style.display=visible?"grid":"none";label.style.left=`${(projected.x*.5+.5)*innerWidth}px`;label.style.top=`${(-projected.y*.5+.5)*innerHeight}px`;}renderer.render(scene,camera);}
