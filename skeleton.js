@@ -15,7 +15,7 @@ const key=new THREE.DirectionalLight(0xffffff,3.2);key.position.set(-4,7,5);scen
 const rim=new THREE.DirectionalLight(0x277dd8,2.2);rim.position.set(5,3,-5);scene.add(rim);
 scene.add(new THREE.GridHelper(10,40,0x32465f,0x172232));
 const axes=new THREE.AxesHelper(2);axes.visible=false;scene.add(axes);
-const rig=new THREE.Group();rig.scale.setScalar(.0175);rig.rotation.y=Math.PI;scene.add(rig);
+const rig=new THREE.Group();rig.scale.setScalar(.008);rig.rotation.y=Math.PI;scene.add(rig);
 const debug=new THREE.Group();scene.add(debug);
 const transformControls=new TransformControls(camera,renderer.domElement);transformControls.setSpace("local");transformControls.setSize(.7);scene.add(transformControls.getHelper());
 
@@ -23,10 +23,10 @@ const nodes=new Map(),markers=new Map(),labels=new Map(),setupById=new Map(),bas
 let boneLines,selectedId=1,animationsData,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false,savedSnapshot="",dragStartSnapshot="";
 const editHistory=[];
 
-const target=new THREE.Vector3(0,1.35,0);let radius=5.7,theta=0,phi=1.48;
+const target=new THREE.Vector3(0,.95,0);let radius=4,theta=0,phi=1.48;
 function placeCamera(){camera.position.set(target.x+radius*Math.sin(phi)*Math.sin(theta),target.y+radius*Math.cos(phi),target.z+radius*Math.sin(phi)*Math.cos(theta));camera.lookAt(target);}
-function setView(nextTheta,nextPhi=1.48,nextRadius=5.7){theta=nextTheta;phi=nextPhi;radius=nextRadius;placeCamera();}
-placeCamera();$("#front").onclick=()=>setView(0);$("#side").onclick=()=>setView(Math.PI/2);$("#reset-view").onclick=()=>setView(0,1.48,5.7);
+function setView(nextTheta,nextPhi=1.48,nextRadius=4){theta=nextTheta;phi=nextPhi;radius=nextRadius;placeCamera();}
+placeCamera();$("#front").onclick=()=>setView(0);$("#side").onclick=()=>setView(Math.PI/2);$("#reset-view").onclick=()=>setView(0,1.48,4);
 
 let dragging=false,moved=false,lastX=0,lastY=0;
 renderer.domElement.addEventListener("pointerdown",event=>{if(gizmoDragging)return;dragging=true;moved=false;lastX=event.clientX;lastY=event.clientY;renderer.domElement.setPointerCapture(event.pointerId);});
@@ -78,13 +78,16 @@ function sampleTrack(track,frame,frameCount){
   if(!track.frames.length)return null;let a=track.frames[0],b=a;
   for(let i=0;i<track.frames.length;i++)if(track.frames[i].time<=frame){a=track.frames[i];b=track.frames[(i+1)%track.frames.length]||a;}
   const span=((b.time-a.time+frameCount)%frameCount)||1,mix=((frame-a.time+frameCount)%frameCount)/span,ar=a.rotation,br=b.rotation||ar;
-  if(!ar)return null;return[lerpAngle(ar[0],br[0],mix),lerpAngle(ar[1],br[1],mix),lerpAngle(ar[2],br[2],mix)];
+  if(!ar)return null;
+  const translation=a.translation?.map((value,index)=>THREE.MathUtils.lerp(value,(b.translation||a.translation)[index],mix));
+  return{rotation:[lerpAngle(ar[0],br[0],mix),lerpAngle(ar[1],br[1],mix),lerpAngle(ar[2],br[2],mix)],translation};
 }
 function applyAnimationFrame(){
   if(!activeClip)return;applyBindPose();
   for(const track of activeClip.objects){
-    const node=nodes.get(track.id),base=baseTransforms.get(track.id),bind=bindTransforms.get(track.id),rotation=sampleTrack(track,animationFrame,activeClip.frameCount);if(!node||!rotation)continue;
-    node.rotation.set(rotation[0]+bind.rotation.x-base.rotation.x,-rotation[1]+bind.rotation.y-base.rotation.y,-rotation[2]+bind.rotation.z-base.rotation.z,"XYZ");
+    const node=nodes.get(track.id),base=baseTransforms.get(track.id),bind=bindTransforms.get(track.id),sample=sampleTrack(track,animationFrame,activeClip.frameCount);if(!node||!sample)continue;
+    node.rotation.set(sample.rotation[0]+bind.rotation.x-base.rotation.x,-sample.rotation[1]+bind.rotation.y-base.rotation.y,-sample.rotation[2]+bind.rotation.z-base.rotation.z,"XYZ");
+    if(sample.translation)node.position.set(sample.translation[0]/5+bind.position.x-base.position.x,-sample.translation[1]/5+bind.position.y-base.position.y,-sample.translation[2]/5+bind.position.z-base.position.z);
   }
   $("#animation-frame").value=animationFrame;$("#frame-readout").textContent=`FRAME ${animationFrame.toFixed(2)} / ${activeClip.frameCount-1}`;
 }
@@ -92,7 +95,7 @@ function markAnimationItem(value){for(const item of document.querySelectorAll(".
 function chooseClip(value){
   if(value==="bind"){enterBindMode();return;}
   activeClip=animationsData.clips.find(clip=>clip.id===Number(value));isPlaying=true;animationFrame=0;transformControls.detach();markAnimationItem(value);
-  $("#animation-frame").max=Math.max(0,activeClip.frameCount-1);$("#animation-frame").value=0;$("#play-animation").textContent="PAUSE";$("#status").textContent=`PLAYING CLIP ${activeClip.id} · DECODER CANDIDATE`;applyAnimationFrame();
+  $("#animation-frame").max=Math.max(0,activeClip.frameCount-1);$("#animation-frame").value=0;$("#play-animation").textContent="PAUSE";$("#status").textContent=`PLAYING VALIDATED CLIP ${activeClip.id}`;applyAnimationFrame();
 }
 
 async function loadRig(){

@@ -216,11 +216,15 @@ def parse_animation_pack(pack: bytes) -> list[dict]:
 
 
 def parse_compressed_animation_pack(pack: bytes) -> list[dict]:
-    """Decode Pepsiman's compact TOD joint stream.
+    """Decode Pepsiman's compact, absolute TOD transform packets.
 
-    The game keeps standard TOD framing, but encodes joint IDs in the low 12
-    bits of a 16-bit marker and stores Euler components as signed 12-bit-angle
-    shorts. Missing components inherit from the previous frame.
+    This layout was recovered from the game's transform routine at
+    0x80018df0 in SLPS_017.62. A packet starts with an absolute flag in bit 15,
+    zero-component flags for X/Y/Z in bits 14/13/12, and a 12-bit joint ID.
+    Components whose flag is clear follow as signed whole-degree shorts;
+    flagged components are zero (they do not inherit). Records are 32-bit
+    aligned. Joint 1 additionally stores an unknown scalar and three signed
+    32-bit absolute translations.
     """
     first_offset = u32(pack, 0)
     clips = []
@@ -234,49 +238,51 @@ def parse_compressed_animation_pack(pack: bytes) -> list[dict]:
         frame_count = u32(pack, offset + 4)
         cursor = offset + 8
         tracks = {joint: [] for joint in range(1, 17)}
-        previous = {joint: [0.0, 0.0, 0.0] for joint in range(1, 17)}
-        decoded_frames = 0
         for _ in range(frame_count):
-            if cursor + 8 > len(pack):
-                break
             frame_start = cursor
             frame_length = u16(pack, cursor) * 4
+            packet_count = u16(pack, cursor + 2)
             frame_number = u32(pack, cursor + 4)
-            frame_end = min(frame_start + frame_length, len(pack))
-            payload_start = cursor + 8
-            markers = []
-            search = payload_start
-            for expected in range(1, 17):
-                found = None
-                while search + 2 <= frame_end:
-                    value = u16(pack, search)
-                    if (value & 0x0FFF) == expected and (value & 0xF000) >= 0x8000:
-                        found = search
-                        break
-                    search += 2
-                if found is None:
-                    break
-                markers.append((expected, found))
-                search = found + 2
-            if len(markers) >= 12:
-                decoded_frames += 1
-                for marker_index, (joint, position) in enumerate(markers):
-                    record_end = markers[marker_index + 1][1] if marker_index + 1 < len(markers) else frame_end
-                    values = [s16(pack, point) for point in range(position + 2, record_end, 2)]
-                    rotation = previous[joint][:]
-                    for axis, value in enumerate(values[:3]):
-                        rotation[axis] = value / 4096 * math.tau
-                    previous[joint] = rotation
-                    tracks[joint].append({"time": frame_number, "rotation": rotation})
+            frame_end = frame_start + frame_length
+            cursor += 8
+            if packet_count != 16:
+                raise ValueError(f"clip {clip_id} frame {frame_number} has {packet_count} joints")
+            for expected_joint in range(1, 17):
+                marker = u16(pack, cursor)
+                cursor += 2
+                joint = marker & 0x0FFF
+                if joint != expected_joint or not marker & 0x8000:
+                    raise ValueError(f"clip {clip_id} frame {frame_number} has invalid joint marker {marker:#06x}")
+                zero_mask = (marker >> 12) & 7
+                degrees = []
+                for component_bit in (4, 2, 1):
+                    if zero_mask & component_bit:
+                        degrees.append(0)
+                    else:
+                        degrees.append(s16(pack, cursor))
+                        cursor += 2
+                cursor = (cursor + 3) & ~3
+                frame = {
+                    "time": frame_number,
+                    "rotation": [math.radians((value + 180) % 360 - 180) for value in degrees],
+                }
+                if joint == 1:
+                    frame["rootScalar"] = s16(pack, cursor)
+                    frame["translation"] = [s32(pack, cursor + 4 + axis * 4) for axis in range(3)]
+                    cursor += 16
+                tracks[joint].append(frame)
+            if cursor != frame_end:
+                raise ValueError(
+                    f"clip {clip_id} frame {frame_number} ended at {cursor:#x}, expected {frame_end:#x}"
+                )
             cursor = frame_end
-        if decoded_frames:
-            clips.append({
-                "id": clip_id,
-                "fps": 60 / resolution if resolution else 60,
-                "frameCount": frame_count,
-                "decodedFrames": decoded_frames,
-                "objects": [{"id": joint, "frames": tracks[joint]} for joint in tracks if tracks[joint]],
-            })
+        clips.append({
+            "id": clip_id,
+            "fps": 60 / resolution if resolution else 60,
+            "frameCount": frame_count,
+            "encoding": "absolute integer-degree TOD compact packets",
+            "objects": [{"id": joint, "frames": tracks[joint]} for joint in tracks],
+        })
     return clips
 
 
@@ -296,6 +302,6 @@ if __name__ == "__main__":
     animation_pack = args.animation_pack.read_bytes()
     setup_clip = parse_animation_pack(animation_pack)[0]
     clips = parse_compressed_animation_pack(animation_pack)
-    animation_data = {"format": "Pepsiman TOD rig v2", "setup": setup_clip, "clips": clips}
+    animation_data = {"format": "Pepsiman TOD rig v3", "setup": setup_clip, "clips": clips}
     (args.destination / "animations.json").write_text(json.dumps(animation_data, separators=(",", ":")))
     print(f"Exported {len(model['objects'])} model segments and {len(clips)} compressed animation clips")

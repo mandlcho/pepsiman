@@ -19,6 +19,9 @@ python3 "$ROOT/tools/extract_character.py" \
   "$WORK/disc/CDDATA/0/0001" \
   "$WORK/disc/CDDATA/0/0002" \
   "$ROOT/assets/ripped/pepsiman"
+PYTHONPATH="$ROOT/tools" python3 "$ROOT/tools/validate_character_animations.py" \
+  "$WORK/disc/CDDATA/0/0002" \
+  --export "$ROOT/assets/ripped/pepsiman/animations.json"
 
 ffmpeg -hide_banner -loglevel error -f s16le -ar 44100 -ac 2 -ss 2 \
   -i "$ROOT/Pepsiman (Japan) (Track 2).bin" -c:a libmp3lame -q:a 4 \
