@@ -1,0 +1,9 @@
+.DS_Store
+.firecrawl/
+game/*.zip
+*.bin
+*.cue
+node_modules/
+dist/
+__pycache__/
+*.pyc
