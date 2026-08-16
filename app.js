@@ -7,6 +7,7 @@ const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
 const GROUND_Y = 0;
 const GRAVITY = 20;
+const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(5);
 const ui = {
   start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
@@ -74,7 +75,7 @@ async function loadCharacter() {
   ]);
   texture.colorSpace=THREE.SRGBColorSpace; texture.magFilter=THREE.NearestFilter; texture.minFilter=THREE.NearestFilter;
   material=new THREE.MeshLambertMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
-  rig=new THREE.Group(); rig.scale.setScalar(.008); rig.rotation.y=Math.PI; scene.add(rig);
+  rig=new THREE.Group(); rig.scale.setScalar(.008); rig.rotation.y=CHARACTER_FACING_YAW; scene.add(rig);
   let overrides={};
   try { overrides=JSON.parse(localStorage.getItem("pepsiman-skeleton-overrides-v1")||"{}").joints||{}; } catch { overrides={}; }
 
@@ -117,7 +118,7 @@ function sampleTrack(track,frame,frameCount){
   const span=((b.time-a.time+frameCount)%frameCount)||1,mix=((frame-a.time+frameCount)%frameCount)/span,br=b.rotation||a.rotation;
   return{rotation:a.rotation.map((value,index)=>lerpAngle(value,br[index],mix)),translation:a.translation?.map((value,index)=>THREE.MathUtils.lerp(value,(b.translation||a.translation)[index],mix))};
 }
-function sampleAnimation(clip,time,loop=true){
+function sampleAnimation(clip,time,loop=true,lockPelvisHeight=false){
   if(!clip)return;
   for(const [id,node] of nodes){const bind=bindTransforms.get(id);node.position.copy(bind.position);node.rotation.copy(bind.rotation);}
   const frame=loop?(time*clip.fps)%clip.frameCount:Math.min(time*clip.fps,clip.frameCount-1);
@@ -125,6 +126,7 @@ function sampleAnimation(clip,time,loop=true){
   if(rootTrack?.frames.length){
     const rootSample=sampleTrack(rootTrack,frame,clip.frameCount);
     applyExtractedPelvisMotion(THREE,nodes.get(1),bindTransforms.get(1),baseTransforms.get(1),rootSample);
+    if(lockPelvisHeight)nodes.get(1).position.y=bindTransforms.get(1).position.y;
   }
   for(const track of clip.objects){
     if(track.id===1)continue;
@@ -201,9 +203,9 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     updateVerticalMotion(dt);state.slide=Math.max(0,state.slide-dt);
     rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=state.slide>0?.0048:.008;
     const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingDuration=(landingClip.frameCount-1)/landingClip.fps;
-    if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false);
-    else if(!state.grounded)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration);
-    else if(state.landingTime>0&&state.landingTime<=landingDuration)sampleAnimation(landingClip,state.landingTime,false);
+    if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false,true);
+    else if(!state.grounded)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration,true,true);
+    else if(state.landingTime>0&&state.landingTime<=landingDuration)sampleAnimation(landingClip,state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
