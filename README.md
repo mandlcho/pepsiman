@@ -31,12 +31,12 @@ Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>.
 
 | Action | Keyboard | Touch |
 | --- | --- | --- |
-| Move | Left / Right or A / D | Arrow buttons |
-| Jump | Up or Space | Up button |
-| Slide | Down or S | Down button |
+| Move continuously | Left / Right or A / D | Hold arrow buttons |
+| Jump | X, Up, or Space | Up button |
+| Slide | C, Down, or S | Down button |
 | Start | Enter | Run button |
 
-Gamepads work through browser keyboard mapping tools; direct Gamepad API mapping is planned.
+Gamepads use the original-style layout directly: D-pad or left stick moves freely left/right, Cross jumps, and Square slides.
 
 ## Rebuild ripped assets
 
