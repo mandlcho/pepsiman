@@ -78,13 +78,14 @@ function setMode(mode){
 
 function applyAnimationFrame(){
   if(!activeClip)return;applyBindPose();
-  mixer.setTime(animationFrame/activeClip.fps);
+  activeAction.time=Math.min(animationFrame/activeClip.fps,activeAction.getClip().duration);
+  activeAction.enabled=true;activeAction.paused=false;mixer.update(0);
   $("#animation-frame").value=animationFrame;$("#frame-readout").textContent=`FRAME ${animationFrame.toFixed(2)} / ${activeClip.frameCount-1}`;
 }
 function markAnimationItem(value){for(const item of document.querySelectorAll(".animation-item"))item.classList.toggle("active",item.dataset.clip===String(value));}
 function chooseClip(value){
   if(value==="bind"){enterBindMode();return;}
-  activeClip=animationsData.clips.find(clip=>clip.id===Number(value));const fbxClip=fbxClips.find(clip=>clip.name===activeClip.name);if(!fbxClip)throw new Error(`FBX animation ${activeClip.name} is missing`);activeAction?.stop();activeAction=mixer.clipAction(fbxClip);activeAction.reset().play();isPlaying=true;animationFrame=0;transformControls.detach();markAnimationItem(value);
+  activeClip=animationsData.clips.find(clip=>clip.id===Number(value));const fbxClip=fbxClips.find(clip=>clip.name===activeClip.name);if(!fbxClip)throw new Error(`FBX animation ${activeClip.name} is missing`);activeAction?.stop();mixer.setTime(0);activeAction=mixer.clipAction(fbxClip);activeAction.reset().setLoop(THREE.LoopOnce,0);activeAction.clampWhenFinished=true;activeAction.play();isPlaying=true;animationFrame=0;transformControls.detach();markAnimationItem(value);
   $("#animation-frame").max=Math.max(0,activeClip.frameCount-1);$("#animation-frame").value=0;$("#play-animation").textContent="PAUSE";$("#status").textContent=`PLAYING FBX · ${activeClip.label.toUpperCase()}`;applyAnimationFrame();
 }
 
