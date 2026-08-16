@@ -286,6 +286,15 @@ def parse_compressed_animation_pack(pack: bytes) -> list[dict]:
     return clips
 
 
+def add_animation_names(clips: list[dict], names_path: Path) -> list[dict]:
+    names = json.loads(names_path.read_text())
+    for clip in clips:
+        metadata = names.get(str(clip["id"]))
+        if metadata:
+            clip.update(metadata)
+    return clips
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("model_pack", type=Path)
@@ -301,7 +310,10 @@ if __name__ == "__main__":
     write_png(args.destination / "texture.png", 256, 256, render_page(vram, cba, tsb))
     animation_pack = args.animation_pack.read_bytes()
     setup_clip = parse_animation_pack(animation_pack)[0]
-    clips = parse_compressed_animation_pack(animation_pack)
+    clips = add_animation_names(
+        parse_compressed_animation_pack(animation_pack),
+        Path(__file__).with_name("animation_names.json"),
+    )
     animation_data = {"format": "Pepsiman TOD rig v3", "setup": setup_clip, "clips": clips}
     (args.destination / "animations.json").write_text(json.dumps(animation_data, separators=(",", ":")))
     print(f"Exported {len(model['objects'])} model segments and {len(clips)} compressed animation clips")

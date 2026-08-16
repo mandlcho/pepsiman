@@ -35,11 +35,15 @@ Each joint record begins with a little-endian `u16`:
 
 For every zero flag that is clear, one signed 16-bit **whole-degree** component follows, in X/Y/Z order. Flagged components are zero; they do not inherit a previous value. The record is padded to a 32-bit boundary. Angles may contain several complete revolutions, so the web export wraps them to `[-180°, 180°)` before conversion to radians.
 
-Joint 1 then stores a signed 16-bit scalar plus two padding bytes and three signed 32-bit absolute translations. The original routine divides these compact root translations by five (`0x8001945c`–`0x800194bc`); bind/setup joint translations use quarter-units. The scalar's gameplay purpose is not required for skeletal playback, but is preserved in the exported data as `rootScalar`.
+Joint 1 then stores a signed 16-bit scalar plus two padding bytes and three signed 32-bit absolute translations. The original routine divides translations by five (`0x8001945c`–`0x800194bc`). The same character-space scale must be applied to the standard TOD setup: at one fifth, the independently modeled TMD segments meet at their authored seams, and setup pelvis Y (`-519 / 5`) agrees with the compact clips (`-518 / 5` in the run clip). The scalar's gameplay purpose is not required for skeletal playback, but is preserved in the exported data as `rootScalar`.
 
 ## Web transform conversion
 
 The TMD mesh is converted from PlayStation coordinates as `(x, y, z) → (x, -y, -z)`. Local TOD translations use the same reflection. Conjugating a local rotation by that coordinate conversion preserves X and negates Y and Z, so animation Euler values become `(rx, -ry, -rz)` in Three.js. Both the setup parser and runtime construct local rotations in XYZ order before applying the parent hierarchy. Saved editor corrections are stored as local bind offsets and added after this conversion; animation preview never replaces the saved correction itself.
+
+Every decoded joint-1 frame in all 50 clips contains the same `-103°` X component. It is therefore a fixed character-basis conversion, not animated pelvis motion. The runtime removes that basis component before constructing the joint-1 matrix.
+
+The corrected joint-1 matrix is then factored into the dummy root rather than written over the pelvis bind transform. If `A` is the basis-corrected animated joint-1 matrix and `B` is the setup pelvis matrix, the root receives `A × inverse(B)` while the pelvis remains at `B`; therefore `root × pelvis = A`. This exposes root translation and orientation on object 1001, keeps the pelvis at its authored bind transform, and prevents the character-wide `-103°` tilt.
 
 Compact packets are absolute per frame: zero-mask bits produce literal zero components, not inherited values or deltas. The web runtime interpolates the resulting absolute Euler frames using shortest-angle interpolation. Root translation is interpolated linearly.
 

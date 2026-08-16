@@ -1,4 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import { applyExtractedRootMotion, applySetupTransform, TOD_TRANSLATION_SCALE } from "./rig-math.js";
 
 const ASSET_ROOT = "./assets/ripped/pepsiman/";
 const lanes = [-2.25, 0, 2.25];
@@ -76,8 +77,7 @@ async function loadCharacter() {
   for (const setup of animations.setup.objects) {
     const node=new THREE.Group(); node.name=setup.id===1001?"root-1001":`joint-${setup.id}`; nodes.set(setup.id,node);
     const frame=setup.frames[0]||{};
-    const t=frame.translation||[0,0,0], r=frame.rotation||[0,0,0], s=frame.scale||[1,1,1];
-    node.position.set(t[0]/4,-t[1]/4,-t[2]/4); node.rotation.set(r[0],-r[1],-r[2],"XYZ"); node.scale.set(...s);
+    applySetupTransform(node,frame);
     baseTransforms.set(setup.id,{position:node.position.clone(),rotation:node.rotation.clone()});
     const override=overrides[setup.id];
     if(override?.position)node.position.fromArray(override.position);
@@ -97,7 +97,7 @@ async function loadCharacter() {
     nodes.get(part.id)?.add(mesh);
   }
   rig.position.set(0,.02,1.3);
-  idleClip=animations.clips.find(clip=>clip.id===2);
+  idleClip=animations.clips.find(clip=>clip.id===51);
   runClip=animations.clips.find(clip=>clip.id===4);
   ui.loading.textContent=`ORIGINAL RIG READY · ${animations.clips.length} VALIDATED MOTION CLIPS`;
   ui.button.disabled=false;
@@ -114,11 +114,17 @@ function sampleAnimation(clip,time){
   if(!clip)return;
   for(const [id,node] of nodes){const bind=bindTransforms.get(id);node.position.copy(bind.position);node.rotation.copy(bind.rotation);}
   const frame=(time*clip.fps)%clip.frameCount;
+  const rootTrack=clip.objects.find(track=>track.id===1);
+  if(rootTrack?.frames.length){
+    const rootSample=sampleTrack(rootTrack,frame,clip.frameCount);
+    applyExtractedRootMotion(THREE,nodes.get(1001),bindTransforms.get(1001),baseTransforms.get(1),rootSample);
+  }
   for(const track of clip.objects){
+    if(track.id===1)continue;
     const node=nodes.get(track.id),base=baseTransforms.get(track.id),bind=bindTransforms.get(track.id);if(!node||!track.frames.length)continue;
     const sample=sampleTrack(track,frame,clip.frameCount);
     node.rotation.set(sample.rotation[0]+bind.rotation.x-base.rotation.x,-sample.rotation[1]+bind.rotation.y-base.rotation.y,-sample.rotation[2]+bind.rotation.z-base.rotation.z,"XYZ");
-    if(sample.translation)node.position.set(sample.translation[0]/5+bind.position.x-base.position.x,-sample.translation[1]/5+bind.position.y-base.position.y,-sample.translation[2]/5+bind.position.z-base.position.z);
+    if(sample.translation)node.position.set(sample.translation[0]*TOD_TRANSLATION_SCALE+bind.position.x-base.position.x,-sample.translation[1]*TOD_TRANSLATION_SCALE+bind.position.y-base.position.y,-sample.translation[2]*TOD_TRANSLATION_SCALE+bind.position.z-base.position.z);
   }
 }
 
