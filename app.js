@@ -5,6 +5,8 @@ const ASSET_ROOT = "./assets/ripped/pepsiman/";
 const lanes = [-2.25, 0, 2.25];
 const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
+const GROUND_Y = 0;
+const GRAVITY = 20;
 const ui = {
   start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
@@ -167,20 +169,25 @@ for(let i=0;i<9;i++) spawnRow(-18-i*10);
 
 const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
-const state={running:false,x:0,vx:0,y:0,vy:0,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
+const state={running:false,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
-function jump(){if(state.running&&state.y<.02&&state.slide<=0){state.vy=8.3;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
-function slide(){if(state.running&&state.y<.1){state.landingTime=0;state.slide=.65;callout("SLIDE!");}}
-function squareAction(){if(!state.running||state.y>=.1)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;callout("SKID!");}else slide();}
+function jump(){if(state.running&&state.grounded&&state.slide<=0){state.vy=8.3;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
+function slide(){if(state.running&&state.grounded){state.landingTime=0;state.slide=.65;callout("SLIDE!");}}
+function squareAction(){if(!state.running||!state.grounded)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;callout("SKID!");}else slide();}
 function readGamepad(){
   const pad=navigator.getGamepads?.()[0];if(!pad){input.gamepadX=0;gamepadState.forward=false;gamepadState.backward=false;return;}
   const stick=Math.abs(pad.axes[0]||0)>.16?pad.axes[0]:0,dpad=(pad.buttons[15]?.pressed?1:0)-(pad.buttons[14]?.pressed?1:0);input.gamepadX=THREE.MathUtils.clamp(stick||dpad,-1,1);gamepadState.forward=Boolean(pad.buttons[12]?.pressed);gamepadState.backward=Boolean(pad.buttons[13]?.pressed);
   const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(slidePressed&&!gamepadState.slide)squareAction();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
 }
+function updateVerticalMotion(dt){
+  const wasGrounded=state.grounded;state.vy-=GRAVITY*dt;const nextY=state.y+state.vy*dt,landed=!wasGrounded&&state.vy<=0&&nextY<=GROUND_Y;
+  if(nextY<=GROUND_Y&&state.vy<=0){state.y=GROUND_Y;state.vy=0;state.grounded=true;}else{state.y=nextY;state.grounded=false;state.jumpTime+=dt;}
+  if(landed){state.jumpTime=0;state.landingTime=.0001;}else if(state.landingTime>0)state.landingTime+=dt;
+}
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;for(const entity of entities)world.remove(entity);entities.length=0;for(let i=0;i<9;i++)spawnRow(-18-i*10);state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=0;state.vy=0;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;for(const entity of entities)world.remove(entity);entities.length=0;for(let i=0;i<9;i++)spawnRow(-18-i*10);state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
 
@@ -191,11 +198,11 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     state.sprint=Math.max(0,state.sprint-dt);state.brake=Math.max(0,state.brake-dt);const baseSpeed=Math.min(25,12+state.distance/500);state.speed=baseSpeed*(state.sprint>0?1.3:state.brake>0?.62:1);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
     const keyboardSteering=(input.right?1:0)-(input.left?1:0),steering=keyboardSteering||input.gamepadX,targetVx=steering*STEER_SPEED;
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-ROAD_EDGE_X,ROAD_EDGE_X);if(Math.abs(state.x)===ROAD_EDGE_X&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
-    const wasAirborne=state.y>0;state.vy-=20*dt;state.y=Math.max(0,state.y+state.vy*dt);if(state.y===0)state.vy=0;if(state.y>0)state.jumpTime+=dt;if(wasAirborne&&state.y===0){state.jumpTime=0;state.landingTime=.0001;}else if(state.landingTime>0)state.landingTime+=dt;state.slide=Math.max(0,state.slide-dt);
+    updateVerticalMotion(dt);state.slide=Math.max(0,state.slide-dt);
     rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=state.slide>0?.0048:.008;
     const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingDuration=(landingClip.frameCount-1)/landingClip.fps;
-    if(state.y>0&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false);
-    else if(state.y>0)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration);
+    if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false);
+    else if(!state.grounded)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration);
     else if(state.landingTime>0&&state.landingTime<=landingDuration)sampleAnimation(landingClip,state.landingTime,false);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
