@@ -1,9 +1,12 @@
 import * as THREE from "three";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 
 const ASSET_ROOT="./assets/ripped/pepsiman/";
-const STORAGE_KEY="pepsiman-skeleton-overrides-v1";
+const FBX_PATH="./exports/pepsiman/Pepsiman_Rig.fbx";
+const STORAGE_KEY="pepsiman-skeleton-overrides-v2";
 const JOINT_NAMES={1001:"root",1:"pelvis",2:"torso",3:"right shoulder",4:"right elbow",5:"right hand",6:"left shoulder",7:"left elbow",8:"left hand",9:"neck",10:"head",11:"right hip",12:"right knee",13:"right foot",14:"left hip",15:"left knee",16:"left foot"};
+const FBX_JOINT_IDS={root:1001,pelvis:1,spine:2,shoulderR:3,elbowR:4,handR:5,shoulderL:6,elbowL:7,handL:8,neck:9,head:10,hipR:11,kneeR:12,footR:13,hipL:14,kneeL:15,footL:16};
 const $=selector=>document.querySelector(selector);
 
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
@@ -20,7 +23,7 @@ const debug=new THREE.Group();scene.add(debug);
 const transformControls=new TransformControls(camera,renderer.domElement);transformControls.setSpace("local");transformControls.setSize(.7);scene.add(transformControls.getHelper());
 
 const nodes=new Map(),markers=new Map(),labels=new Map(),setupById=new Map(),baseTransforms=new Map(),bindTransforms=new Map(),meshes=[];
-let boneLines,selectedId=1001,animationsData,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false,savedSnapshot="",dragStartSnapshot="";
+let boneLines,selectedId=1001,animationsData,fbxClips=[],mixer=null,activeAction=null,activeClip=null,isPlaying=false,animationFrame=0,playbackSpeed=1,gizmoDragging=false,savedSnapshot="",dragStartSnapshot="";
 const editHistory=[];
 
 const target=new THREE.Vector3(0,.95,0);let radius=4,theta=0,phi=1.48;
@@ -58,7 +61,7 @@ function saveRig(){
 
 function applyBindPose(){for(const [id,node] of nodes)copyTransform(node,bindTransforms.get(id));}
 function enterBindMode(){
-  activeClip=null;isPlaying=false;animationFrame=0;markAnimationItem("bind");$("#play-animation").textContent="PLAY";$("#animation-frame").value=0;$("#animation-frame").max=1;$("#frame-readout").textContent="FRAME 0 / 0";
+  activeAction?.stop();activeAction=null;activeClip=null;isPlaying=false;animationFrame=0;markAnimationItem("bind");$("#play-animation").textContent="PLAY";$("#animation-frame").value=0;$("#animation-frame").max=1;$("#frame-readout").textContent="FRAME 0 / 0";
   applyBindPose();if(nodes.has(selectedId))transformControls.attach(nodes.get(selectedId));$("#status").textContent="EDITING BIND RIG";
 }
 function setEditorValues(){
@@ -73,48 +76,35 @@ function setMode(mode){
   enterBindMode();transformControls.setMode(mode);$("#translate-mode").classList.toggle("active",mode==="translate");$("#rotate-mode").classList.toggle("active",mode==="rotate");
 }
 
-function lerpAngle(a,b,t){return a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*t;}
-function sampleTrack(track,frame,frameCount){
-  if(!track.frames.length)return null;let a=track.frames[0],b=a;
-  for(let i=0;i<track.frames.length;i++)if(track.frames[i].time<=frame){a=track.frames[i];b=track.frames[(i+1)%track.frames.length]||a;}
-  const span=((b.time-a.time+frameCount)%frameCount)||1,mix=((frame-a.time+frameCount)%frameCount)/span,ar=a.rotation,br=b.rotation||ar;
-  if(!ar)return null;
-  const translation=a.translation?.map((value,index)=>THREE.MathUtils.lerp(value,(b.translation||a.translation)[index],mix));
-  return{rotation:[lerpAngle(ar[0],br[0],mix),lerpAngle(ar[1],br[1],mix),lerpAngle(ar[2],br[2],mix)],translation};
-}
 function applyAnimationFrame(){
   if(!activeClip)return;applyBindPose();
-  for(const track of activeClip.objects){
-    const node=nodes.get(track.id),base=baseTransforms.get(track.id),bind=bindTransforms.get(track.id),sample=sampleTrack(track,animationFrame,activeClip.frameCount);if(!node||!sample)continue;
-    node.rotation.set(sample.rotation[0]+bind.rotation.x-base.rotation.x,-sample.rotation[1]+bind.rotation.y-base.rotation.y,-sample.rotation[2]+bind.rotation.z-base.rotation.z,"XYZ");
-    if(sample.translation)node.position.set(sample.translation[0]/5+bind.position.x-base.position.x,-sample.translation[1]/5+bind.position.y-base.position.y,-sample.translation[2]/5+bind.position.z-base.position.z);
-  }
+  mixer.setTime(animationFrame/activeClip.fps);
   $("#animation-frame").value=animationFrame;$("#frame-readout").textContent=`FRAME ${animationFrame.toFixed(2)} / ${activeClip.frameCount-1}`;
 }
 function markAnimationItem(value){for(const item of document.querySelectorAll(".animation-item"))item.classList.toggle("active",item.dataset.clip===String(value));}
 function chooseClip(value){
   if(value==="bind"){enterBindMode();return;}
-  activeClip=animationsData.clips.find(clip=>clip.id===Number(value));isPlaying=true;animationFrame=0;transformControls.detach();markAnimationItem(value);
-  $("#animation-frame").max=Math.max(0,activeClip.frameCount-1);$("#animation-frame").value=0;$("#play-animation").textContent="PAUSE";$("#status").textContent=`PLAYING VALIDATED CLIP ${activeClip.id}`;applyAnimationFrame();
+  activeClip=animationsData.clips.find(clip=>clip.id===Number(value));const fbxClip=fbxClips.find(clip=>clip.name===activeClip.name);if(!fbxClip)throw new Error(`FBX animation ${activeClip.name} is missing`);activeAction?.stop();activeAction=mixer.clipAction(fbxClip);activeAction.reset().play();isPlaying=true;animationFrame=0;transformControls.detach();markAnimationItem(value);
+  $("#animation-frame").max=Math.max(0,activeClip.frameCount-1);$("#animation-frame").value=0;$("#play-animation").textContent="PAUSE";$("#status").textContent=`PLAYING FBX · ${activeClip.label.toUpperCase()}`;applyAnimationFrame();
 }
 
 async function loadRig(){
-  const [model,animations,texture]=await Promise.all([fetch(`${ASSET_ROOT}model.json`).then(response=>response.json()),fetch(`${ASSET_ROOT}animations.json`).then(response=>response.json()),new THREE.TextureLoader().loadAsync(`${ASSET_ROOT}texture.png`)]);animationsData=animations;
-  texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
-  const material=new THREE.MeshPhongMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05,shininess:25}),overrides=savedOverrides();
-  for(const setup of animations.setup.objects){
-    setupById.set(setup.id,setup);const frame=setup.frames[0]||{},t=frame.translation||[0,0,0],r=frame.rotation||[0,0,0];
-    const node=new THREE.Group();node.name=setup.id===1001?"root-1001":`joint-${setup.id}`;node.position.set(t[0]/4,-t[1]/4,-t[2]/4);node.rotation.set(r[0],-r[1],-r[2],"XYZ");nodes.set(setup.id,node);baseTransforms.set(setup.id,cloneTransform(node));
-    const override=overrides[setup.id];if(override?.position)node.position.fromArray(override.position);if(override?.rotation)node.rotation.set(...override.rotation,"XYZ");bindTransforms.set(setup.id,cloneTransform(node));
-  }
-  for(const setup of animations.setup.objects)if(nodes.has(setup.id))(nodes.get(setup.parentId)||rig).add(nodes.get(setup.id));
-  for(const part of model.objects.slice(0,16)){const geometry=new THREE.BufferGeometry();geometry.setAttribute("position",new THREE.Float32BufferAttribute(part.positions,3));geometry.setAttribute("uv",new THREE.Float32BufferAttribute(part.uvs,2));geometry.computeVertexNormals();const mesh=new THREE.Mesh(geometry,material);mesh.userData.jointId=part.id;nodes.get(part.id).add(mesh);meshes.push(mesh);}
+  const [character,animations]=await Promise.all([new FBXLoader().loadAsync(FBX_PATH),fetch(`${ASSET_ROOT}animations.json`).then(response=>response.json())]);animationsData=animations;fbxClips=character.animations;for(const clip of fbxClips)clip.name=clip.name.split("|").at(-1);mixer=new THREE.AnimationMixer(character);
+  for(const setup of animations.setup.objects)setupById.set(setup.id,setup);
+  character.name="Pepsiman_FBX_Character";character.traverse(object=>{
+    if(object.isBone&&FBX_JOINT_IDS[object.name])nodes.set(FBX_JOINT_IDS[object.name],object);
+    if(object.isSkinnedMesh){object.frustumCulled=false;object.castShadow=true;object.receiveShadow=true;meshes.push(object);const materials=Array.isArray(object.material)?object.material:[object.material];for(const material of materials){material.side=THREE.DoubleSide;material.transparent=true;material.alphaTest=.05;if(material.map){material.map.colorSpace=THREE.SRGBColorSpace;material.map.magFilter=THREE.NearestFilter;material.map.minFilter=THREE.NearestFilter;}}}
+  });
+  if(nodes.size!==17)throw new Error(`FBX skeleton has ${nodes.size} mapped bones; expected 17`);if(fbxClips.length!==50)throw new Error(`FBX has ${fbxClips.length} clips; expected 50`);
+  rig.add(character);
+  const overrides=savedOverrides();
+  for(const [id,node] of nodes){baseTransforms.set(id,cloneTransform(node));const override=overrides[id];if(override?.position)node.position.fromArray(override.position);if(override?.rotation)node.rotation.set(...override.rotation,"XYZ");bindTransforms.set(id,cloneTransform(node));}
   const jointSelect=$("#joint-select");
   for(const id of nodes.keys()){jointSelect.add(new Option(`${id} · ${JOINT_NAMES[id].toUpperCase()}`,id));const marker=new THREE.Mesh(new THREE.SphereGeometry(id===1001 ? .05 : .035,12,8),new THREE.MeshBasicMaterial({color:id===1001?0x62c990:id===1?0xf02a42:0x38a2ff,depthTest:false}));marker.renderOrder=4;marker.userData.jointId=id;debug.add(marker);markers.set(id,marker);const label=document.createElement("span");label.className="joint-label";label.textContent=id===1001?"R":id;$("#labels").append(label);labels.set(id,label);}
-  for(const clip of animations.clips){const item=document.createElement("button");item.className="animation-item";item.dataset.clip=clip.id;item.textContent=`CLIP ${clip.id} · ${clip.frameCount}F`;item.title=`Clip ${clip.id} · ${clip.frameCount} frames at ${clip.fps} FPS`;$("#animation-list").append(item);}
+  for(const clip of animations.clips){const item=document.createElement("button");item.className="animation-item";item.dataset.clip=clip.id;item.textContent=`≈ ${clip.label||`MOTION ${clip.id}`} · ${clip.frameCount}F`;item.title=`Inferred label for retail motion ${clip.id} · ${clip.frameCount} frames at ${clip.fps} FPS`;$("#animation-list").append(item);}
   const linePositions=[];for(const [id] of nodes)if(nodes.has(setupById.get(id).parentId))linePositions.push(0,0,0,0,0,0);
   const lineGeometry=new THREE.BufferGeometry();lineGeometry.setAttribute("position",new THREE.Float32BufferAttribute(linePositions,3));boneLines=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({color:0xffd86a,depthTest:false,transparent:true,opacity:.9}));boneLines.renderOrder=3;debug.add(boneLines);
-  savedSnapshot=currentSnapshot();selectJoint(1001);updateDebugGeometry();updateSaveState();$("#status").textContent="ROOT → PELVIS RIG READY";
+  savedSnapshot=currentSnapshot();selectJoint(1001);updateDebugGeometry();updateSaveState();$("#status").textContent="FBX SKIN + 50 FBX CLIPS READY";
 }
 
 function updateDebugGeometry(){

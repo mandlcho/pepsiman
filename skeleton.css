@@ -29,6 +29,8 @@ legend { padding:0 5px; color:#718096; font-size:7px; font-weight:800; letter-sp
 #inspector fieldset label { margin:0; color:#657489; font-size:7px; }
 #inspector input { width:100%; margin:4px 0 0; padding:6px 3px; border:1px solid #2c3a4c; color:#badafa; background:#0b111b; font:9px monospace; }
 .editor-actions { margin-top:10px; }.editor-actions button { flex:1; }
+.downloads a { flex:1; padding:8px 5px; border:1px solid #335f8c; color:#dcecff; background:#102d48; font:800 7px Inter; letter-spacing:.05em; text-align:center; text-decoration:none; }
+.downloads a:hover { border-color:var(--blue); background:#16456f; }
 #export-rig { color:white; border-color:#335f8c; background:#124b7f; }
 #undo-edit:disabled { opacity:.35; cursor:not-allowed; }
 #save-rig { color:#07101d; border-color:#62c990; background:#62c990; }

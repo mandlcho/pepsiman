@@ -19,7 +19,13 @@ python3 serve.py
 
 Open <http://127.0.0.1:8080>.
 
-Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>. The lab exposes all 16 TOD joints, parent links, transform gizmos, exact local values, 20-step undo history, explicit browser save, JSON export, and a clickable preview list for every extracted motion clip. `DEFAULT · T-POSE` always restores the editable bind pose.
+Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>. The lab exposes the recovered root plus all 16 TOD joints, parent links, transform gizmos, exact local values, 20-step undo history, explicit browser save, JSON export, FBX downloads, and a clickable preview list for every extracted motion clip. `DEFAULT · T-POSE` always restores the editable bind pose. The `≈` action labels are documented inferences; retail motion IDs remain attached to every clip.
+
+## Rig and animation downloads
+
+- [Combined skinned rig with all 50 animation stacks](exports/pepsiman/Pepsiman_Rig.fbx)
+- [All 50 individual animation FBXs](exports/pepsiman/Pepsiman_Animation_Clips.zip)
+- [Rig/FBX reconstruction notes](docs/rig-and-fbx.md)
 
 ### Controls
 
@@ -60,7 +66,7 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 ## Technical notes
 
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
-- Rigging: original 16-joint TOD hierarchy, editable bind transforms, and validated absolute integer-degree motion packets
+- Rigging: recovered root + original 16-joint TOD hierarchy, rigid skin weights, corrected bind transforms, and validated absolute integer-degree motion packets
 - Gameplay: deterministic lane runner, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 

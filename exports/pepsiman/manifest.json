@@ -1,0 +1,409 @@
+{
+  "format": "Pepsiman reconstructed FBX rig v1",
+  "combined": "Pepsiman_Rig.fbx",
+  "texture": "texture.png",
+  "skeleton": "root -> pelvis -> spine/hips (17 bones total)",
+  "weighting": "rigid weights recovered from the original TMD segment ownership",
+  "clips": [
+    {
+      "id": 2,
+      "name": "crouch_loop",
+      "label": "Crouch loop",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/2_crouch_loop.fbx"
+    },
+    {
+      "id": 3,
+      "name": "jog_loop",
+      "label": "Jog loop",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "high",
+      "file": "animations/3_jog_loop.fbx"
+    },
+    {
+      "id": 4,
+      "name": "run_loop",
+      "label": "Run loop",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "high",
+      "file": "animations/4_run_loop.fbx"
+    },
+    {
+      "id": 5,
+      "name": "sprint_loop",
+      "label": "Sprint loop",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/5_sprint_loop.fbx"
+    },
+    {
+      "id": 6,
+      "name": "jump_takeoff",
+      "label": "Jump takeoff",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/6_jump_takeoff.fbx"
+    },
+    {
+      "id": 7,
+      "name": "airborne_hold",
+      "label": "Airborne hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/7_airborne_hold.fbx"
+    },
+    {
+      "id": 8,
+      "name": "landing",
+      "label": "Landing",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/8_landing.fbx"
+    },
+    {
+      "id": 9,
+      "name": "forward_stumble",
+      "label": "Forward stumble",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/9_forward_stumble.fbx"
+    },
+    {
+      "id": 10,
+      "name": "forward_flip",
+      "label": "Forward flip",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/10_forward_flip.fbx"
+    },
+    {
+      "id": 11,
+      "name": "cartwheel_fall",
+      "label": "Cartwheel fall",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/11_cartwheel_fall.fbx"
+    },
+    {
+      "id": 12,
+      "name": "stumble_recovery",
+      "label": "Stumble recovery",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/12_stumble_recovery.fbx"
+    },
+    {
+      "id": 13,
+      "name": "slide_entry",
+      "label": "Slide entry",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/13_slide_entry.fbx"
+    },
+    {
+      "id": 14,
+      "name": "slide_loop",
+      "label": "Slide loop",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/14_slide_loop.fbx"
+    },
+    {
+      "id": 15,
+      "name": "long_crash",
+      "label": "Long crash",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/15_long_crash.fbx"
+    },
+    {
+      "id": 16,
+      "name": "ground_recovery_a",
+      "label": "Ground recovery A",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/16_ground_recovery_a.fbx"
+    },
+    {
+      "id": 17,
+      "name": "ground_recovery_b",
+      "label": "Ground recovery B",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/17_ground_recovery_b.fbx"
+    },
+    {
+      "id": 18,
+      "name": "long_ground_recovery",
+      "label": "Long ground recovery",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/18_long_ground_recovery.fbx"
+    },
+    {
+      "id": 19,
+      "name": "prone_idle",
+      "label": "Prone idle",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/19_prone_idle.fbx"
+    },
+    {
+      "id": 20,
+      "name": "prone_hold",
+      "label": "Prone hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/20_prone_hold.fbx"
+    },
+    {
+      "id": 21,
+      "name": "balance_run",
+      "label": "Balance run",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/21_balance_run.fbx"
+    },
+    {
+      "id": 22,
+      "name": "duck_walk",
+      "label": "Duck walk",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/22_duck_walk.fbx"
+    },
+    {
+      "id": 23,
+      "name": "crouch_loop_alt",
+      "label": "Crouch loop alternate",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/23_crouch_loop_alt.fbx"
+    },
+    {
+      "id": 24,
+      "name": "deep_crouch_hold",
+      "label": "Deep crouch hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/24_deep_crouch_hold.fbx"
+    },
+    {
+      "id": 25,
+      "name": "backward_fall_start",
+      "label": "Backward fall start",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/25_backward_fall_start.fbx"
+    },
+    {
+      "id": 26,
+      "name": "backward_fall",
+      "label": "Backward fall",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/26_backward_fall.fbx"
+    },
+    {
+      "id": 27,
+      "name": "run_loop_alt",
+      "label": "Run loop alternate",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/27_run_loop_alt.fbx"
+    },
+    {
+      "id": 28,
+      "name": "ducking_stumble",
+      "label": "Ducking stumble",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/28_ducking_stumble.fbx"
+    },
+    {
+      "id": 29,
+      "name": "vault",
+      "label": "Vault",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/29_vault.fbx"
+    },
+    {
+      "id": 30,
+      "name": "seated_slide",
+      "label": "Seated slide",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/30_seated_slide.fbx"
+    },
+    {
+      "id": 31,
+      "name": "roll_recovery",
+      "label": "Roll recovery",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/31_roll_recovery.fbx"
+    },
+    {
+      "id": 32,
+      "name": "leap",
+      "label": "Leap",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/32_leap.fbx"
+    },
+    {
+      "id": 33,
+      "name": "forward_tumble",
+      "label": "Forward tumble",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/33_forward_tumble.fbx"
+    },
+    {
+      "id": 34,
+      "name": "inverted_hold",
+      "label": "Inverted hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/34_inverted_hold.fbx"
+    },
+    {
+      "id": 35,
+      "name": "thrown_fall",
+      "label": "Thrown fall",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/35_thrown_fall.fbx"
+    },
+    {
+      "id": 36,
+      "name": "backward_tumble",
+      "label": "Backward tumble",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/36_backward_tumble.fbx"
+    },
+    {
+      "id": 37,
+      "name": "seated_ground_hold",
+      "label": "Seated ground hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/37_seated_ground_hold.fbx"
+    },
+    {
+      "id": 38,
+      "name": "stand_up",
+      "label": "Stand up",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/38_stand_up.fbx"
+    },
+    {
+      "id": 39,
+      "name": "seated_fall",
+      "label": "Seated fall",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/39_seated_fall.fbx"
+    },
+    {
+      "id": 40,
+      "name": "forward_tumble_alt",
+      "label": "Forward tumble alternate",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/40_forward_tumble_alt.fbx"
+    },
+    {
+      "id": 41,
+      "name": "prone_turn",
+      "label": "Prone turn",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/41_prone_turn.fbx"
+    },
+    {
+      "id": 42,
+      "name": "prone_recovery",
+      "label": "Prone recovery",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/42_prone_recovery.fbx"
+    },
+    {
+      "id": 43,
+      "name": "inverted_fall_hold",
+      "label": "Inverted fall hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/43_inverted_fall_hold.fbx"
+    },
+    {
+      "id": 44,
+      "name": "spinning_jump",
+      "label": "Spinning jump",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/44_spinning_jump.fbx"
+    },
+    {
+      "id": 45,
+      "name": "hard_fall",
+      "label": "Hard fall",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/45_hard_fall.fbx"
+    },
+    {
+      "id": 46,
+      "name": "kneeling_hold",
+      "label": "Kneeling hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/46_kneeling_hold.fbx"
+    },
+    {
+      "id": 47,
+      "name": "evasive_run",
+      "label": "Evasive run",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/47_evasive_run.fbx"
+    },
+    {
+      "id": 48,
+      "name": "backward_tumble_alt",
+      "label": "Backward tumble alternate",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/48_backward_tumble_alt.fbx"
+    },
+    {
+      "id": 49,
+      "name": "squat_hold",
+      "label": "Squat hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "medium",
+      "file": "animations/49_squat_hold.fbx"
+    },
+    {
+      "id": 50,
+      "name": "run_to_stop",
+      "label": "Run to stop",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/50_run_to_stop.fbx"
+    },
+    {
+      "id": 51,
+      "name": "upright_hold",
+      "label": "Upright hold",
+      "provenance": "inferred-from-recovered-pose",
+      "confidence": "low",
+      "file": "animations/51_upright_hold.fbx"
+    }
+  ]
+}
