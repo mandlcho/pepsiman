@@ -8,13 +8,11 @@ The original TMD stores each body segment in local coordinates. Sony's PsyQ data
 
 All character TOD translations use a scale of `1 / 5`. This is directly visible in the retail transform routine at `SLPS_017.62:0x8001945c–0x800194bc`; it is also independently checked by the recovered geometry. Using `1 / 4` separates the knee/foot interfaces by more than ten source units. Using `1 / 5` reduces the worst nearest-vertex seam across all 15 parent/child mesh interfaces to 3.10 source units and produces a contiguous front/side bind render.
 
-## Pelvis and root motion
+## Stationary root and pelvis motion
 
-Every one of the 1,061 decoded joint-1 frames contains X rotation `1697°`, equivalent to `-103°`. Because it never varies, it is a character coordinate-basis term rather than pelvis motion. The exporter cancels this fixed basis and factors the remaining joint-1 matrix onto root `1001`:
+Every one of the 1,061 decoded joint-1 frames contains X rotation `1697°`, equivalent to `-103°`. Because it never varies, it is a character coordinate-basis term rather than pelvis motion. The exporter cancels this fixed basis and writes the remaining joint-1 transform directly to the pelvis.
 
-`root_delta = corrected_animated_joint_1 * inverse(bind_pelvis)`
-
-The pelvis stays at its authored bind transform. Root translation and orientation animate on `1001`, and `root_delta * bind_pelvis` reproduces the corrected source joint-1 pose.
+Dummy root `1001` remains at its authored identity transform in every frame. The pelvis owns the recovered translation and orientation, giving the interchange rig the conventional `root (stationary) -> pelvis (animated) -> body` behavior while reproducing the corrected source joint-1 pose.
 
 The rotation representation follows Sony's TOD specification: one degree is stored as 4096 fixed-point units, with X/Y/Z components in the RST packet. See [PsyQ File Formats, pp. 2-44–2-46](https://psx.arthus.net/sdk/Psy-Q/DOCS/Devrefs/Filefrmt.pdf).
 
@@ -49,4 +47,4 @@ The browser-facing validation uses the exact Three.js `FBXLoader` used by Skelet
 node tools/validate_fbx_three.mjs /path/to/three exports/pepsiman/Pepsiman_Rig.fbx assets/ripped/pepsiman/animations.json
 ```
 
-It checks the `SkinnedMesh`, normalized vertex weights, hierarchy, pelvis bind transform, clip names, and all 1,061 recovered frames. The current export's worst joint-rotation drift is `0.034°`.
+It checks the stationary root, `SkinnedMesh`, normalized vertex weights, hierarchy, pelvis bind transform, clip names, and all 1,061 recovered frames. The current export's worst joint-rotation drift is `0.033°`.

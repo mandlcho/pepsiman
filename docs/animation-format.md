@@ -43,7 +43,7 @@ The TMD mesh is converted from PlayStation coordinates as `(x, y, z) → (x, -y,
 
 Every decoded joint-1 frame in all 50 clips contains the same `-103°` X component. It is therefore a fixed character-basis conversion, not animated pelvis motion. The runtime removes that basis component before constructing the joint-1 matrix.
 
-The corrected joint-1 matrix is then factored into the dummy root rather than written over the pelvis bind transform. If `A` is the basis-corrected animated joint-1 matrix and `B` is the setup pelvis matrix, the root receives `A × inverse(B)` while the pelvis remains at `B`; therefore `root × pelvis = A`. This exposes root translation and orientation on object 1001, keeps the pelvis at its authored bind transform, and prevents the character-wide `-103°` tilt.
+The basis-corrected joint-1 matrix is applied to the pelvis. Dummy object 1001 remains an identity world anchor throughout playback, yielding `root (stationary) → pelvis (animated) → body` and preventing the character-wide `-103°` tilt.
 
 Compact packets are absolute per frame: zero-mask bits produce literal zero components, not inherited values or deltas. The web runtime interpolates the resulting absolute Euler frames using shortest-angle interpolation. Root translation is interpolated linearly.
 

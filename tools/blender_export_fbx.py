@@ -56,6 +56,15 @@ def export_fbx(source: Path, destination: Path, animation_directory: Path | None
     bpy.ops.object.select_all(action="DESELECT")
     armatures[0].select_set(True)
     skinned_meshes[0].select_set(True)
+    armature = armatures[0]
+    armature.animation_data_create()
+    armature.animation_data.action = None
+    while armature.animation_data.nla_tracks:
+        armature.animation_data.nla_tracks.remove(armature.animation_data.nla_tracks[0])
+    for pose_bone in armature.pose.bones:
+        pose_bone.matrix_basis.identity()
+    bpy.context.scene.frame_set(0)
+    bpy.context.view_layer.update()
     if len(bpy.data.actions) != 50:
         raise RuntimeError(f"expected 50 imported actions, found {len(bpy.data.actions)}")
     write_fbx(destination, all_actions=True)
@@ -65,8 +74,6 @@ def export_fbx(source: Path, destination: Path, animation_directory: Path | None
         if names_path is None:
             raise RuntimeError("the individual animation export requires the animation name map")
         names = json.loads(names_path.read_text())
-        armature = armatures[0]
-        armature.animation_data_create()
         animation_directory.mkdir(parents=True, exist_ok=True)
         for clip_id in range(2, 52):
             clip_name = names[str(clip_id)]["name"]
@@ -78,7 +85,12 @@ def export_fbx(source: Path, destination: Path, animation_directory: Path | None
                 armature.animation_data.nla_tracks.remove(armature.animation_data.nla_tracks[0])
             track = armature.animation_data.nla_tracks.new()
             track.name = clip_name
-            track.strips.new(clip_name, int(action.frame_range[0]), action)
+            strip = track.strips.new(clip_name, int(action.frame_range[0]), action)
+            strip.extrapolation = "NOTHING"
+            bpy.context.scene.frame_set(-1000)
+            bpy.context.view_layer.update()
+            for pose_bone in armature.pose.bones:
+                pose_bone.matrix_basis.identity()
             write_fbx(
                 animation_directory / f"{clip_id}_{clip_name}.fbx",
                 all_actions=False,

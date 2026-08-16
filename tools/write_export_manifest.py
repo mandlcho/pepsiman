@@ -17,6 +17,7 @@ if __name__ == "__main__":
         "combined": "Pepsiman_Rig.fbx",
         "texture": "texture.png",
         "skeleton": "root -> pelvis -> spine/hips (17 bones total)",
+        "motionOwnership": "root is stationary; pelvis owns recovered joint-1 translation and rotation",
         "weighting": "rigid weights recovered from the original TMD segment ownership",
         "clips": [
             {

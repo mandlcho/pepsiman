@@ -41,8 +41,10 @@ if (Math.abs(pelvis.position.y - 103.8) > 1e-4 || Math.abs(pelvis.position.z - 3
 
 const boneById = new Map([[1001, bones.find(bone => bone.name === "root")], [1, pelvis]]);
 for (const [id, name] of [[2,"spine"],[3,"shoulderR"],[4,"elbowR"],[5,"handR"],[6,"shoulderL"],[7,"elbowL"],[8,"handL"],[9,"neck"],[10,"head"],[11,"hipR"],[12,"kneeR"],[13,"footR"],[14,"hipL"],[15,"kneeL"],[16,"footL"]]) boneById.set(id,bones.find(bone=>bone.name===name));
+character.updateMatrixWorld(true);
+const rootBindWorld = boneById.get(1001).matrixWorld.clone();
 const mixer = new THREE.AnimationMixer(character), expectedScale = new THREE.Vector3(1,1,1);
-let validatedFrames = 0,maxQuaternionError=0,worstQuaternion="",maxMatrixError=0,worstMatrix="";
+let validatedFrames = 0,maxQuaternionError=0,worstQuaternion="",maxMatrixError=0,worstMatrix="",maxRootError=0,worstRoot="";
 const sourceClips = sourceAnimations.clips.filter(sourceClip => character.animations.some(clip => clip.name === sourceClip.name));
 if (sourceClips.length !== character.animations.length) throw new Error("FBX clip names do not map one-to-one to recovered source clips");
 for (const sourceClip of sourceClips) {
@@ -57,6 +59,8 @@ for (const sourceClip of sourceClips) {
     const expectedPelvisMatrix = new THREE.Matrix4().compose(expectedPosition,expectedRotation,expectedScale);
     character.updateMatrixWorld(true);
     const actualPelvisMatrix = pelvis.matrixWorld.clone();
+    const actualRootMatrix = boneById.get(1001).matrixWorld;
+    for(let element=0;element<16;element++){const error=Math.abs(actualRootMatrix.elements[element]-rootBindWorld.elements[element]);if(error>maxRootError){maxRootError=error;worstRoot=`${sourceClip.name} frame ${frameIndex} element ${element}`;}}
     for(let element=0;element<16;element++){const error=Math.abs(actualPelvisMatrix.elements[element]-expectedPelvisMatrix.elements[element]);if(error>maxMatrixError){maxMatrixError=error;worstMatrix=`${sourceClip.name} frame ${frameIndex} element ${element}; actual ${actualPelvisMatrix.elements.join(",")}; expected ${expectedPelvisMatrix.elements.join(",")}`;}}
     for(let id=2;id<=16;id++){
       const rotation=sourceClip.objects[id-1].frames[frameIndex].rotation;
@@ -69,5 +73,5 @@ for (const sourceClip of sourceClips) {
   action.stop();
 }
 const maxAngularError=THREE.MathUtils.radToDeg(2*Math.acos(Math.min(1,1-maxQuaternionError)));
-if(maxMatrixError>2e-3||maxAngularError>2)throw new Error(`FBX animation drift exceeds tolerance: root matrix ${maxMatrixError} at ${worstMatrix}; rotation ${maxAngularError}° at ${worstQuaternion}`);
-console.log(`Three.js FBXLoader validated 1 SkinnedMesh, ${skinWeight.count} weighted vertices, ${bones.length} bones, ${character.animations.length} clips / ${validatedFrames} frames (max rotation drift ${maxAngularError.toFixed(3)}°), and pelvis bind ${pelvis.position.toArray().join(",")}`);
+if(maxRootError>2e-5||maxMatrixError>2e-3||maxAngularError>2)throw new Error(`FBX animation drift exceeds tolerance: stationary root ${maxRootError} at ${worstRoot}; pelvis matrix ${maxMatrixError} at ${worstMatrix}; rotation ${maxAngularError}° at ${worstQuaternion}`);
+console.log(`Three.js FBXLoader validated a stationary root, 1 SkinnedMesh, ${skinWeight.count} weighted vertices, ${bones.length} bones, ${character.animations.length} clips / ${validatedFrames} frames (max rotation drift ${maxAngularError.toFixed(3)}°), and pelvis bind ${pelvis.position.toArray().join(",")}`);

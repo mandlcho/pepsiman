@@ -18,7 +18,7 @@ export function applySetupTransform(node, frame = {}) {
   node.scale.set(...scale);
 }
 
-export function applyExtractedRootMotion(THREE, rootNode, rootBind, pelvisBase, sample) {
+export function applyExtractedPelvisMotion(THREE, pelvisNode, pelvisBind, pelvisBase, sample) {
   const sourcePosition = sample.translation
     ? new THREE.Vector3(
         sample.translation[0] * TOD_TRANSLATION_SCALE,
@@ -30,15 +30,12 @@ export function applyExtractedRootMotion(THREE, rootNode, rootBind, pelvisBase, 
     new THREE.Euler(sample.rotation[0] - PEPSIMAN_ROOT_BASIS_X, -sample.rotation[1], -sample.rotation[2], "XYZ"),
   );
   const pelvisBaseRotation = new THREE.Quaternion().setFromEuler(pelvisBase.rotation);
-  const rootBindRotation = new THREE.Quaternion().setFromEuler(rootBind.rotation);
+  const pelvisBindRotation = new THREE.Quaternion().setFromEuler(pelvisBind.rotation);
   const unitScale = new THREE.Vector3(1, 1, 1);
   const sourcePelvis = new THREE.Matrix4().compose(sourcePosition, sourceRotation, unitScale);
-  const inverseBasePelvis = new THREE.Matrix4()
+  const bindCorrection = new THREE.Matrix4()
     .compose(pelvisBase.position, pelvisBaseRotation, unitScale)
-    .invert();
-  const rootDelta = sourcePelvis.multiply(inverseBasePelvis);
-  const rootMatrix = new THREE.Matrix4()
-    .compose(rootBind.position, rootBindRotation, unitScale)
-    .multiply(rootDelta);
-  rootMatrix.decompose(rootNode.position, rootNode.quaternion, rootNode.scale);
+    .invert()
+    .multiply(new THREE.Matrix4().compose(pelvisBind.position, pelvisBindRotation, unitScale));
+  sourcePelvis.multiply(bindCorrection).decompose(pelvisNode.position, pelvisNode.quaternion, pelvisNode.scale);
 }

@@ -1,5 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-import { applyExtractedRootMotion, applySetupTransform, TOD_TRANSLATION_SCALE } from "./rig-math.js";
+import { applyExtractedPelvisMotion, applySetupTransform, TOD_TRANSLATION_SCALE } from "./rig-math.js";
 
 const ASSET_ROOT = "./assets/ripped/pepsiman/";
 const lanes = [-2.25, 0, 2.25];
@@ -117,7 +117,7 @@ function sampleAnimation(clip,time){
   const rootTrack=clip.objects.find(track=>track.id===1);
   if(rootTrack?.frames.length){
     const rootSample=sampleTrack(rootTrack,frame,clip.frameCount);
-    applyExtractedRootMotion(THREE,nodes.get(1001),bindTransforms.get(1001),baseTransforms.get(1),rootSample);
+    applyExtractedPelvisMotion(THREE,nodes.get(1),bindTransforms.get(1),baseTransforms.get(1),rootSample);
   }
   for(const track of clip.objects){
     if(track.id===1)continue;

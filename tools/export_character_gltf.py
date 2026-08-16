@@ -176,21 +176,20 @@ def export(model_path: Path, animations_path: Path, names_path: Path | None, out
     clips = [clip for clip in animations["clips"] if only_clip is None or clip["id"] == only_clip]
     if only_clip is not None and not clips:
         raise ValueError(f"clip {only_clip} not found")
-    pelvis_base_inverse = rigid_inverse(local[1])
     for clip in clips:
         samplers, channels = [], []
         times = [frame["time"] / clip["fps"] for frame in clip["objects"][0]["frames"]]
         time_accessor = buffer.add(times, 5126, "SCALAR", minimum=[min(times)], maximum=[max(times)])
 
-        root_translations, root_rotations = [], []
+        pelvis_translations, pelvis_rotations = [], []
         for frame in clip["objects"][0]["frames"]:
-            root_delta = multiply(local_matrix(frame, remove_root_basis=True), pelvis_base_inverse)
-            root_translations.append([root_delta[0][3], root_delta[1][3], root_delta[2][3]])
-            root_rotations.append(quaternion_from_matrix(root_delta))
-        for path, values in (("translation", root_translations), ("rotation", root_rotations)):
+            pelvis_matrix = local_matrix(frame, remove_root_basis=True)
+            pelvis_translations.append([pelvis_matrix[0][3], pelvis_matrix[1][3], pelvis_matrix[2][3]])
+            pelvis_rotations.append(quaternion_from_matrix(pelvis_matrix))
+        for path, values in (("translation", pelvis_translations), ("rotation", pelvis_rotations)):
             output_accessor = buffer.add(values, 5126, "VEC3" if path == "translation" else "VEC4")
             samplers.append({"input": time_accessor, "output": output_accessor, "interpolation": "LINEAR"})
-            channels.append({"sampler": len(samplers) - 1, "target": {"node": node_for_joint[1001], "path": path}})
+            channels.append({"sampler": len(samplers) - 1, "target": {"node": node_for_joint[1], "path": path}})
 
         for joint in range(2, 17):
             rotations = [quaternion_from_matrix(rotation_matrix(frame["rotation"])) for frame in clip["objects"][joint - 1]["frames"]]
