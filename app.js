@@ -165,21 +165,22 @@ function spawnRow(z=-85) {
 }
 for(let i=0;i<9;i++) spawnRow(-18-i*10);
 
-const input={left:false,right:false,gamepadX:0};
-const gamepadState={jump:false,slide:false};
-const state={running:false,x:0,vx:0,y:0,vy:0,jumpTime:0,landingTime:0,slide:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
+const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
+const gamepadState={jump:false,slide:false,forward:false,backward:false};
+const state={running:false,x:0,vx:0,y:0,vy:0,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
 function jump(){if(state.running&&state.y<.02&&state.slide<=0){state.vy=8.3;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
 function slide(){if(state.running&&state.y<.1){state.landingTime=0;state.slide=.65;callout("SLIDE!");}}
+function squareAction(){if(!state.running||state.y>=.1)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;callout("SKID!");}else slide();}
 function readGamepad(){
-  const pad=navigator.getGamepads?.()[0];if(!pad){input.gamepadX=0;return;}
-  const stick=Math.abs(pad.axes[0]||0)>.16?pad.axes[0]:0,dpad=(pad.buttons[15]?.pressed?1:0)-(pad.buttons[14]?.pressed?1:0);input.gamepadX=THREE.MathUtils.clamp(stick||dpad,-1,1);
-  const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(slidePressed&&!gamepadState.slide)slide();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
+  const pad=navigator.getGamepads?.()[0];if(!pad){input.gamepadX=0;gamepadState.forward=false;gamepadState.backward=false;return;}
+  const stick=Math.abs(pad.axes[0]||0)>.16?pad.axes[0]:0,dpad=(pad.buttons[15]?.pressed?1:0)-(pad.buttons[14]?.pressed?1:0);input.gamepadX=THREE.MathUtils.clamp(stick||dpad,-1,1);gamepadState.forward=Boolean(pad.buttons[12]?.pressed);gamepadState.backward=Boolean(pad.buttons[13]?.pressed);
+  const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(slidePressed&&!gamepadState.slide)squareAction();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
 }
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;for(const entity of entities)world.remove(entity);entities.length=0;for(let i=0;i<9;i++)spawnRow(-18-i*10);state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=0;state.vy=0;state.jumpTime=0;state.landingTime=0;state.slide=0;state.invulnerable=0;input.left=false;input.right=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;for(const entity of entities)world.remove(entity);entities.length=0;for(let i=0;i<9;i++)spawnRow(-18-i*10);state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=0;state.vy=0;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
 
@@ -187,7 +188,7 @@ let previous=performance.now()/1000;
 function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.min(.04,now-previous);previous=now;
   if(state.running){
     readGamepad();
-    state.speed=Math.min(25,12+state.distance/500);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
+    state.sprint=Math.max(0,state.sprint-dt);state.brake=Math.max(0,state.brake-dt);const baseSpeed=Math.min(25,12+state.distance/500);state.speed=baseSpeed*(state.sprint>0?1.3:state.brake>0?.62:1);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
     const keyboardSteering=(input.right?1:0)-(input.left?1:0),steering=keyboardSteering||input.gamepadX,targetVx=steering*STEER_SPEED;
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-ROAD_EDGE_X,ROAD_EDGE_X);if(Math.abs(state.x)===ROAD_EDGE_X&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
     const wasAirborne=state.y>0;state.vy-=20*dt;state.y=Math.max(0,state.y+state.vy*dt);if(state.y===0)state.vy=0;if(state.y>0)state.jumpTime+=dt;if(wasAirborne&&state.y===0){state.jumpTime=0;state.landingTime=.0001;}else if(state.landingTime>0)state.landingTime+=dt;state.slide=Math.max(0,state.slide-dt);
@@ -211,9 +212,9 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
 }
 requestAnimationFrame(tick);
 
-addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key))event.preventDefault();if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,true);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,true);if(!event.repeat&&(event.key==="ArrowUp"||event.key===" "||event.key.toLowerCase()==="x"))jump();if(!event.repeat&&(event.key==="ArrowDown"||event.key.toLowerCase()==="s"||event.key.toLowerCase()==="c"))slide();if(event.key==="Enter"&&!state.running)startGame();});
-addEventListener("keyup",event=>{if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,false);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,false);});
-addEventListener("blur",()=>{input.left=false;input.right=false;input.gamepadX=0;});
+addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key))event.preventDefault();if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,true);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,true);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=true;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=true;if(!event.repeat&&(event.key===" "||event.key.toLowerCase()==="x"))jump();if(!event.repeat&&(event.key.toLowerCase()==="c"||event.key==="Shift"))squareAction();if(event.key==="Enter"&&!state.running)startGame();});
+addEventListener("keyup",event=>{if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,false);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,false);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=false;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=false;});
+addEventListener("blur",()=>{input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;});
 document.querySelectorAll("[data-control]").forEach(button=>{const control=button.dataset.control;if(control==="left"||control==="right"){const direction=control==="left"?-1:1;button.addEventListener("pointerdown",event=>{button.setPointerCapture(event.pointerId);setSteering(direction,true);});for(const type of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(type,()=>setSteering(direction,false));}else button.addEventListener("pointerdown",()=>({jump,slide}[control]()));});
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
