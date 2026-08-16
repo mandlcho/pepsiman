@@ -7,7 +7,7 @@ const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
 const GROUND_Y = 0;
 const GRAVITY = 20;
-const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(5);
+const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(20);
 const ui = {
   start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
