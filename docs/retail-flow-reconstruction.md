@@ -55,6 +55,19 @@ Those fourteen indices correspond sequentially to the fourteen numbered disc fam
 
 The first Stage 1 segment is therefore retail segment `0`, backed by `CDDATA/2`. Human-readable stage/area names will be added only after the corresponding retail transition logic is decoded.
 
+## Stage 1 overlay and resource loading
+
+`CDDATA/2/2000` is not an opaque placement blob. The executable loads it at `0x800f0000`; its internal pointers resolve against that address, and its body contains valid MIPS code plus scene-specific dispatch tables. It is the first retail segment's executable overlay.
+
+Resource selector `3` points to an eighteen-word record in `SLPS_017.62`:
+
+- the first nine words hold CD locations for files in family `2`;
+- the next nine words hold sector counts;
+- the nonzero counts are `0x20, 0x68, 0x54, 0xbe, 0x20, 0x21, 0x22, 0x12`;
+- those values exactly equal the rounded-up 2048-byte sector counts of `2000` through `2007`.
+
+After the main executable loads `2000`, its overlay drives the remaining resource-loading states and installs segment-specific initialization, update, completion, camera, and hazard callbacks. Reconstructing Stage 1 therefore requires both data decoding and behavioral recovery from this overlay; treating the numbered files as meshes alone would omit essential retail flow.
+
 Recover and verify the table directly with:
 
 ```sh

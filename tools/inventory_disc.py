@@ -54,6 +54,20 @@ def archive_tags(data: bytes) -> list[str] | None:
 def classify(path: Path, root: Path) -> DiscFile:
     data = path.read_bytes()
     relative = path.relative_to(root).as_posix()
+    family = path.parent.name
+    if path.name == f"{family}000" and family in "23456789ABCDEF" and len(data) >= 4:
+        load_address = 0x800F0000
+        pointers = sum(
+            load_address <= u32(data, offset) < load_address + len(data)
+            for offset in range(0, len(data) - 3, 4)
+        )
+        return DiscFile(
+            relative,
+            len(data),
+            f"relocated MIPS scene overlay at {load_address:#010x}",
+            pointers,
+            {"internal pointers": pointers},
+        )
     tags = archive_tags(data)
     if tags:
         counts = dict(sorted(Counter(tags).items()))
