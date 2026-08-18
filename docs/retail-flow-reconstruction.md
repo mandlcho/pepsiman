@@ -30,6 +30,37 @@ Confirmed tagged archives include:
 
 The numbered scene families are not ordinary file extensions. Each family mixes direct TMD geometry, table-based containers, texture archives, and runtime/script data. Their roles and retail ordering must be established from executable references before assigning stage names.
 
+## Authoritative retail segment order
+
+The retail executable stores the current gameplay-segment index at `0x80095830`. Scene-specific initialization dispatches through the function at `0x8004121c`; its jump table maps segment indices `0–14` to resource selectors `3–17`. The actual scene update and completion tables bound normal gameplay to indices `0–13`, establishing fourteen retail gameplay segments plus one reserved selector.
+
+Those fourteen indices correspond sequentially to the fourteen numbered disc families `CDDATA/2` through `CDDATA/F`:
+
+| Segment index | Resource selector | Disc family |
+|---:|---:|---:|
+| 0 | 3 | `2` |
+| 1 | 4 | `3` |
+| 2 | 5 | `4` |
+| 3 | 6 | `5` |
+| 4 | 7 | `6` |
+| 5 | 8 | `7` |
+| 6 | 9 | `8` |
+| 7 | 10 | `9` |
+| 8 | 11 | `A` |
+| 9 | 12 | `B` |
+| 10 | 13 | `C` |
+| 11 | 14 | `D` |
+| 12 | 15 | `E` |
+| 13 | 16 | `F` |
+
+The first Stage 1 segment is therefore retail segment `0`, backed by `CDDATA/2`. Human-readable stage/area names will be added only after the corresponding retail transition logic is decoded.
+
+Recover and verify the table directly with:
+
+```sh
+python3 tools/extract_retail_flow.py /path/to/extracted/disc/SLPS_017.62
+```
+
 Run the repeatable read-only inventory with:
 
 ```sh
