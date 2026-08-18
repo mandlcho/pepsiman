@@ -7,7 +7,9 @@ const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
 const GROUND_Y = 0;
 const GRAVITY = 20;
-const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(20);
+const JUMP_VELOCITY = 8.3;
+const LANDING_CONTACT_FRAME = 14;
+const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(15);
 const ui = {
   start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
@@ -173,7 +175,7 @@ const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
 const state={running:false,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
-function jump(){if(state.running&&state.grounded&&state.slide<=0){state.vy=8.3;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
+function jump(){if(state.running&&state.grounded&&state.slide<=0){state.vy=JUMP_VELOCITY;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
 function slide(){if(state.running&&state.grounded){state.landingTime=0;state.slide=.65;callout("SLIDE!");}}
 function squareAction(){if(!state.running||!state.grounded)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;callout("SKID!");}else slide();}
 function readGamepad(){
@@ -202,10 +204,11 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-ROAD_EDGE_X,ROAD_EDGE_X);if(Math.abs(state.x)===ROAD_EDGE_X&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
     updateVerticalMotion(dt);state.slide=Math.max(0,state.slide-dt);
     rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=state.slide>0?.0048:.008;
-    const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingDuration=(landingClip.frameCount-1)/landingClip.fps;
+    const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingContactTime=LANDING_CONTACT_FRAME/landingClip.fps,landingRecoveryDuration=(landingClip.frameCount-1-LANDING_CONTACT_FRAME)/landingClip.fps;
     if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false,true);
-    else if(!state.grounded)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration,true,true);
-    else if(state.landingTime>0&&state.landingTime<=landingDuration)sampleAnimation(landingClip,state.landingTime,false,true);
+    else if(!state.grounded&&state.vy>0)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration,true,true);
+    else if(!state.grounded){const descentProgress=THREE.MathUtils.clamp(-state.vy/JUMP_VELOCITY,0,1);sampleAnimation(landingClip,descentProgress*landingContactTime,false,true);}
+    else if(state.landingTime>0&&state.landingTime<=landingRecoveryDuration)sampleAnimation(landingClip,landingContactTime+state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
