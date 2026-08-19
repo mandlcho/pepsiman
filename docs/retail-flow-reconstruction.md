@@ -75,7 +75,14 @@ The TMD conversion now establishes two concrete Stage 1 geometry roles:
 - their polygon packets reference 133 unique CLUT/texture-page combinations reconstructed from `2002` and `2005`;
 - the ordered course-chunk centers form an approximately 813-unit browser-space route, including the retail road's turns.
 
-The browser currently renders and follows the recovered course geometry. Exact prop instances, hazards, pickups, and scripted events still depend on decoding the placement records and overlay callbacks.
+The `2006` loader establishes a fixed-capacity layout used by the retail executable:
+
+- an 80-entry model/collision index followed by 400 records of 44 bytes;
+- a second 80-entry index followed by 100 records of 76 bytes;
+- 200 world-entity records of 72 bytes beginning at file offset `0x6778`;
+- 200 behavior/model-definition records of 92 bytes immediately afterward.
+
+The browser now renders the 170 active world entities from that table, using their original world position, base yaw, scale, and current/base TMD object indices. The remaining 30 capacity slots are preserved as inactive records. Retail collision responses, dynamic behavior, pickups, and scripted events still depend on translating the associated overlay callbacks.
 
 Recover and verify the table directly with:
 

@@ -42,6 +42,7 @@ sun.position.set(-8, 13, 5); sun.castShadow = true; scene.add(sun);
 
 const world = new THREE.Group(); scene.add(world);
 const prototypeRoad = new THREE.Group(); world.add(prototypeRoad);
+const prototypeBuildings = new THREE.Group(); world.add(prototypeBuildings);
 const roadMaterial = new THREE.MeshLambertMaterial({ color:0x33404a });
 const road = new THREE.Mesh(new THREE.PlaneGeometry(10, 220), roadMaterial);
 road.rotation.x = -Math.PI / 2; road.position.z = -80; road.receiveShadow = true; prototypeRoad.add(road);
@@ -60,10 +61,10 @@ const buildingMaterials = [0x345d7b,0x526d7e,0x23536b,0x6f7880].map(color=>new T
 for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
   const height=4+Math.random()*9, width=3+Math.random()*4;
   const b=new THREE.Mesh(new THREE.BoxGeometry(width,height,6),buildingMaterials[(Math.random()*4)|0]);
-  b.position.set(side*(8+Math.random()*4),height/2-.1,z+Math.random()*3); world.add(b);
+  b.position.set(side*(8+Math.random()*4),height/2-.1,z+Math.random()*3); prototypeBuildings.add(b);
   for(let y=1.4;y<height-1;y+=1.6) {
     const win=new THREE.Mesh(new THREE.PlaneGeometry(width*.65,.45),new THREE.MeshBasicMaterial({color:0x9ee4ff}));
-    win.position.set(b.position.x-side*(width/2+.01),y,b.position.z+1); win.rotation.y=side*Math.PI/2; world.add(win);
+    win.position.set(b.position.x-side*(width/2+.01),y,b.position.z+1); win.rotation.y=side*Math.PI/2; prototypeBuildings.add(win);
   }
 }
 
@@ -90,23 +91,27 @@ function updateRetailCourse(distance){
   retailCourse.group.position.set(-anchor.x,-anchor.y,1.3-anchor.z);
 }
 async function loadStageOneCourse(){
-  const model=await fetch(`${STAGE_ONE_ROOT}2003.json`).then(response=>response.json());
+  const [model,propModel,entityTable]=await Promise.all([
+    fetch(`${STAGE_ONE_ROOT}2003.json`).then(response=>response.json()),
+    fetch(`${STAGE_ONE_ROOT}2004.json`).then(response=>response.json()),
+    fetch(`${STAGE_ONE_ROOT}2006-entities.json`).then(response=>response.json())
+  ]);
   const group=new THREE.Group();group.name="retail-stage-1-course";group.scale.setScalar(RETAIL_WORLD_SCALE);world.add(group);
   const textureLoader=new THREE.TextureLoader(),materials=new Map();
-  const materialFor=async name=>{
+  const materialFor=name=>{
     if(materials.has(name))return materials.get(name);
-    let material;
-    if(name==="vertex-color")material=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
-    else{
+    const pending=(async()=>{
+      if(name==="vertex-color")return new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
       const texture=await textureLoader.loadAsync(`${STAGE_ONE_ROOT}textures/${name.slice(4)}.png`);
       texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
-      material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
-    }
-    materials.set(name,material);return material;
+      return new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
+    })();
+    materials.set(name,pending);return pending;
   };
-  const roadHeight=model.objects[0].bounds.min[1];
-  for(const object of model.objects){
-    const objectGroup=new THREE.Group();objectGroup.name=`course-chunk-${object.id}`;group.add(objectGroup);
+  const materialNames=new Set([...model.objects,...propModel.objects].flatMap(object=>object.groups.map(primitive=>primitive.material)));
+  await Promise.all([...materialNames].map(materialFor));
+  const makeObject=async(object,name)=>{
+    const objectGroup=new THREE.Group();objectGroup.name=name;
     for(const primitive of object.groups){
       const geometry=new THREE.BufferGeometry();
       geometry.setAttribute("position",new THREE.Float32BufferAttribute(primitive.positions,3));
@@ -114,15 +119,27 @@ async function loadStageOneCourse(){
       if(primitive.colors.length)geometry.setAttribute("color",new THREE.Float32BufferAttribute(primitive.colors,3));
       const mesh=new THREE.Mesh(geometry,await materialFor(primitive.material));mesh.frustumCulled=false;objectGroup.add(mesh);
     }
+    return objectGroup;
+  };
+  const roadHeight=model.objects[0].bounds.min[1];
+  for(const object of model.objects){
+    group.add(await makeObject(object,`course-chunk-${object.id}`));
     const min=object.bounds.min,max=object.bounds.max;
     retailCourse.path.push({position:new THREE.Vector3((min[0]+max[0])/2,roadHeight,(min[2]+max[2])/2),distance:0,tangent:null});
+  }
+  const propTemplates=await Promise.all(propModel.objects.map(object=>makeObject(object,`prop-template-${object.id}`)));
+  for(const entity of entityTable.entities){
+    if(!entity.active)continue;
+    const prop=propTemplates[entity.baseModel].clone(true);prop.name=`retail-entity-${entity.id}`;
+    prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
+    prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);
   }
   for(let index=0;index<retailCourse.path.length;index++){
     const previous=retailCourse.path[Math.max(0,index-1)].position,next=retailCourse.path[Math.min(retailCourse.path.length-1,index+1)].position;
     retailCourse.path[index].tangent=next.clone().sub(previous).normalize();
     if(index>0)retailCourse.path[index].distance=retailCourse.path[index-1].distance+retailCourse.path[index].position.distanceTo(retailCourse.path[index-1].position)*RETAIL_WORLD_SCALE;
   }
-  retailCourse.group=group;retailCourse.length=retailCourse.path.at(-1).distance;retailCourse.ready=true;prototypeRoad.visible=false;updateRetailCourse(0);
+  retailCourse.group=group;retailCourse.length=retailCourse.path.at(-1).distance;retailCourse.ready=true;prototypeRoad.visible=false;prototypeBuildings.visible=false;updateRetailCourse(0);
 }
 
 let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip;
@@ -291,4 +308,4 @@ document.querySelectorAll("[data-control]").forEach(button=>{const control=butto
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · 170 PROPS`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
