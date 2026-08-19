@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract Stage 1's fixed-capacity retail entity table from CDDATA/2/2006."""
+"""Extract Stage 1's retail entities and model collision spheres from CDDATA/2/2006."""
 
 from __future__ import annotations
 
@@ -14,6 +14,10 @@ ENTITY_TABLE_OFFSET = 0x6778
 ENTITY_CAPACITY = 200
 ENTITY_SIZE = 0x48
 TMD_OBJECT_COUNT = 80
+COLLISION_INDEX_OFFSET = 0x04
+COLLISION_INDEX_SIZE = 0x08
+COLLISION_RECORDS_OFFSET = 0x284
+COLLISION_RECORD_SIZE = 0x2C
 
 
 def s16(data: bytes, offset: int) -> int:
@@ -28,6 +32,54 @@ def extract(data: bytes) -> dict:
     required = ENTITY_TABLE_OFFSET + ENTITY_CAPACITY * ENTITY_SIZE
     if len(data) < required:
         raise ValueError(f"entity pack is truncated: need {required} bytes, got {len(data)}")
+    collision_index = []
+    collision_record_count = 0
+    for model in range(TMD_OBJECT_COUNT):
+        offset = COLLISION_INDEX_OFFSET + model * COLLISION_INDEX_SIZE
+        start, count = struct.unpack_from("<II", data, offset)
+        collision_record_count = max(collision_record_count, start + count)
+        collision_index.append({"model": model, "start": start, "count": count})
+
+    collision_end = COLLISION_RECORDS_OFFSET + collision_record_count * COLLISION_RECORD_SIZE
+    if collision_end > len(data):
+        raise ValueError(
+            f"collision sphere table is truncated: need {collision_end} bytes, got {len(data)}"
+        )
+
+    collision_spheres = []
+    for model_entry in collision_index:
+        model = model_entry["model"]
+        for model_record_index in range(model_entry["count"]):
+            index = model_entry["start"] + model_record_index
+            offset = COLLISION_RECORDS_OFFSET + index * COLLISION_RECORD_SIZE
+            record = data[offset : offset + COLLISION_RECORD_SIZE]
+            owner_model = s32(record, 0x28)
+            radius = s32(record, 0x14)
+            if owner_model != model:
+                raise ValueError(
+                    f"collision sphere {index} belongs to model {owner_model}, expected {model}"
+                )
+            if radius <= 0:
+                raise ValueError(f"collision sphere {index} has invalid radius {radius}")
+            center = [s32(record, 0x1C), s32(record, 0x20), s32(record, 0x24)]
+            collision_spheres.append({
+                "id": index,
+                "model": model,
+                "modelRecordIndex": model_record_index,
+                "center": [center[0], -center[1], -center[2]],
+                "radius": radius,
+                "collisionClass": record[0x18],
+                "collisionVariant": record[0x19],
+                "reactionParameters": [s16(record, 0x0C), s16(record, 0x0E), s16(record, 0x10)],
+                "raw": record.hex(),
+            })
+
+    if len(collision_spheres) != collision_record_count:
+        raise ValueError(
+            "collision sphere index contains gaps or overlaps: "
+            f"indexed {len(collision_spheres)} records, extent is {collision_record_count}"
+        )
+
     entities = []
     for index in range(ENTITY_CAPACITY):
         offset = ENTITY_TABLE_OFFSET + index * ENTITY_SIZE
@@ -55,13 +107,19 @@ def extract(data: bytes) -> dict:
             "raw": record.hex(),
         })
     return {
-        "format": "Pepsiman Stage 1 retail entity table v1",
+        "format": "Pepsiman Stage 1 retail entities and collision spheres v2",
         "source": "CDDATA/2/2006",
         "tableOffset": ENTITY_TABLE_OFFSET,
         "recordSize": ENTITY_SIZE,
         "capacity": ENTITY_CAPACITY,
         "activeCount": sum(entity["active"] for entity in entities),
         "coordinateConversion": "(x, y, z) -> (x, -y, -z)",
+        "collisionSphereIndexOffset": COLLISION_INDEX_OFFSET,
+        "collisionSphereRecordsOffset": COLLISION_RECORDS_OFFSET,
+        "collisionSphereRecordSize": COLLISION_RECORD_SIZE,
+        "collisionSphereCount": len(collision_spheres),
+        "collisionSphereIndex": collision_index,
+        "collisionSpheres": collision_spheres,
         "entities": entities,
     }
 
@@ -74,7 +132,10 @@ def main() -> None:
     result = extract(args.source.read_bytes())
     args.destination.parent.mkdir(parents=True, exist_ok=True)
     args.destination.write_text(json.dumps(result, separators=(",", ":")) + "\n")
-    print(f"Extracted {result['activeCount']} active entities from {result['capacity']} retail records")
+    print(
+        f"Extracted {result['activeCount']} active entities and "
+        f"{result['collisionSphereCount']} collision spheres"
+    )
 
 
 if __name__ == "__main__":
