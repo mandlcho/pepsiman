@@ -10,6 +10,7 @@ The player character uses data decoded from the supplied Japanese disc:
 - 50 validated compact animation clips decoded from the original TOD stream
 - original CD-audio music track
 - 2,170 TIM textures extracted as PNG for continued level reconstruction
+- original Stage 1 road geometry (21 retail TMD chunks) and 80-object prop library
 
 ## Play locally
 
@@ -52,10 +53,11 @@ The pipeline:
 
 1. strips Mode 2 sector headers into an ISO-9660 image;
 2. extracts the proprietary `CDDATA` packs;
-3. reconstructs PS1 VRAM and decodes TIM textures to PNG;
-4. converts the original TMD segmented character mesh to compact web JSON;
-5. converts standard and Pepsiman-compressed TOD motion packets to browser animation tracks;
-6. converts the selected Red Book CD-audio track to MP3.
+3. reconstructs PS1 VRAM and decodes TIM textures and palette/page combinations to PNG;
+4. converts the original Stage 1 course and prop TMDs to browser geometry;
+5. converts the original TMD segmented character mesh to compact web JSON;
+6. converts standard and Pepsiman-compressed TOD motion packets to browser animation tracks;
+7. converts the selected Red Book CD-audio track to MP3.
 
 The `.bin` and `.cue` disc files are explicitly gitignored and must never be committed.
 
@@ -69,7 +71,8 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
 - Rigging: recovered root + original 16-joint TOD hierarchy, rigid skin weights, corrected bind transforms, and validated absolute integer-degree motion packets
-- Gameplay: deterministic lane runner, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
+- Gameplay: continuous lateral steering, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
+- Stage 1: original textured road chunks following the recovered 813-unit retail course centerline; object placement reconstruction remains in progress
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 
 This fan project contains assets from the original game. Do not distribute it unless you have the necessary rights.

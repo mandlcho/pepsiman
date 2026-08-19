@@ -68,6 +68,15 @@ Resource selector `3` points to an eighteen-word record in `SLPS_017.62`:
 
 After the main executable loads `2000`, its overlay drives the remaining resource-loading states and installs segment-specific initialization, update, completion, camera, and hazard callbacks. Reconstructing Stage 1 therefore requires both data decoding and behavioral recovery from this overlay; treating the numbered files as meshes alone would omit essential retail flow.
 
+The TMD conversion now establishes two concrete Stage 1 geometry roles:
+
+- `2003` contains 21 world-positioned course chunks, totaling 5,904 browser triangles after quad triangulation;
+- `2004` contains 80 reusable local-space prop models, totaling 2,949 browser triangles;
+- their polygon packets reference 133 unique CLUT/texture-page combinations reconstructed from `2002` and `2005`;
+- the ordered course-chunk centers form an approximately 813-unit browser-space route, including the retail road's turns.
+
+The browser currently renders and follows the recovered course geometry. Exact prop instances, hazards, pickups, and scripted events still depend on decoding the placement records and overlay callbacks.
+
 Recover and verify the table directly with:
 
 ```sh
