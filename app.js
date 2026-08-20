@@ -68,7 +68,9 @@ for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
   }
 }
 
-const retailCourse={group:null,path:[],length:0,ready:false};
+const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0};
+const retailColliders=[];
+const retailCollidedEntities=new Set();
 const upAxis=new THREE.Vector3(0,1,0);
 function coursePointAt(distance){
   if(!retailCourse.path.length)return null;
@@ -128,11 +130,22 @@ async function loadStageOneCourse(){
     retailCourse.path.push({position:new THREE.Vector3((min[0]+max[0])/2,roadHeight,(min[2]+max[2])/2),distance:0,tangent:null});
   }
   const propTemplates=await Promise.all(propModel.objects.map(object=>makeObject(object,`prop-template-${object.id}`)));
+  const collisionSpheresByModel=Array.from({length:propModel.objects.length},()=>[]);
+  for(const sphere of entityTable.collisionSpheres)collisionSpheresByModel[sphere.model].push(sphere);
   for(const entity of entityTable.entities){
-    if(!entity.active)continue;
-    const prop=propTemplates[entity.baseModel].clone(true);prop.name=`retail-entity-${entity.id}`;
+    if(!entity.active||entity.currentModel<0)continue;
+    const prop=propTemplates[entity.currentModel].clone(true);prop.name=`retail-entity-${entity.id}`;
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
-    prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);
+    prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
+    for(const sphere of collisionSpheresByModel[entity.currentModel])retailColliders.push({
+      entityId:entity.id,
+      object:prop,
+      center:new THREE.Vector3().fromArray(sphere.center),
+      radius:sphere.radius*RETAIL_WORLD_SCALE*Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),
+      collisionClass:sphere.collisionClass,
+      collisionVariant:sphere.collisionVariant,
+      reactionParameters:sphere.reactionParameters
+    });
   }
   for(let index=0;index<retailCourse.path.length;index++){
     const previous=retailCourse.path[Math.max(0,index-1)].position,next=retailCourse.path[Math.min(retailCourse.path.length-1,index+1)].position;
@@ -215,38 +228,6 @@ function sampleAnimation(clip,time,loop=true,lockPelvisHeight=false){
   }
 }
 
-const entities=[];
-const boxMaterial=new THREE.MeshLambertMaterial({color:0xf0bf35});
-const barrierMaterial=new THREE.MeshLambertMaterial({color:0xf2f0e9});
-const redMaterial=new THREE.MeshLambertMaterial({color:0xe9293e});
-function makeCan() {
-  const g=new THREE.Group();
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.75,10),new THREE.MeshLambertMaterial({color:0x0877de}));
-  const stripe=new THREE.Mesh(new THREE.TorusGeometry(.285,.06,5,12),redMaterial); stripe.rotation.x=Math.PI/2;
-  g.add(body,stripe); g.userData.kind="can"; return g;
-}
-function makeObstacle(kind) {
-  const g=new THREE.Group(); g.userData.kind=kind;
-  if(kind==="barrier") {
-    const beam=new THREE.Mesh(new THREE.BoxGeometry(1.45,.65,.42),barrierMaterial); beam.position.y=.65; g.add(beam);
-    for(let x=-.5;x<=.5;x+=1){const leg=new THREE.Mesh(new THREE.BoxGeometry(.18,.8,.2),redMaterial);leg.position.set(x,.35,0);g.add(leg);}
-  } else {
-    const box=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.5,1.5),boxMaterial);box.position.y=.75;g.add(box);
-  }
-  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}}); return g;
-}
-function spawnRow(z=-85) {
-  const safe=(Math.random()*3)|0;
-  for(let lane=0;lane<3;lane++) {
-    if(lane===safe||Math.random()<.28) {
-      if(Math.random()<.68){const can=makeCan();can.position.set(lanes[lane],1,z-Math.random()*3);world.add(can);entities.push(can);}
-    } else {
-      const ob=makeObstacle(Math.random()<.58?"barrier":"crate");ob.position.set(lanes[lane],0,z);world.add(ob);entities.push(ob);
-    }
-  }
-}
-for(let i=0;i<9;i++) spawnRow(-18-i*10);
-
 const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
 const state={running:false,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
@@ -267,9 +248,30 @@ function updateVerticalMotion(dt){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;for(const entity of entities)world.remove(entity);entities.length=0;for(let i=0;i<9;i++)spawnRow(-18-i*10);state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
+
+const collisionCenter=new THREE.Vector3();
+const playerProbeCenters=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
+const PLAYER_PROBE_RADII=[20*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE];
+function testRetailCollisions(){
+  if(!retailCourse.ready||!rig)return;
+  scene.updateMatrixWorld(true);
+  nodes.get(10).getWorldPosition(playerProbeCenters[0]);
+  nodes.get(1).getWorldPosition(playerProbeCenters[1]);
+  nodes.get(1).localToWorld(playerProbeCenters[2].set(0,0,-14));
+  for(const collider of retailColliders){
+    if(collider.collisionClass===0||retailCollidedEntities.has(collider.entityId))continue;
+    collider.object.localToWorld(collisionCenter.copy(collider.center));
+    for(let probeIndex=0;probeIndex<playerProbeCenters.length;probeIndex++){
+      const combinedRadius=collider.radius+PLAYER_PROBE_RADII[probeIndex];
+      if(collisionCenter.distanceToSquared(playerProbeCenters[probeIndex])<combinedRadius*combinedRadius){
+        retailCollidedEntities.add(collider.entityId);hit();break;
+      }
+    }
+  }
+}
 
 let previous=performance.now()/1000;
 function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.min(.04,now-previous);previous=now;
@@ -288,13 +290,8 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     else if(state.landingTime>0&&state.landingTime<=landingRecoveryDuration)sampleAnimation(landingClip,landingContactTime+state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
+    testRetailCollisions();
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
-    for(let i=entities.length-1;i>=0;i--){const e=entities[i];e.position.z+=state.speed*dt;if(e.userData.kind==="can"){e.rotation.y+=dt*4;e.rotation.z=Math.sin(now*3)*.12;}
-      const close=Math.abs(e.position.z-rig.position.z)<.85&&Math.abs(e.position.x-rig.position.x)<.8;
-      if(close&&!e.userData.hit){e.userData.hit=true;if(e.userData.kind==="can"){state.cans++;blip();callout("PEPSI!");world.remove(e);entities.splice(i,1);updateHud();continue;}const clear=e.userData.kind==="barrier"?state.y>1.05:state.slide>0;if(!clear)hit();}
-      if(e.position.z>13){world.remove(e);entities.splice(i,1);}
-    }
-    const farthest=entities.reduce((min,e)=>Math.min(min,e.position.z),0);if(farthest>-90)spawnRow(farthest-10-Math.random()*3);
     updateHud();
   } else if(rig){rig.visible=true;sampleAnimation(idleClip,now);updateRetailCourse(0);}
   camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2,5,dt);renderer.render(scene,camera);
@@ -308,4 +305,4 @@ document.querySelectorAll("[data-control]").forEach(button=>{const control=butto
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · 170 PROPS`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailColliders.length} COLLIDERS`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
