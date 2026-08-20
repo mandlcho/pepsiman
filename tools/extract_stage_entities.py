@@ -18,6 +18,10 @@ COLLISION_INDEX_OFFSET = 0x04
 COLLISION_INDEX_SIZE = 0x08
 COLLISION_RECORDS_OFFSET = 0x284
 COLLISION_RECORD_SIZE = 0x2C
+SURFACE_INDEX_OFFSET = 0x4748
+SURFACE_INDEX_SIZE = 0x08
+SURFACE_RECORDS_OFFSET = 0x49C8
+SURFACE_RECORD_SIZE = 0x4C
 
 
 def s16(data: bytes, offset: int) -> int:
@@ -80,6 +84,43 @@ def extract(data: bytes) -> dict:
             f"indexed {len(collision_spheres)} records, extent is {collision_record_count}"
         )
 
+    surface_index = []
+    surface_record_count = 0
+    for model in range(TMD_OBJECT_COUNT):
+        offset = SURFACE_INDEX_OFFSET + model * SURFACE_INDEX_SIZE
+        start, count = struct.unpack_from("<II", data, offset)
+        surface_record_count = max(surface_record_count, start + count)
+        surface_index.append({"model": model, "start": start, "count": count})
+
+    surface_end = SURFACE_RECORDS_OFFSET + surface_record_count * SURFACE_RECORD_SIZE
+    if surface_end > len(data):
+        raise ValueError(f"collision surface table is truncated: need {surface_end} bytes, got {len(data)}")
+
+    collision_surfaces = []
+    for model_entry in surface_index:
+        model = model_entry["model"]
+        for model_record_index in range(model_entry["count"]):
+            index = model_entry["start"] + model_record_index
+            offset = SURFACE_RECORDS_OFFSET + index * SURFACE_RECORD_SIZE
+            record = data[offset : offset + SURFACE_RECORD_SIZE]
+            vertices = []
+            for vertex_index in range(4):
+                x, y, z = struct.unpack_from("<hhh", record, vertex_index * 6)
+                vertices.append([x, -y, -z])
+            collision_surfaces.append({
+                "id": index,
+                "model": model,
+                "modelRecordIndex": model_record_index,
+                "vertices": vertices,
+                "raw": record.hex(),
+            })
+
+    if len(collision_surfaces) != surface_record_count:
+        raise ValueError(
+            "collision surface index contains gaps or overlaps: "
+            f"indexed {len(collision_surfaces)} records, extent is {surface_record_count}"
+        )
+
     entities = []
     for index in range(ENTITY_CAPACITY):
         offset = ENTITY_TABLE_OFFSET + index * ENTITY_SIZE
@@ -120,6 +161,12 @@ def extract(data: bytes) -> dict:
         "collisionSphereCount": len(collision_spheres),
         "collisionSphereIndex": collision_index,
         "collisionSpheres": collision_spheres,
+        "collisionSurfaceIndexOffset": SURFACE_INDEX_OFFSET,
+        "collisionSurfaceRecordsOffset": SURFACE_RECORDS_OFFSET,
+        "collisionSurfaceRecordSize": SURFACE_RECORD_SIZE,
+        "collisionSurfaceCount": len(collision_surfaces),
+        "collisionSurfaceIndex": surface_index,
+        "collisionSurfaces": collision_surfaces,
         "entities": entities,
     }
 
@@ -134,7 +181,8 @@ def main() -> None:
     args.destination.write_text(json.dumps(result, separators=(",", ":")) + "\n")
     print(
         f"Extracted {result['activeCount']} active entities and "
-        f"{result['collisionSphereCount']} collision spheres"
+        f"{result['collisionSphereCount']} collision spheres and "
+        f"{result['collisionSurfaceCount']} collision surfaces"
     )
 
 
