@@ -68,7 +68,7 @@ for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
   }
 }
 
-const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0};
+const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0,collisionMeshes:[]};
 const retailColliders=[];
 const retailCollisionSurfaces=[];
 const retailCollidedEntities=new Set();
@@ -126,7 +126,8 @@ async function loadStageOneCourse(){
   };
   const roadHeight=model.objects[0].bounds.min[1];
   for(const object of model.objects){
-    group.add(await makeObject(object,`course-chunk-${object.id}`));
+    const chunk=await makeObject(object,`course-chunk-${object.id}`);group.add(chunk);
+    chunk.traverse(child=>{if(child.isMesh)retailCourse.collisionMeshes.push(child);});
     const min=object.bounds.min,max=object.bounds.max;
     retailCourse.path.push({position:new THREE.Vector3((min[0]+max[0])/2,roadHeight,(min[2]+max[2])/2),distance:0,tangent:null});
   }
@@ -249,25 +250,35 @@ function readGamepad(){
   const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(slidePressed&&!gamepadState.slide)squareAction();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
 }
 const surfaceWorldVertices=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
+const groundRaycaster=new THREE.Raycaster();
+const groundRayOrigin=new THREE.Vector3();
+const downDirection=new THREE.Vector3(0,-1,0);
+const GROUND_STEP_HEIGHT=.2;
 function pointInTriangleXZ(px,pz,a,b,c){
   const edge=(u,v)=>(px-u.x)*(v.z-u.z)-(pz-u.z)*(v.x-u.x);
   const ab=edge(a,b),bc=edge(b,c),ca=edge(c,a);
   return(ab>=0&&bc>=0&&ca>=0)||(ab<=0&&bc<=0&&ca<=0);
 }
 function runnerGroundHeight(){
-  let height=GROUND_Y;
+  let height=-Infinity;
   const runnerX=state.x,runnerZ=rig.position.z;
+  groundRayOrigin.set(runnerX,50,runnerZ);groundRaycaster.set(groundRayOrigin,downDirection);groundRaycaster.far=100;
+  for(const contact of groundRaycaster.intersectObjects(retailCourse.collisionMeshes,false)){
+    if(state.y>=contact.point.y-GROUND_STEP_HEIGHT){height=Math.max(height,contact.point.y);break;}
+  }
   for(const surface of retailCollisionSurfaces){
     for(let index=0;index<4;index++)surface.object.localToWorld(surfaceWorldVertices[index].copy(surface.vertices[index]));
     const [a,b,c,d]=surfaceWorldVertices;
     if(!pointInTriangleXZ(runnerX,runnerZ,a,b,c)&&!pointInTriangleXZ(runnerX,runnerZ,b,d,c))continue;
     const surfaceHeight=(a.y+b.y+c.y+d.y)/4;
-    if(state.y>=surfaceHeight-.08)height=Math.max(height,surfaceHeight);
+    if(state.y>=surfaceHeight-GROUND_STEP_HEIGHT)height=Math.max(height,surfaceHeight);
   }
-  return height;
+  return Number.isFinite(height)?height:GROUND_Y;
 }
 function updateVerticalMotion(dt,groundHeight){
-  const wasGrounded=state.grounded;state.vy-=GRAVITY*dt;const nextY=state.y+state.vy*dt,landed=!wasGrounded&&state.vy<=0&&nextY<=groundHeight;
+  const wasGrounded=state.grounded;
+  if(wasGrounded&&Math.abs(state.y-groundHeight)<=GROUND_STEP_HEIGHT){state.y=groundHeight;state.vy=0;if(state.landingTime>0)state.landingTime+=dt;return;}
+  state.vy-=GRAVITY*dt;const nextY=state.y+state.vy*dt,landed=!wasGrounded&&state.vy<=0&&nextY<=groundHeight;
   if(nextY<=groundHeight&&state.vy<=0){state.y=groundHeight;state.vy=0;state.grounded=true;}else{state.y=nextY;state.grounded=false;state.jumpTime+=dt;}
   if(landed){state.jumpTime=0;state.landingTime=.0001;}else if(state.landingTime>0)state.landingTime+=dt;
 }
