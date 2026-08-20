@@ -70,6 +70,7 @@ for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
 
 const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0};
 const retailColliders=[];
+const retailCollisionSurfaces=[];
 const retailCollidedEntities=new Set();
 const upAxis=new THREE.Vector3(0,1,0);
 function coursePointAt(distance){
@@ -131,7 +132,9 @@ async function loadStageOneCourse(){
   }
   const propTemplates=await Promise.all(propModel.objects.map(object=>makeObject(object,`prop-template-${object.id}`)));
   const collisionSpheresByModel=Array.from({length:propModel.objects.length},()=>[]);
+  const collisionSurfacesByModel=Array.from({length:propModel.objects.length},()=>[]);
   for(const sphere of entityTable.collisionSpheres)collisionSpheresByModel[sphere.model].push(sphere);
+  for(const surface of entityTable.collisionSurfaces)collisionSurfacesByModel[surface.model].push(surface);
   for(const entity of entityTable.entities){
     if(!entity.active||entity.currentModel<0)continue;
     const prop=propTemplates[entity.currentModel].clone(true);prop.name=`retail-entity-${entity.id}`;
@@ -145,6 +148,11 @@ async function loadStageOneCourse(){
       collisionClass:sphere.collisionClass,
       collisionVariant:sphere.collisionVariant,
       reactionParameters:sphere.reactionParameters
+    });
+    for(const surface of collisionSurfacesByModel[entity.currentModel])retailCollisionSurfaces.push({
+      entityId:entity.id,
+      object:prop,
+      vertices:surface.vertices.map(vertex=>new THREE.Vector3().fromArray(vertex))
     });
   }
   for(let index=0;index<retailCourse.path.length;index++){
@@ -240,9 +248,27 @@ function readGamepad(){
   const stick=Math.abs(pad.axes[0]||0)>.16?pad.axes[0]:0,dpad=(pad.buttons[15]?.pressed?1:0)-(pad.buttons[14]?.pressed?1:0);input.gamepadX=THREE.MathUtils.clamp(stick||dpad,-1,1);gamepadState.forward=Boolean(pad.buttons[12]?.pressed);gamepadState.backward=Boolean(pad.buttons[13]?.pressed);
   const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(slidePressed&&!gamepadState.slide)squareAction();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
 }
-function updateVerticalMotion(dt){
-  const wasGrounded=state.grounded;state.vy-=GRAVITY*dt;const nextY=state.y+state.vy*dt,landed=!wasGrounded&&state.vy<=0&&nextY<=GROUND_Y;
-  if(nextY<=GROUND_Y&&state.vy<=0){state.y=GROUND_Y;state.vy=0;state.grounded=true;}else{state.y=nextY;state.grounded=false;state.jumpTime+=dt;}
+const surfaceWorldVertices=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
+function pointInTriangleXZ(px,pz,a,b,c){
+  const edge=(u,v)=>(px-u.x)*(v.z-u.z)-(pz-u.z)*(v.x-u.x);
+  const ab=edge(a,b),bc=edge(b,c),ca=edge(c,a);
+  return(ab>=0&&bc>=0&&ca>=0)||(ab<=0&&bc<=0&&ca<=0);
+}
+function runnerGroundHeight(){
+  let height=GROUND_Y;
+  const runnerX=state.x,runnerZ=rig.position.z;
+  for(const surface of retailCollisionSurfaces){
+    for(let index=0;index<4;index++)surface.object.localToWorld(surfaceWorldVertices[index].copy(surface.vertices[index]));
+    const [a,b,c,d]=surfaceWorldVertices;
+    if(!pointInTriangleXZ(runnerX,runnerZ,a,b,c)&&!pointInTriangleXZ(runnerX,runnerZ,b,d,c))continue;
+    const surfaceHeight=(a.y+b.y+c.y+d.y)/4;
+    if(state.y>=surfaceHeight-.08)height=Math.max(height,surfaceHeight);
+  }
+  return height;
+}
+function updateVerticalMotion(dt,groundHeight){
+  const wasGrounded=state.grounded;state.vy-=GRAVITY*dt;const nextY=state.y+state.vy*dt,landed=!wasGrounded&&state.vy<=0&&nextY<=groundHeight;
+  if(nextY<=groundHeight&&state.vy<=0){state.y=groundHeight;state.vy=0;state.grounded=true;}else{state.y=nextY;state.grounded=false;state.jumpTime+=dt;}
   if(landed){state.jumpTime=0;state.landingTime=.0001;}else if(state.landingTime>0)state.landingTime+=dt;
 }
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
@@ -280,8 +306,8 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     state.sprint=Math.max(0,state.sprint-dt);state.brake=Math.max(0,state.brake-dt);const baseSpeed=Math.min(25,12+state.distance/500);state.speed=baseSpeed*(state.sprint>0?1.3:state.brake>0?.62:1);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
     const keyboardSteering=(input.right?1:0)-(input.left?1:0),steering=keyboardSteering||input.gamepadX,targetVx=steering*STEER_SPEED;
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-ROAD_EDGE_X,ROAD_EDGE_X);if(Math.abs(state.x)===ROAD_EDGE_X&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
-    updateVerticalMotion(dt);state.slide=Math.max(0,state.slide-dt);
     updateRetailCourse(state.distance);
+    scene.updateMatrixWorld(true);updateVerticalMotion(dt,runnerGroundHeight());state.slide=Math.max(0,state.slide-dt);
     rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=state.slide>0?.0048:.008;
     const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingContactTime=LANDING_CONTACT_FRAME/landingClip.fps,landingRecoveryDuration=(landingClip.frameCount-1-LANDING_CONTACT_FRAME)/landingClip.fps;
     if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false,true);
@@ -305,4 +331,4 @@ document.querySelectorAll("[data-control]").forEach(button=>{const control=butto
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailColliders.length} COLLIDERS`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
