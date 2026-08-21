@@ -7,6 +7,9 @@ const RETAIL_TEXTURE_ROOT = "./assets/ripped/textures/0/";
 const STAGE_ONE_SPRITE_ROOT = "./assets/ripped/textures/2/";
 const RETAIL_WORLD_SCALE = .008;
 const RETAIL_PICKUP_RADIUS = 50 * RETAIL_WORLD_SCALE;
+const RETAIL_ENCOUNTER_PROXIMITY = 600 * RETAIL_WORLD_SCALE;
+const RETAIL_REACTION_FPS = 30;
+const RETAIL_REACTION_FRAMES = 15;
 const lanes = [-2.25, 0, 2.25];
 const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
@@ -175,22 +178,26 @@ async function loadStageOneCourse(){
     retailCollectibles.push({id:collectible.id,sprite});
   }
   retailCourse.collectibleCount=retailCollectibles.length;
-  const encounterFrameIds=[...new Set(entityTable.encounterRecords.filter(record=>record.active).map(record=>record.spriteFrameId))];
+  const activeEncounterRecords=entityTable.encounterRecords.filter(record=>record.active);
+  const encounterFrameIds=[...new Set(activeEncounterRecords.flatMap(record=>{
+    const behaviorState=record.runtimeBytes36To39[2]&0x3f;
+    return behaviorState===1||behaviorState===2?[record.spriteFrameId,record.spriteFrameId+1]:[record.spriteFrameId];
+  }))];
   const encounterMaterials=new Map(await Promise.all(encounterFrameIds.map(async frameId=>{
     const texture=await textureLoader.loadAsync(`${STAGE_ONE_SPRITE_ROOT}2005-${String(frameId).padStart(3,"0")}.png`);
     texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
     return[frameId,new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:false})];
   })));
-  const linkedEventIds=new Set(entityTable.encounterRecords.filter(record=>record.active).map(record=>record.eventRecordIndex));
+  const linkedEventIds=new Set(activeEncounterRecords.map(record=>record.eventRecordIndex));
   for(const event of entityTable.eventRecords){
     if(!linkedEventIds.has(event.id))continue;
     retailEvents.set(event.id,{id:event.id,state:0,vertices:event.triggerVertices.map(vertex=>new THREE.Vector3().fromArray(vertex))});
   }
-  for(const encounter of entityTable.encounterRecords){
-    if(!encounter.active)continue;
+  for(const encounter of activeEncounterRecords){
     const sprite=new THREE.Sprite(encounterMaterials.get(encounter.spriteFrameId));sprite.name=`retail-encounter-${encounter.id}`;sprite.position.fromArray(encounter.position);
     const height=Math.abs(encounter.field30),width=height*.5*(encounter.field28<0?-1:1);sprite.scale.set(width,height,1);sprite.center.set(.5,0);sprite.visible=false;group.add(sprite);
-    retailEncounters.push({id:encounter.id,eventId:encounter.eventRecordIndex,sprite,collisionEnabled:Boolean(encounter.runtimeBytes36To39[2]&0x80),radius:Math.abs(encounter.field32)/3*RETAIL_WORLD_SCALE});
+    const behaviorState=encounter.runtimeBytes36To39[2]&0x3f;
+    retailEncounters.push({id:encounter.id,eventId:encounter.eventRecordIndex,sprite,basePosition:sprite.position.clone(),baseMaterial:sprite.material,nextMaterial:encounterMaterials.get(encounter.spriteFrameId+1),behaviorState,collisionEnabled:Boolean(encounter.runtimeBytes36To39[2]&0x80),radius:Math.abs(encounter.field32)/3*RETAIL_WORLD_SCALE,reaction:null,removed:false});
   }
   retailCourse.encounterCount=retailEncounters.length;
   retailCourse.path.unshift({position:new THREE.Vector3().fromArray(entityTable.eventRecords[0].triggerCenter),distance:0,tangent:null});
@@ -323,12 +330,13 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=0;for(const encounter of retailEncounters)encounter.sprite.visible=false;state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=0;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
 
 const collisionCenter=new THREE.Vector3();
 const collectibleCenter=new THREE.Vector3();
+const playerCoursePosition=new THREE.Vector3();
 const eventWorldVertices=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const playerProbeCenters=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const PLAYER_PROBE_RADII=[20*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE];
@@ -365,7 +373,7 @@ function testRetailCollectibles(){
     }
   }
 }
-function updateRetailEncounters(){
+function updateRetailEncounters(dt){
   if(!retailCourse.ready||!rig)return;
   for(const event of retailEvents.values()){
     if(event.state!==0)continue;
@@ -375,13 +383,36 @@ function updateRetailEncounters(){
   }
   updatePlayerProbeCenters();
   for(const encounter of retailEncounters){
-    encounter.sprite.visible=retailEvents.get(encounter.eventId)?.state===1;
+    if(encounter.removed){encounter.sprite.visible=false;continue;}
+    const eventActive=retailEvents.get(encounter.eventId)?.state===1;
+    encounter.sprite.visible=eventActive;
+    if(encounter.reaction){
+      encounter.reaction.elapsed+=dt;
+      const frame=Math.floor(encounter.reaction.elapsed*RETAIL_REACTION_FPS)+1;
+      if(frame>RETAIL_REACTION_FRAMES){encounter.removed=true;encounter.sprite.visible=false;continue;}
+      const travel=frame*20,angle=THREE.MathUtils.degToRad(frame*10);
+      encounter.sprite.position.copy(encounter.basePosition).addScaledVector(encounter.reaction.direction,travel);encounter.sprite.position.y+=Math.abs(Math.sin(angle))*200;
+      encounter.sprite.visible=eventActive&&frame%3!==0;
+      continue;
+    }
+    if(encounter.behaviorState===1){
+      encounter.sprite.getWorldPosition(collisionCenter);
+      const close=Math.abs(collisionCenter.x-rig.position.x)<RETAIL_ENCOUNTER_PROXIMITY&&Math.abs(collisionCenter.z-rig.position.z)<RETAIL_ENCOUNTER_PROXIMITY;
+      encounter.sprite.material=close&&encounter.nextMaterial?encounter.nextMaterial:encounter.baseMaterial;
+    }
     if(!encounter.sprite.visible||!encounter.collisionEnabled||retailCollidedEncounterIds.has(encounter.id))continue;
     encounter.sprite.getWorldPosition(collisionCenter);
     for(let probeIndex=0;probeIndex<playerProbeCenters.length;probeIndex++){
       const combinedRadius=encounter.radius+PLAYER_PROBE_RADII[probeIndex];
       if(collisionCenter.distanceToSquared(playerProbeCenters[probeIndex])>combinedRadius*combinedRadius)continue;
-      retailCollidedEncounterIds.add(encounter.id);hit();break;
+      retailCollidedEncounterIds.add(encounter.id);
+      if(encounter.behaviorState===2&&encounter.nextMaterial){
+        encounter.sprite.material=encounter.nextMaterial;
+        playerCoursePosition.copy(rig.position);retailCourse.group.worldToLocal(playerCoursePosition);
+        const direction=encounter.basePosition.clone().sub(playerCoursePosition);direction.y=0;if(direction.lengthSq()<1)direction.set(0,0,-1);direction.normalize();
+        encounter.reaction={elapsed:0,direction};
+      }
+      hit();break;
     }
   }
 }
@@ -404,7 +435,7 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     else if(state.landingTime>0&&state.landingTime<=landingRecoveryDuration)sampleAnimation(landingClip,landingContactTime+state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
-    updateRetailEncounters();testRetailCollectibles();testRetailCollisions();
+    updateRetailEncounters(dt);testRetailCollectibles();testRetailCollisions();
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
     updateHud();
   } else if(rig){rig.visible=true;sampleAnimation(idleClip,now);updateRetailCourse(0);}
