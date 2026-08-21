@@ -156,6 +156,21 @@ zero-filled pickup byte while retaining each source record and the source SHA-25
 The browser still requires the scene-2 overlay controllers and authored movement
 path before this set-piece can be registered as playable.
 
+The scene-2 overlay supplies a second, independent authored actor stream. At
+`0x800f6c60`, the retail code copies exactly 103 packed 16-byte records from
+overlay offset `0x7490` into 20-byte runtime slots. Each source record is a
+16-bit controller type followed by three signed coordinates; runtime dispatch at
+`0x800f5e44` selects one of the function pointers at overlay offset `0x7b0c`.
+The authored records use controller types 0 through 7 and span forward coordinate
+700 through 29,500. Two deliberately non-monotonic groups remain in source order
+(records 68 and 76), so the browser must not sort the stream. The overlay also
+starts with a 61-entry top-level scene-state jump table used by `0x800f4794`.
+`tools/extract_stage_overlay_setpiece.py` validates all overlay pointers and table
+boundaries, preserves every raw actor record and exports both dispatch tables to
+`assets/ripped/stages/4/4000-overlay-setpiece.json`. Controller semantics and the
+browser coordinate mapping remain unassigned until their eight handlers are
+decoded; the new export is provenance data, not a guessed obstacle implementation.
+
 The first retail moving-entity dispatch is also connected. Overlay behaviors 1 and
 2 route through `0x800f9190`/`0x800f9274`; their subtype supplies speeds in ten-unit
 steps, and the shared movement controllers limit the active motion counter to 150
