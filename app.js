@@ -2,9 +2,11 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.m
 import { applyExtractedPelvisMotion, applySetupTransform, TOD_TRANSLATION_SCALE } from "./rig-math.js";
 
 const ASSET_ROOT = "./assets/ripped/pepsiman/";
-const STAGE_ONE_ROOT = "./assets/ripped/stages/2/";
+const RETAIL_SEGMENTS = {
+  0:{root:"./assets/ripped/stages/2/",world:"2003",props:"2004",entities:"2006-entities",spriteRoot:"./assets/ripped/textures/2/",spritePack:"2005"},
+  1:{root:"./assets/ripped/stages/3/",world:"3003",props:"3004",entities:"3006-entities",spriteRoot:"./assets/ripped/textures/3/",spritePack:"3005"}
+};
 const RETAIL_TEXTURE_ROOT = "./assets/ripped/textures/0/";
-const STAGE_ONE_SPRITE_ROOT = "./assets/ripped/textures/2/";
 const RETAIL_WORLD_SCALE = .008;
 const RETAIL_PICKUP_RADIUS = 50 * RETAIL_WORLD_SCALE;
 const RETAIL_ENCOUNTER_PROXIMITY = 600 * RETAIL_WORLD_SCALE;
@@ -123,23 +125,29 @@ function updateRetailCourse(distance){
   const anchor=sample.position.clone().multiplyScalar(RETAIL_WORLD_SCALE).applyAxisAngle(upAxis,yaw);
   retailCourse.group.position.set(-anchor.x,-anchor.y,1.3-anchor.z);
 }
-async function loadStageOneCourse(){
+function unloadRetailCourse(){
+  retailCourse.group?.removeFromParent();retailCourse.group=null;retailCourse.path.length=0;retailCourse.length=0;retailCourse.ready=false;retailCourse.chunkCount=0;retailCourse.visiblePropCount=0;retailCourse.collectibleCount=0;retailCourse.encounterCount=0;retailCourse.collisionMeshes.length=0;
+  retailColliders.length=0;retailCollisionSurfaces.length=0;retailCollectibles.length=0;retailEvents.clear();retailEncounters.length=0;retailPropTemplates=[];
+}
+async function loadRetailCourse(segmentIndex=0){
+  const resources=RETAIL_SEGMENTS[segmentIndex];if(!resources)throw new Error(`Retail segment ${segmentIndex} has not been extracted yet`);
+  unloadRetailCourse();
   const [model,propModel,entityTable,retailFlow]=await Promise.all([
-    fetch(`${STAGE_ONE_ROOT}2003.json`).then(response=>response.json()),
-    fetch(`${STAGE_ONE_ROOT}2004.json`).then(response=>response.json()),
-    fetch(`${STAGE_ONE_ROOT}2006-entities.json`).then(response=>response.json()),
+    fetch(`${resources.root}${resources.world}.json`).then(response=>response.json()),
+    fetch(`${resources.root}${resources.props}.json`).then(response=>response.json()),
+    fetch(`${resources.root}${resources.entities}.json`).then(response=>response.json()),
     fetch("./assets/ripped/retail-flow.json").then(response=>response.json())
   ]);
-  stageOneEndingFlow=retailFlow.scenes.find(scene=>scene.sceneIndex===0)?.ending||null;
-  stageOneScriptedFlow=retailFlow.stageOneScriptedEvents.find(event=>event.eventRecordIndex===194)||null;
+  stageOneEndingFlow=retailFlow.scenes.find(scene=>scene.sceneIndex===segmentIndex)?.ending||null;
+  stageOneScriptedFlow=segmentIndex===0?retailFlow.stageOneScriptedEvents.find(event=>event.eventRecordIndex===194)||null:null;
   retailFinishFlow=retailFlow.finishController||null;
-  const group=new THREE.Group();group.name="retail-stage-1-course";group.scale.setScalar(RETAIL_WORLD_SCALE);world.add(group);
+  const group=new THREE.Group();group.name=`retail-segment-${segmentIndex}-course`;group.scale.setScalar(RETAIL_WORLD_SCALE);world.add(group);
   const textureLoader=new THREE.TextureLoader(),materials=new Map();
   const materialFor=name=>{
     if(materials.has(name))return materials.get(name);
     const pending=(async()=>{
       if(name==="vertex-color")return new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
-      const texture=await textureLoader.loadAsync(`${STAGE_ONE_ROOT}textures/${name.slice(4)}.png`);
+      const texture=await textureLoader.loadAsync(`${resources.root}textures/${name.slice(4)}.png`);
       texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
       return new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
     })();
@@ -205,12 +213,12 @@ async function loadStageOneCourse(){
     return behaviorState===1||behaviorState===2?[record.spriteFrameId,record.spriteFrameId+1]:[record.spriteFrameId];
   }))];
   const encounterMaterials=new Map(await Promise.all(encounterFrameIds.map(async frameId=>{
-    const texture=await textureLoader.loadAsync(`${STAGE_ONE_SPRITE_ROOT}2005-${String(frameId).padStart(3,"0")}.png`);
+    const texture=await textureLoader.loadAsync(`${resources.spriteRoot}${resources.spritePack}-${String(frameId).padStart(3,"0")}.png`);
     texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
     return[frameId,new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:false})];
   })));
   const encounterActivationEventIds=new Set(activeEncounterRecords.map(record=>record.eventRecordIndex));
-  const linkedEventIds=new Set([...encounterActivationEventIds].flatMap(eventId=>[eventId,eventId+1]));linkedEventIds.add(194);linkedEventIds.add(196);
+  const linkedEventIds=new Set([...encounterActivationEventIds].flatMap(eventId=>[eventId,eventId+1]));if(segmentIndex===0){linkedEventIds.add(194);linkedEventIds.add(196);}
   for(const event of entityTable.eventRecords){
     if(!linkedEventIds.has(event.id))continue;
     retailEvents.set(event.id,{id:event.id,initialState:event.initialState,state:event.initialState,vertices:event.triggerVertices.map(vertex=>new THREE.Vector3().fromArray(vertex))});
@@ -239,6 +247,7 @@ async function loadStageOneCourse(){
     if(index>0)retailCourse.path[index].distance=retailCourse.path[index-1].distance+retailCourse.path[index].position.distanceTo(retailCourse.path[index-1].position)*RETAIL_WORLD_SCALE;
   }
   retailCourse.group=group;retailCourse.length=retailCourse.path.at(-1).distance;retailCourse.ready=true;prototypeRoad.visible=false;prototypeBuildings.visible=false;updateRetailCourse(0);
+  state.segmentIndex=segmentIndex;
 }
 
 let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, proneClip;
@@ -317,7 +326,7 @@ function sampleAnimation(clip,time,loop=true,lockPelvisHeight=false){
 
 const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
-const state={running:false,completed:false,ending:null,scripted:null,results:null,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,elapsed:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
+const state={running:false,completed:false,ending:null,scripted:null,results:null,segmentIndex:0,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,elapsed:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function playerControlLocked(){return Boolean(state.ending||(state.scripted&&state.scripted.phase<4));}
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
 function jump(){if(state.running&&!playerControlLocked()&&state.grounded&&state.slide<=0){state.vy=JUMP_VELOCITY;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
@@ -364,7 +373,7 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginStageOneEnding(){
   if(!state.running||state.ending||!stageOneEndingFlow)return;
@@ -392,7 +401,12 @@ function updateStageOneEnding(dt){
   }
 }
 function setRetailDigits(element,text){const glyphs={":":10,"/":11};element.replaceChildren(...[...text].map(character=>{const glyph=document.createElement("i");glyph.style.setProperty("--glyph",glyphs[character]??Number(character));return glyph;}));}
-function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0};ui.music.pause();ui.over.className="game-over retail-clear";ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;setRetailDigits(ui.resultCans,"000");const minutes=Math.floor(state.elapsed/60),seconds=Math.floor(state.elapsed%60);setRetailDigits(ui.resultTime,`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`);ui.over.hidden=false;}
+function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0,transitioning:false};ui.music.pause();ui.over.className="game-over retail-clear";ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.hidden=true;ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;setRetailDigits(ui.resultCans,"000");const minutes=Math.floor(state.elapsed/60),seconds=Math.floor(state.elapsed%60);setRetailDigits(ui.resultTime,`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`);ui.over.hidden=false;}
+async function advanceRetailSegment(){
+  const nextSegment=state.segmentIndex+1;
+  try{await loadRetailCourse(nextSegment);startGame();}
+  catch(error){console.error(error);ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";}
+}
 function updateRetailResults(dt){
   if(!state.results||!retailFinishFlow)return;
   state.results.elapsed+=dt;const frame=Math.floor(state.results.elapsed*RETAIL_FPS),milestones=retailFinishFlow.resultRevealMilestones;
@@ -400,7 +414,9 @@ function updateRetailResults(dt){
   ui.over.classList.toggle("results-slot-1",frame>=milestones.effectSlot1Frame);
   ui.over.classList.toggle("results-slot-2",frame>=milestones.effectSlot2Frame);
   if(frame>=milestones.countStartFrame){const displayCans=Math.min(state.cans,frame-milestones.countStartFrame);if(displayCans!==state.results.displayCans){state.results.displayCans=displayCans;setRetailDigits(ui.resultCans,String(displayCans).padStart(3,"0"));}}
-  ui.over.classList.toggle("results-complete",frame>=milestones.countStartFrame+state.cans+60);
+  const effectCompleteFrame=milestones.countStartFrame+state.cans+60;
+  ui.over.classList.toggle("results-complete",frame>=effectCompleteFrame);
+  if(!state.results.transitioning&&frame>=effectCompleteFrame+retailFinishFlow.transitionDelayFrames){state.results.transitioning=true;advanceRetailSegment();}
 }
 function beginStageOneScriptedEvent(){
   if(!state.running||state.scripted||!stageOneScriptedFlow)return;
@@ -563,4 +579,4 @@ document.querySelectorAll("[data-control]").forEach(button=>{const control=butto
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.chunkCount} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.collectibleCount} RETAIL CANS · ${retailCourse.encounterCount} TRIGGERED ENCOUNTERS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadRetailCourse(0)]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.chunkCount} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.collectibleCount} RETAIL CANS · ${retailCourse.encounterCount} TRIGGERED ENCOUNTERS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});

@@ -112,8 +112,13 @@ prop objects with 3,309 triangles, 271 authored course points, and browser spawn
 validates 125 active entities, 302 collision spheres, 9 landing surfaces, 106 active
 event records, 99 active encounter records, and 100 course-indexed Pepsi pickups.
 The entity pack retains an 8,248-byte embedded TOD beginning at the same `0x10708`
-offset used by family 2. These assets are preserved under `assets/ripped/stages/3`;
-runtime integration is the next delivery batch.
+offset used by family 2. These assets are preserved under `assets/ripped/stages/3`.
+The browser course loader is now segment-aware and, after the result effect and
+the proven 9-frame handoff, replaces family 2 with the original family-3 world,
+props, collisions, pickups, encounters, authored path, and spawn. Family-2-only
+event IDs 194 and 196 are not injected into the second segment. The second
+segment's overlay-specific scripted events and ending trigger still require the
+same controller-level reconstruction already completed for family 2.
 
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 
@@ -131,7 +136,7 @@ The two fourteen-record destination tables at executable addresses `0x8007ae1c` 
 
 State 5 starts the shared retail result effect with `0x8003e444` and polls `0x8003e544` until it completes. The actually dispatched result updater is `0x8003cc94`. Its initial state activates effect slot 0 at frame 0, writes the slot-1 position offset at frame 24, activates slot 1 at frame 40, slots 2 and 3 at frames 64 and 68, and enters the Pepsi-count phase at frame 80. These are executable-derived frame boundaries, not timings estimated from video. The relationship between these moving slots and individual pieces of extracted artwork is still kept separate from the proven timings.
 
-The browser now drives its original-art results overlay from those exact boundaries and counts the collected Pepsi total upward from frame 80. The current visual assignment of effect slots to the title and two scorecard rows is a presentation approximation pending a complete retail draw-call-to-PIC registration map; the source JSON deliberately names raw effect slots rather than claiming those artwork identities.
+The browser now drives its original-art results overlay from those exact boundaries and counts the collected Pepsi total upward from frame 80. The current visual assignment of effect slots to the title and two scorecard rows is a presentation approximation pending a complete retail draw-call-to-PIC registration map; the source JSON deliberately names raw effect slots rather than claiming those artwork identities. Its current effect-completion estimate is the count start plus one frame per collected can and a 60-frame settle, after which the proven 9-frame transition delay is applied. The estimate will be replaced once the remaining score/record branches of `0x8003cc94` are fully decoded.
 
 State 6 waits for the overlay child controller and the global transition guard at `0x800958f8`. State 7 handles the special mode-3 exit. In the ordinary retail path, state 8 waits 9 frames and calls the lookup at `0x80041158`: its first table is the next-segment map `[1, 2, ..., 15, 0]`, so scene index 0 advances to scene index 1 (`CDDATA/3`). The adjacent `[2,2,2,3,3,3,...]` table is the retail stage-number grouping. The full score-count and record-comparison branches of the result effect remain under reconstruction.
 
