@@ -198,7 +198,7 @@ async function loadRetailCourse(segmentIndex=0){
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
     prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
     let dynamic=null;
-    if([1,2,5,6,7,8,15,44,45].includes(entity.behavior)){
+    if([1,2,5,6,7,8,15,44,45,46].includes(entity.behavior)){
       dynamic={entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),baseModel:entity.currentModel,currentModel:entity.currentModel,collisionSpheresByModel,scaleFactor:Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),colliders:[],courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false};
       retailDynamicEntities.push(dynamic);
     }
@@ -525,6 +525,14 @@ function updateRetailDynamicEntities(dt){
     if(state.distance>dynamic.courseDistance+24){dynamic.object.visible=false;continue;}
     if(dynamic.behavior===44||dynamic.behavior===45)continue;
     const frameDelta=dt*RETAIL_FPS;
+    if(dynamic.behavior===46){
+      dynamic.ageFrames=state.elapsed*RETAIL_FPS;
+      const amplitude=dynamic.variant===1?250:125,sideHeading=dynamic.initialHeading+(dynamic.variant===1?Math.PI*1.5:Math.PI*.5),radius=Math.sin(THREE.MathUtils.degToRad(dynamic.ageFrames*3))*amplitude;
+      dynamic.object.position.x=dynamic.basePosition.x-Math.sin(sideHeading)*radius;
+      dynamic.object.position.y=dynamic.basePosition.y-Math.abs(Math.sin(THREE.MathUtils.degToRad(dynamic.ageFrames*20))*41);
+      dynamic.object.position.z=dynamic.basePosition.z-Math.cos(sideHeading)*radius;
+      continue;
+    }
     if(dynamic.behavior<=2||dynamic.behavior===15){
       const motionFrames=dynamic.behavior===15||dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
       if(dynamic.ageFrames>=motionFrames)continue;
