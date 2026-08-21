@@ -197,16 +197,15 @@ async function loadRetailCourse(segmentIndex=0){
     const prop=propTemplates[entity.currentModel].clone(true);prop.name=`retail-entity-${entity.id}`;
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
     prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
-    if([1,2,5,6,7,8,15].includes(entity.behavior))retailDynamicEntities.push({entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false});
-    for(const sphere of collisionSpheresByModel[entity.currentModel])retailColliders.push({
-      entityId:entity.id,
-      object:prop,
-      center:new THREE.Vector3().fromArray(sphere.center),
-      radius:sphere.radius*RETAIL_WORLD_SCALE*Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),
-      collisionClass:sphere.collisionClass,
-      collisionVariant:sphere.collisionVariant,
-      reactionParameters:sphere.reactionParameters
-    });
+    let dynamic=null;
+    if([1,2,5,6,7,8,15,44,45].includes(entity.behavior)){
+      dynamic={entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),baseModel:entity.currentModel,currentModel:entity.currentModel,collisionSpheresByModel,scaleFactor:Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),colliders:[],courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false};
+      retailDynamicEntities.push(dynamic);
+    }
+    for(const sphere of collisionSpheresByModel[entity.currentModel]){
+      const collider={entityId:entity.id,object:prop,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
+      retailColliders.push(collider);dynamic?.colliders.push(collider);
+    }
     for(const surface of collisionSurfacesByModel[entity.currentModel])retailCollisionSurfaces.push({
       entityId:entity.id,
       object:prop,
@@ -263,7 +262,7 @@ async function loadRetailCourse(segmentIndex=0){
     retailCourse.path[index].tangent=next.clone().sub(previous).normalize();
     if(index>0)retailCourse.path[index].distance=retailCourse.path[index-1].distance+retailCourse.path[index].position.distanceTo(retailCourse.path[index-1].position)*RETAIL_WORLD_SCALE;
   }
-  for(const dynamic of retailDynamicEntities){const localPosition=dynamic.basePosition.clone();dynamic.courseDistance=nearestCourseDistance(localPosition);dynamic.object.visible=false;}
+  for(const dynamic of retailDynamicEntities){const localPosition=dynamic.basePosition.clone();dynamic.courseDistance=nearestCourseDistance(localPosition);dynamic.object.visible=[44,45].includes(dynamic.behavior);}
   retailCourse.group=group;retailCourse.length=retailCourse.path.at(-1).distance;retailCourse.ready=true;prototypeRoad.visible=false;prototypeBuildings.visible=false;updateRetailCourse(0);
   state.segmentIndex=segmentIndex;
 }
@@ -391,8 +390,20 @@ function updateVerticalMotion(dt,groundHeight){
 }
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
+function setRetailDynamicModel(dynamic,modelIndex){
+  if(dynamic.currentModel===modelIndex)return;
+  const replacement=retailPropTemplates[modelIndex]?.clone(true);if(!replacement)return;
+  dynamic.object.clear();for(const child of [...replacement.children])dynamic.object.add(child);
+  const profiles=dynamic.collisionSpheresByModel[modelIndex]||[];
+  dynamic.colliders.forEach((collider,index)=>{
+    const profile=profiles[index];
+    if(!profile){collider.collisionClass=0;return;}
+    collider.center.fromArray(profile.center);collider.radius=profile.radius*RETAIL_WORLD_SCALE*dynamic.scaleFactor;collider.collisionClass=profile.collisionClass;collider.collisionVariant=profile.collisionVariant;collider.reactionParameters=profile.reactionParameters;
+  });
+  dynamic.currentModel=modelIndex;
+}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const dynamic of retailDynamicEntities){dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=false;dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[44,45].includes(dynamic.behavior);dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginStageOneEnding(){
   if(!state.running||state.ending||!stageOneEndingFlow)return;
@@ -504,10 +515,15 @@ function updateRetailDynamicEntities(dt){
       if(dynamic.behavior===7||dynamic.behavior===8){
         dynamic.object.getWorldPosition(dynamicWorldPosition);
         if(dynamicWorldPosition.distanceTo(rig.position)>=3000*RETAIL_WORLD_SCALE)continue;
+      }else if(dynamic.behavior===44||dynamic.behavior===45){
+        dynamic.object.getWorldPosition(dynamicWorldPosition);
+        if(dynamicWorldPosition.distanceTo(rig.position)>=(dynamic.variant+1)*500*RETAIL_WORLD_SCALE)continue;
       }else if(state.distance<dynamic.courseDistance-18||state.distance>dynamic.courseDistance+8)continue;
       dynamic.active=true;dynamic.object.visible=true;
+      if(dynamic.behavior===44||dynamic.behavior===45)setRetailDynamicModel(dynamic,dynamic.baseModel+(dynamic.behavior===44?1:-1));
     }
     if(state.distance>dynamic.courseDistance+24){dynamic.object.visible=false;continue;}
+    if(dynamic.behavior===44||dynamic.behavior===45)continue;
     const frameDelta=dt*RETAIL_FPS;
     if(dynamic.behavior<=2||dynamic.behavior===15){
       const motionFrames=dynamic.behavior===15||dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
