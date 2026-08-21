@@ -161,8 +161,12 @@ Behavior 15 drives the larger model-76/model-78 vehicles through wrapper
 `0x800f95d8` and the shared vehicle controller at `0x800f3304`. For the active
 records in the extracted segments, the subtype maps directly to 20, 30, or 40
 source units per frame and the pre-impact controller advances continuously along
-the authored heading. That proven pre-impact movement is connected in the browser;
-the controller's separate collision/crash phase still remains to be reproduced.
+the authored heading while subtracting 120 from game-space Y each frame. The
+controller renders both the entity's selected model and the next model ID from a
+stack copy, so the model-76 and model-78 records are compound vehicles rather than
+single meshes. The browser now moves both original component meshes and both sets
+of collision spheres together. The controller's separate collision/crash phase
+still remains to be reproduced.
 
 Behavior 18 dispatches through `0x800f9700` to the paired-vehicle controller at
 `0x800f36d4`. State 0 allocates a copy of the 72-byte entity record, increments
@@ -176,6 +180,16 @@ by 11 angle units per frame, and the paired heading increases by 5. The browser
 now reproduces the paired mesh/collider allocation, movement, deceleration, jitter,
 and opposite rotations. The particle constructor called during the skid remains
 queued with the broader retail effects work.
+
+Behavior 43 uses wrapper `0x800f976c` and the same shared controller at
+`0x800f3304`. Its active subtype 3 selects 10 source units per frame, mode 4, and
+a 500-unit parameter; it also renders the compound model-78/model-79 pair and
+applies the controller's -120 game-space Y update. Those proven transforms and
+both collision profiles are connected. Mode 4 exits the movement phase based on
+the signed difference between the global course index and the result of course
+lookup helper `0x8002aeb8`; translating that index lifecycle exactly remains
+pending, so the browser currently retains the moving pair until its normal
+visibility cutoff.
 
 Behaviors 44 and 45 are paired proximity model swaps rather than continuous
 motion. Both dispatch through `0x800fa3c0` into `0x800f721c`; subtypes 0, 1, and 2

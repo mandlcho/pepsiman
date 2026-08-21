@@ -198,9 +198,9 @@ async function loadRetailCourse(segmentIndex=0){
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
     prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
     let dynamic=null;
-    if([1,2,5,6,7,8,15,18,20,44,45,46].includes(entity.behavior)){
+    if([1,2,5,6,7,8,15,18,20,43,44,45,46].includes(entity.behavior)){
       dynamic={entityId:entity.id,object:prop,secondary:null,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),baseModel:entity.currentModel,currentModel:entity.currentModel,collisionSpheresByModel,scaleFactor:Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),colliders:[],courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false};
-      if(entity.behavior===18&&propTemplates[entity.currentModel+1]){
+      if([15,18,43].includes(entity.behavior)&&propTemplates[entity.currentModel+1]){
         const secondary=propTemplates[entity.currentModel+1].clone(true);secondary.name=`retail-entity-${entity.id}-paired`;secondary.position.copy(prop.position);secondary.rotation.copy(prop.rotation);secondary.scale.copy(prop.scale);secondary.visible=false;group.add(secondary);dynamic.secondary=secondary;
       }
       retailDynamicEntities.push(dynamic);
@@ -539,8 +539,8 @@ function updateRetailDynamicEntities(dt){
         if(dynamicWorldPosition.distanceTo(rig.position)>=(dynamic.variant+1)*500*RETAIL_WORLD_SCALE)continue;
       }else if(state.distance<dynamic.courseDistance-18||state.distance>dynamic.courseDistance+8)continue;
       dynamic.active=true;dynamic.object.visible=true;
-      if(dynamic.behavior===18){
-        dynamic.object.position.y=dynamic.basePosition.y+150;
+      if([15,18,43].includes(dynamic.behavior)){
+        if(dynamic.behavior===18)dynamic.object.position.y=dynamic.basePosition.y+150;
         if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.object.position);dynamic.secondary.visible=true;}
       }
       if(dynamic.behavior===44||dynamic.behavior===45)setRetailDynamicModel(dynamic,dynamic.baseModel+(dynamic.behavior===44?1:-1));
@@ -580,14 +580,14 @@ function updateRetailDynamicEntities(dt){
       }
       continue;
     }
-    if(dynamic.behavior<=2||dynamic.behavior===15){
-      const motionFrames=dynamic.behavior===15||dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
+    if(dynamic.behavior<=2||dynamic.behavior===15||dynamic.behavior===43){
+      const motionFrames=dynamic.behavior===15||dynamic.behavior===43||dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
       if(dynamic.ageFrames>=motionFrames)continue;
       dynamic.ageFrames=Math.min(motionFrames,dynamic.ageFrames+frameDelta);
-      const speed=(dynamic.behavior===15?dynamic.variant:dynamic.variant<=10?dynamic.variant:dynamic.variant-10)*10;
+      const speed=dynamic.behavior===43?10:(dynamic.behavior===15?dynamic.variant:dynamic.variant<=10?dynamic.variant:dynamic.variant-10)*10;
       const distance=speed*frameDelta;
-      dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;
-      dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;
+      moveRetailDynamicPair(dynamic,distance);
+      if(dynamic.behavior===15||dynamic.behavior===43){dynamic.object.position.y+=120*frameDelta;if(dynamic.secondary)dynamic.secondary.position.y+=120*frameDelta;}
       continue;
     }
     const variantIndex=Math.max(0,dynamic.variant-1),group=Math.floor(variantIndex/5),withinGroup=variantIndex%5;
