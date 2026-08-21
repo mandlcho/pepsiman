@@ -30,6 +30,8 @@ EVENT_RECORD_SIZE = 0x5C
 ENCOUNTER_RECORDS_OFFSET = 0xE798
 ENCOUNTER_RECORD_COUNT = 100
 ENCOUNTER_RECORD_SIZE = 0x3C
+ENCOUNTER_SPRITE_BASE_ASSET_ID = 30
+ENCOUNTER_SPRITE_FRAME_COUNT = 60
 COLLECTIBLE_TABLE_OFFSET = 0xFF08
 COLLECTIBLE_TABLE_SIZE = 0x800
 COLLECTIBLE_RECORD_SIZE = 0x08
@@ -172,10 +174,18 @@ def extract(data: bytes) -> dict:
         record = data[offset : offset + EVENT_RECORD_SIZE]
         initial_state = record[0]
         initial_state_counts[initial_state] += 1
+        trigger_center = [s32(record, 0x50), s32(record, 0x54), s32(record, 0x58)]
+        trigger_vertices = []
+        for x_offset, z_offset in ((0x04, 0x08), (0x0A, 0x0E), (0x10, 0x14), (0x16, 0x1A)):
+            x = trigger_center[0] + s16(record, x_offset)
+            z = trigger_center[2] + s16(record, z_offset)
+            trigger_vertices.append([x, -trigger_center[1], -z])
         event_records.append({
             "id": index,
             "active": initial_state != 0xFF,
             "initialState": initial_state,
+            "triggerCenter": [trigger_center[0], -trigger_center[1], -trigger_center[2]],
+            "triggerVertices": trigger_vertices,
             "s32": list(struct.unpack("<23i", record)),
             "raw": record.hex(),
         })
@@ -192,6 +202,20 @@ def extract(data: bytes) -> dict:
         offset = ENCOUNTER_RECORDS_OFFSET + index * ENCOUNTER_RECORD_SIZE
         record = data[offset : offset + ENCOUNTER_RECORD_SIZE]
         render_model_id = s16(record, 0x00)
+        if render_model_id >= 0 and not (
+            ENCOUNTER_SPRITE_BASE_ASSET_ID
+            <= render_model_id
+            < ENCOUNTER_SPRITE_BASE_ASSET_ID + ENCOUNTER_SPRITE_FRAME_COUNT
+        ):
+            raise ValueError(
+                f"encounter record {index} references sprite asset {render_model_id} "
+                "outside the Stage 1 TIM registration range"
+            )
+        sprite_frame_id = (
+            render_model_id - ENCOUNTER_SPRITE_BASE_ASSET_ID + 1
+            if render_model_id >= 0
+            else None
+        )
         position = [s32(record, 0x04), s32(record, 0x08), s32(record, 0x0C)]
         duplicated_position = [s32(record, 0x10), s32(record, 0x14), s32(record, 0x18)]
         if position != duplicated_position:
@@ -205,6 +229,12 @@ def extract(data: bytes) -> dict:
             "id": index,
             "active": render_model_id >= 0,
             "renderModelId": render_model_id,
+            "spriteFrameId": sprite_frame_id,
+            "spriteTexture": (
+                f"assets/ripped/textures/2/2005-{sprite_frame_id:03d}.png"
+                if sprite_frame_id is not None
+                else None
+            ),
             "position": [position[0], -position[1], -position[2]],
             "duplicatedPosition": [
                 duplicated_position[0],
@@ -284,7 +314,7 @@ def extract(data: bytes) -> dict:
         raise ValueError("embedded Stage 1 animation does not contain the expected TOD signature")
 
     return {
-        "format": "Pepsiman Stage 1 retail collision, entity, encounter, and pickup data v4",
+        "format": "Pepsiman Stage 1 retail collision, entity, encounter, and pickup data v5",
         "source": "CDDATA/2/2006",
         "sourceSize": len(data),
         "sourceSha256": hashlib.sha256(data).hexdigest(),
@@ -317,6 +347,9 @@ def extract(data: bytes) -> dict:
         "encounterRecordSize": ENCOUNTER_RECORD_SIZE,
         "encounterRecordCount": ENCOUNTER_RECORD_COUNT,
         "activeEncounterRecordCount": sum(record["active"] for record in encounter_records),
+        "encounterSpriteBaseAssetId": ENCOUNTER_SPRITE_BASE_ASSET_ID,
+        "encounterSpriteFrameCount": ENCOUNTER_SPRITE_FRAME_COUNT,
+        "encounterSpriteSource": "CDDATA/2/2005",
         "encounterRecords": encounter_records,
         "collectibleTableOffset": COLLECTIBLE_TABLE_OFFSET,
         "collectibleTableSize": COLLECTIBLE_TABLE_SIZE,
