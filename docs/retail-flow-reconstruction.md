@@ -120,6 +120,25 @@ event IDs 194 and 196 are not injected into the second segment. The second
 segment's overlay-specific scripted events and ending trigger still require the
 same controller-level reconstruction already completed for family 2.
 
+Segment 1 is not vertically flat. Its authored world starts at raw elevation 9080,
+descends through successive ramp chunks, and finishes at elevation 0. The initial
+browser integration incorrectly copied the first chunk's elevation onto every
+course point, which displaced later geometry by as much as 72.64 browser units.
+The loader now samples the original TMD triangles under every authored X/Z path
+point and uses the resulting surface elevation when moving the world beneath the
+runner. All Stage 1 points resolve at the expected road height; segment 1 now
+follows the full 9080-to-0 descent instead of losing its environment underground.
+
+The first retail moving-entity dispatch is also connected. Overlay behaviors 1 and
+2 route through `0x800f9190`/`0x800f9274`; their subtype supplies speeds in ten-unit
+steps, and the shared movement controllers limit the active motion counter to 150
+frames. Entity exports now retain the source motion heading and subtype. The browser
+uses those proven speeds, headings, and the 150-frame window for the car records.
+The current 18-unit look-ahead activation window is inferred because the common
+visibility/lifecycle helper at `0x8002c0ec` is not fully decoded yet. Remaining
+behavior classes—including rotating, falling, and scripted obstacle controllers—
+remain next in the overlay reconstruction queue.
+
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 
 The original extracted texture `assets/ripped/textures/0/0001-023.png` is a 32×16 two-frame Pepsi-can sprite sheet. The exact retail asset-ID-to-TIM lookup for asset 250 remains under trace, so the browser uses this visually verified original can sheet while keeping that final numeric mapping explicitly unclaimed. The browser currently renders the 170 active world entities, all 100 course-indexed pickups, and the 67 encounter sprites using original transforms and authored positions. The 26 linked event quads activate those sprites at their authored approach points, and collision-enabled records use the retail radius derived from `abs(field32) / 3`.
