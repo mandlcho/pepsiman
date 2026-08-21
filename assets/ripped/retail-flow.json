@@ -1,11 +1,13 @@
 {
-  "format": "Pepsiman retail flow map v3",
+  "format": "Pepsiman retail flow map v4",
   "provenance": "SLPS_017.62 scene dispatch and position tables consumed by Stage 1 overlay controllers 0x800f7584 and 0x800f7abc",
   "executableLoadAddress": "0x80010000",
   "sceneIndexAddress": "0x80095830",
   "endingApproachTableAddress": "0x8007ae1c",
   "endingFinishTableAddress": "0x8007aed0",
   "scriptedCenterTableAddress": "0x8007ad68",
+  "nextSegmentTableAddress": "0x8007b0ec",
+  "stageNumberTableAddress": "0x8007b10c",
   "sceneCount": 14,
   "scenes": [
     {
@@ -13,6 +15,8 @@
       "resourceSelector": 3,
       "discFamily": "2",
       "discDirectory": "CDDATA/2",
+      "nextSegmentIndex": 1,
+      "stageNumber": 2,
       "ending": {
         "approachGamePosition": [
           26696,
@@ -46,6 +50,8 @@
       "resourceSelector": 4,
       "discFamily": "3",
       "discDirectory": "CDDATA/3",
+      "nextSegmentIndex": 2,
+      "stageNumber": 2,
       "ending": {
         "approachGamePosition": [
           6385,
@@ -79,6 +85,8 @@
       "resourceSelector": 5,
       "discFamily": "4",
       "discDirectory": "CDDATA/4",
+      "nextSegmentIndex": 3,
+      "stageNumber": 2,
       "ending": {
         "approachGamePosition": [
           0,
@@ -112,6 +120,8 @@
       "resourceSelector": 6,
       "discFamily": "5",
       "discDirectory": "CDDATA/5",
+      "nextSegmentIndex": 4,
+      "stageNumber": 3,
       "ending": {
         "approachGamePosition": [
           -13000,
@@ -145,6 +155,8 @@
       "resourceSelector": 7,
       "discFamily": "6",
       "discDirectory": "CDDATA/6",
+      "nextSegmentIndex": 5,
+      "stageNumber": 3,
       "ending": {
         "approachGamePosition": [
           0,
@@ -178,6 +190,8 @@
       "resourceSelector": 8,
       "discFamily": "7",
       "discDirectory": "CDDATA/7",
+      "nextSegmentIndex": 6,
+      "stageNumber": 3,
       "ending": {
         "approachGamePosition": [
           0,
@@ -211,6 +225,8 @@
       "resourceSelector": 9,
       "discFamily": "8",
       "discDirectory": "CDDATA/8",
+      "nextSegmentIndex": 7,
+      "stageNumber": 4,
       "ending": {
         "approachGamePosition": [
           0,
@@ -244,6 +260,8 @@
       "resourceSelector": 10,
       "discFamily": "9",
       "discDirectory": "CDDATA/9",
+      "nextSegmentIndex": 8,
+      "stageNumber": 4,
       "ending": {
         "approachGamePosition": [
           0,
@@ -277,6 +295,8 @@
       "resourceSelector": 11,
       "discFamily": "A",
       "discDirectory": "CDDATA/A",
+      "nextSegmentIndex": 9,
+      "stageNumber": 4,
       "ending": {
         "approachGamePosition": [
           0,
@@ -310,6 +330,8 @@
       "resourceSelector": 12,
       "discFamily": "B",
       "discDirectory": "CDDATA/B",
+      "nextSegmentIndex": 10,
+      "stageNumber": 5,
       "ending": {
         "approachGamePosition": [
           -5799,
@@ -343,6 +365,8 @@
       "resourceSelector": 13,
       "discFamily": "C",
       "discDirectory": "CDDATA/C",
+      "nextSegmentIndex": 11,
+      "stageNumber": 5,
       "ending": {
         "approachGamePosition": [
           10417,
@@ -376,6 +400,8 @@
       "resourceSelector": 14,
       "discFamily": "D",
       "discDirectory": "CDDATA/D",
+      "nextSegmentIndex": 12,
+      "stageNumber": 5,
       "ending": {
         "approachGamePosition": [
           0,
@@ -409,6 +435,8 @@
       "resourceSelector": 15,
       "discFamily": "E",
       "discDirectory": "CDDATA/E",
+      "nextSegmentIndex": 13,
+      "stageNumber": 6,
       "ending": {
         "approachGamePosition": [
           19644,
@@ -442,6 +470,8 @@
       "resourceSelector": 16,
       "discFamily": "F",
       "discDirectory": "CDDATA/F",
+      "nextSegmentIndex": 14,
+      "stageNumber": 6,
       "ending": {
         "approachGamePosition": [
           27178,
@@ -472,6 +502,72 @@
     }
   ],
   "reservedSelector": 17,
+  "finishController": {
+    "controllerAddress": "0x800f7abc",
+    "resultInitializerAddress": "0x8003e444",
+    "resultPollAddress": "0x8003e544",
+    "resultUpdateAddress": "0x8003cc94",
+    "resultConfigAddress": "0x800856b0",
+    "resultConfigBytes": [
+      0,
+      0,
+      0,
+      0,
+      8,
+      0,
+      255,
+      39
+    ],
+    "resultRevealMilestones": {
+      "backgroundFrame": 0,
+      "secondaryEffectFrame": 24,
+      "firstScorecardFrame": 40,
+      "secondScorecardFrame": 64,
+      "secondScorecardSettleFrame": 68,
+      "countStartFrame": 80
+    },
+    "transitionGuardAddress": "0x800958f8",
+    "transitionModeAddress": "0x800958ac",
+    "modeThreeExitState": 6,
+    "nextSegmentLookupFunction": "0x80041158",
+    "nextSegmentIndices": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      0
+    ],
+    "stageNumbers": [
+      2,
+      2,
+      2,
+      3,
+      3,
+      3,
+      4,
+      4,
+      4,
+      5,
+      5,
+      5,
+      6,
+      6,
+      6,
+      0
+    ],
+    "transitionDelayFrames": 9
+  },
   "stageOneScriptedEvents": [
     {
       "eventRecordIndex": 194,

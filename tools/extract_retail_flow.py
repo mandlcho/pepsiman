@@ -17,6 +17,9 @@ SCENE_SELECTOR_TABLE = 0x8001205C
 ENDING_APPROACH_TABLE = 0x8007AE1C
 ENDING_FINISH_TABLE = 0x8007AED0
 SCRIPTED_CENTER_TABLE = 0x8007AD68
+NEXT_SEGMENT_TABLE = 0x8007B0EC
+STAGE_NUMBER_TABLE = 0x8007B10C
+RESULT_CONFIG_ADDRESS = 0x800856B0
 
 
 class PsxExecutable:
@@ -37,6 +40,13 @@ class PsxExecutable:
 
     def signed_words(self, address: int, count: int) -> tuple[int, ...]:
         return struct.unpack_from(f"<{count}i", self.data, self.offset(address))
+
+    def unsigned_halfwords(self, address: int, count: int) -> tuple[int, ...]:
+        return struct.unpack_from(f"<{count}H", self.data, self.offset(address))
+
+    def bytes(self, address: int, count: int) -> tuple[int, ...]:
+        start = self.offset(address)
+        return tuple(self.data[start : start + count])
 
 
 def signed_16(value: int) -> int:
@@ -62,6 +72,12 @@ def extract(executable: PsxExecutable) -> dict:
     if selectors != expected:
         raise ValueError(f"unexpected retail selector map: {selectors}")
 
+    next_segments = executable.unsigned_halfwords(NEXT_SEGMENT_TABLE, 16)
+    stage_numbers = executable.unsigned_halfwords(STAGE_NUMBER_TABLE, 16)
+    if next_segments != tuple(range(1, 16)) + (0,):
+        raise ValueError(f"unexpected next-segment map: {next_segments}")
+    if stage_numbers != (2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 0):
+        raise ValueError(f"unexpected stage-number map: {stage_numbers}")
     scenes = []
     for scene_index in range(SCENE_COUNT):
         approach = executable.signed_words(ENDING_APPROACH_TABLE + scene_index * 12, 3)
@@ -71,6 +87,8 @@ def extract(executable: PsxExecutable) -> dict:
             "resourceSelector": selectors[scene_index],
             "discFamily": f"{scene_index + 2:X}",
             "discDirectory": f"CDDATA/{scene_index + 2:X}",
+            "nextSegmentIndex": next_segments[scene_index],
+            "stageNumber": stage_numbers[scene_index],
             "ending": {
                 "approachGamePosition": list(approach),
                 "approachBrowserPosition": [approach[0], -approach[1], -approach[2]],
@@ -84,16 +102,41 @@ def extract(executable: PsxExecutable) -> dict:
             },
         })
     return {
-        "format": "Pepsiman retail flow map v3",
+        "format": "Pepsiman retail flow map v4",
         "provenance": "SLPS_017.62 scene dispatch and position tables consumed by Stage 1 overlay controllers 0x800f7584 and 0x800f7abc",
         "executableLoadAddress": f"0x{executable.load_address:08x}",
         "sceneIndexAddress": f"0x{SCENE_INDEX_ADDRESS:08x}",
         "endingApproachTableAddress": f"0x{ENDING_APPROACH_TABLE:08x}",
         "endingFinishTableAddress": f"0x{ENDING_FINISH_TABLE:08x}",
         "scriptedCenterTableAddress": f"0x{SCRIPTED_CENTER_TABLE:08x}",
+        "nextSegmentTableAddress": f"0x{NEXT_SEGMENT_TABLE:08x}",
+        "stageNumberTableAddress": f"0x{STAGE_NUMBER_TABLE:08x}",
         "sceneCount": SCENE_COUNT,
         "scenes": scenes,
         "reservedSelector": selectors[SCENE_COUNT],
+        "finishController": {
+            "controllerAddress": "0x800f7abc",
+            "resultInitializerAddress": "0x8003e444",
+            "resultPollAddress": "0x8003e544",
+            "resultUpdateAddress": "0x8003cc94",
+            "resultConfigAddress": f"0x{RESULT_CONFIG_ADDRESS:08x}",
+            "resultConfigBytes": list(executable.bytes(RESULT_CONFIG_ADDRESS, 8)),
+            "resultRevealMilestones": {
+                "backgroundFrame": 0,
+                "secondaryEffectFrame": 24,
+                "firstScorecardFrame": 40,
+                "secondScorecardFrame": 64,
+                "secondScorecardSettleFrame": 68,
+                "countStartFrame": 80
+            },
+            "transitionGuardAddress": "0x800958f8",
+            "transitionModeAddress": "0x800958ac",
+            "modeThreeExitState": 6,
+            "nextSegmentLookupFunction": "0x80041158",
+            "nextSegmentIndices": list(next_segments),
+            "stageNumbers": list(stage_numbers),
+            "transitionDelayFrames": 9
+        },
         "stageOneScriptedEvents": [{
             "eventRecordIndex": 194,
             "controllerAddress": "0x800f7584",
