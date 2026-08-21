@@ -40,6 +40,8 @@ python3 "$ROOT/tools/extract_stage_tmd.py" \
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/4/4004" "$ROOT/assets/ripped/stages/4" \
   --tim "$WORK/disc/CDDATA/4/4003" --tim "$WORK/disc/CDDATA/4/4005"
+python3 "$ROOT/tools/extract_stage_setpiece.py" \
+  "$WORK/disc/CDDATA/4/4006" "$ROOT/assets/ripped/stages/4/4006-setpiece.json"
 python3 "$ROOT/tools/extract_character.py" \
   "$WORK/disc/CDDATA/0/0000" \
   "$WORK/disc/CDDATA/0/0001" \

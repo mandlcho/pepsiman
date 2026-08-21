@@ -143,10 +143,18 @@ referenced texture palettes under `assets/ripped/stages/4`; `tools/rip_assets.sh
 now rebuilds both segment 1 and these segment-2 assets from the original disc.
 
 `4006` is only 36,448 bytes and does not match the 67,348-byte fixed entity-pack
-layout shared by `2006` and `3006`. The generalized extractor rejects it as
-truncated instead of silently assigning incorrect entity/event offsets. Its
-placement and set-piece format remains under overlay trace, so the browser does
-not yet register scene index 2 from the partial geometry export alone.
+layout shared by `2006` and `3006`. Its exact compact layout is 200 entity records
+of 60 bytes, 200 standard event records of 92 bytes, 100 compact encounter records
+of 40 bytes, and a final 2,048-byte collectible table. The entity records retain
+the ordinary position/rotation/scale/model prefix but omit the 12-byte behavior
+tail. The placement pack contains 109 active entities using 15 of the 30 prop
+models, 71 active state-0 event quads, eight active encounter assets (retail IDs
+30–37), and no collectibles; its 25-bucket collectible index and remaining
+capacity are entirely zero-filled. `tools/extract_stage_setpiece.py` validates
+every boundary, duplicated position, model range, event state, asset range, and
+zero-filled pickup byte while retaining each source record and the source SHA-256.
+The browser still requires the scene-2 overlay controllers and authored movement
+path before this set-piece can be registered as playable.
 
 The first retail moving-entity dispatch is also connected. Overlay behaviors 1 and
 2 route through `0x800f9190`/`0x800f9274`; their subtype supplies speeds in ten-unit
