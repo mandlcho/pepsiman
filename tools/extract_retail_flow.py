@@ -82,6 +82,41 @@ def extract(executable: PsxExecutable) -> dict:
     for scene_index in range(SCENE_COUNT):
         approach = executable.signed_words(ENDING_APPROACH_TABLE + scene_index * 12, 3)
         finish = executable.signed_words(ENDING_FINISH_TABLE + scene_index * 12, 3)
+        ending = {
+            "approachGamePosition": list(approach),
+            "approachBrowserPosition": [approach[0], -approach[1], -approach[2]],
+            "finishGamePosition": list(finish),
+            "finishBrowserPosition": [finish[0], -finish[1], -finish[2]],
+        }
+        if scene_index == 0:
+            ending.update({
+                "eventRecordIndex": 196,
+                "controllerAddress": "0x800f7abc",
+                "interpolationFrames": 35,
+                "cameraInterpolationFrames": 30,
+                "cameraAdvanceCounterFrames": 41,
+                "holdFrames": 241,
+                "finalDelayFrames": 9,
+                "transitionLookupSelector": 0,
+            })
+        elif scene_index == 1:
+            ending.update({
+                "eventRecordIndex": 198,
+                "controllerAddress": "0x800f77b8",
+                "movementControllerAddress": "0x800f7efc",
+                "approachInterpolationFrames": 35,
+                "approachCompleteAnimationId": 23,
+                "finishInterpolationDenominatorFrames": 100,
+                "finishMovementFrames": 101,
+                "finishCompleteAnimationId": 19,
+                "preCameraHoldFrames": 31,
+                "cameraAnimationId": 25,
+                "cameraInterpolationFrames": 20,
+                "cameraAdvanceCounterFrames": 41,
+                "preResultEffectFrames": 24,
+                "finalDelayFrames": 9,
+                "transitionLookupSelector": 1,
+            })
         scenes.append({
             "sceneIndex": scene_index,
             "resourceSelector": selectors[scene_index],
@@ -89,20 +124,10 @@ def extract(executable: PsxExecutable) -> dict:
             "discDirectory": f"CDDATA/{scene_index + 2:X}",
             "nextSegmentIndex": next_segments[scene_index],
             "stageNumber": stage_numbers[scene_index],
-            "ending": {
-                "approachGamePosition": list(approach),
-                "approachBrowserPosition": [approach[0], -approach[1], -approach[2]],
-                "finishGamePosition": list(finish),
-                "finishBrowserPosition": [finish[0], -finish[1], -finish[2]],
-                "interpolationFrames": 35,
-                "cameraInterpolationFrames": 30,
-                "cameraAdvanceCounterFrames": 41,
-                "holdFrames": 241,
-                "finalDelayFrames": 9,
-            },
+            "ending": ending,
         })
     return {
-        "format": "Pepsiman retail flow map v4",
+        "format": "Pepsiman retail flow map v5",
         "provenance": "SLPS_017.62 scene dispatch and position tables consumed by Stage 1 overlay controllers 0x800f7584 and 0x800f7abc",
         "executableLoadAddress": f"0x{executable.load_address:08x}",
         "sceneIndexAddress": f"0x{SCENE_INDEX_ADDRESS:08x}",

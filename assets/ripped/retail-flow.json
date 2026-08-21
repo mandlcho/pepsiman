@@ -1,5 +1,5 @@
 {
-  "format": "Pepsiman retail flow map v4",
+  "format": "Pepsiman retail flow map v5",
   "provenance": "SLPS_017.62 scene dispatch and position tables consumed by Stage 1 overlay controllers 0x800f7584 and 0x800f7abc",
   "executableLoadAddress": "0x80010000",
   "sceneIndexAddress": "0x80095830",
@@ -38,11 +38,14 @@
           9080,
           6120
         ],
+        "eventRecordIndex": 196,
+        "controllerAddress": "0x800f7abc",
         "interpolationFrames": 35,
         "cameraInterpolationFrames": 30,
         "cameraAdvanceCounterFrames": 41,
         "holdFrames": 241,
-        "finalDelayFrames": 9
+        "finalDelayFrames": 9,
+        "transitionLookupSelector": 0
       }
     },
     {
@@ -73,11 +76,21 @@
           0,
           23383
         ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
+        "eventRecordIndex": 198,
+        "controllerAddress": "0x800f77b8",
+        "movementControllerAddress": "0x800f7efc",
+        "approachInterpolationFrames": 35,
+        "approachCompleteAnimationId": 23,
+        "finishInterpolationDenominatorFrames": 100,
+        "finishMovementFrames": 101,
+        "finishCompleteAnimationId": 19,
+        "preCameraHoldFrames": 31,
+        "cameraAnimationId": 25,
+        "cameraInterpolationFrames": 20,
         "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        "preResultEffectFrames": 24,
+        "finalDelayFrames": 9,
+        "transitionLookupSelector": 1
       }
     },
     {
@@ -107,12 +120,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -142,12 +150,7 @@
           -13409,
           300,
           25402
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -177,12 +180,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -212,12 +210,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -247,12 +240,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -282,12 +270,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -317,12 +300,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -352,12 +330,7 @@
           -5637,
           0,
           -3858
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -387,12 +360,7 @@
           10794,
           -610,
           21361
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -422,12 +390,7 @@
           0,
           0,
           0
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -457,12 +420,7 @@
           19646,
           0,
           -19607
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     },
     {
@@ -492,12 +450,7 @@
           27178,
           2000,
           -16480
-        ],
-        "interpolationFrames": 35,
-        "cameraInterpolationFrames": 30,
-        "cameraAdvanceCounterFrames": 41,
-        "holdFrames": 241,
-        "finalDelayFrames": 9
+        ]
       }
     }
   ],
