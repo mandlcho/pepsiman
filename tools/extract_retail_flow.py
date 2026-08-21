@@ -108,6 +108,12 @@ def extract(executable: PsxExecutable) -> dict:
             "soundAssetId": 56,
             "effectSpawnCount": 40,
             "effectVerticalStep": 10,
+            "randomParticleConstructorAddress": "0x800f1ae8",
+            "randomParticleCount": 8,
+            "randomParticleRetailModelId": 184,
+            "randomParticleModelObject": 79,
+            "randomParticleModelMappingProvenance": "inferred from the 80-object Stage 1 prop library ending at retail model ID 184",
+            "randomParticleLifetimeFrames": 61,
             "closingEffectFrames": 30,
         }],
     }
