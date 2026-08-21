@@ -1,0 +1,418 @@
+{
+  "format": "Pepsiman retail flow map v2",
+  "provenance": "SLPS_017.62 scene dispatch at 0x8004121c and ending tables consumed by overlay controller 0x800f7abc",
+  "executableLoadAddress": "0x80010000",
+  "sceneIndexAddress": "0x80095830",
+  "endingApproachTableAddress": "0x8007ae1c",
+  "endingFinishTableAddress": "0x8007aed0",
+  "sceneCount": 14,
+  "scenes": [
+    {
+      "sceneIndex": 0,
+      "resourceSelector": 3,
+      "discFamily": "2",
+      "discDirectory": "CDDATA/2",
+      "ending": {
+        "approachGamePosition": [
+          26696,
+          -9080,
+          -5923
+        ],
+        "approachBrowserPosition": [
+          26696,
+          9080,
+          5923
+        ],
+        "finishGamePosition": [
+          26695,
+          -9080,
+          -6120
+        ],
+        "finishBrowserPosition": [
+          26695,
+          9080,
+          6120
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 1,
+      "resourceSelector": 4,
+      "discFamily": "3",
+      "discDirectory": "CDDATA/3",
+      "ending": {
+        "approachGamePosition": [
+          6385,
+          0,
+          -23383
+        ],
+        "approachBrowserPosition": [
+          6385,
+          0,
+          23383
+        ],
+        "finishGamePosition": [
+          6123,
+          0,
+          -23383
+        ],
+        "finishBrowserPosition": [
+          6123,
+          0,
+          23383
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 2,
+      "resourceSelector": 5,
+      "discFamily": "4",
+      "discDirectory": "CDDATA/4",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 3,
+      "resourceSelector": 6,
+      "discFamily": "5",
+      "discDirectory": "CDDATA/5",
+      "ending": {
+        "approachGamePosition": [
+          -13000,
+          -300,
+          -24971
+        ],
+        "approachBrowserPosition": [
+          -13000,
+          300,
+          24971
+        ],
+        "finishGamePosition": [
+          -13409,
+          -300,
+          -25402
+        ],
+        "finishBrowserPosition": [
+          -13409,
+          300,
+          25402
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 4,
+      "resourceSelector": 7,
+      "discFamily": "6",
+      "discDirectory": "CDDATA/6",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 5,
+      "resourceSelector": 8,
+      "discFamily": "7",
+      "discDirectory": "CDDATA/7",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 6,
+      "resourceSelector": 9,
+      "discFamily": "8",
+      "discDirectory": "CDDATA/8",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 7,
+      "resourceSelector": 10,
+      "discFamily": "9",
+      "discDirectory": "CDDATA/9",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 8,
+      "resourceSelector": 11,
+      "discFamily": "A",
+      "discDirectory": "CDDATA/A",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 9,
+      "resourceSelector": 12,
+      "discFamily": "B",
+      "discDirectory": "CDDATA/B",
+      "ending": {
+        "approachGamePosition": [
+          -5799,
+          0,
+          3725
+        ],
+        "approachBrowserPosition": [
+          -5799,
+          0,
+          -3725
+        ],
+        "finishGamePosition": [
+          -5637,
+          0,
+          3858
+        ],
+        "finishBrowserPosition": [
+          -5637,
+          0,
+          -3858
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 10,
+      "resourceSelector": 13,
+      "discFamily": "C",
+      "discDirectory": "CDDATA/C",
+      "ending": {
+        "approachGamePosition": [
+          10417,
+          610,
+          -21361
+        ],
+        "approachBrowserPosition": [
+          10417,
+          -610,
+          21361
+        ],
+        "finishGamePosition": [
+          10794,
+          610,
+          -21361
+        ],
+        "finishBrowserPosition": [
+          10794,
+          -610,
+          21361
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 11,
+      "resourceSelector": 14,
+      "discFamily": "D",
+      "discDirectory": "CDDATA/D",
+      "ending": {
+        "approachGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "approachBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "finishGamePosition": [
+          0,
+          0,
+          0
+        ],
+        "finishBrowserPosition": [
+          0,
+          0,
+          0
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 12,
+      "resourceSelector": 15,
+      "discFamily": "E",
+      "discDirectory": "CDDATA/E",
+      "ending": {
+        "approachGamePosition": [
+          19644,
+          0,
+          19346
+        ],
+        "approachBrowserPosition": [
+          19644,
+          0,
+          -19346
+        ],
+        "finishGamePosition": [
+          19646,
+          0,
+          19607
+        ],
+        "finishBrowserPosition": [
+          19646,
+          0,
+          -19607
+        ],
+        "interpolationFrames": 35
+      }
+    },
+    {
+      "sceneIndex": 13,
+      "resourceSelector": 16,
+      "discFamily": "F",
+      "discDirectory": "CDDATA/F",
+      "ending": {
+        "approachGamePosition": [
+          27178,
+          -2000,
+          16214
+        ],
+        "approachBrowserPosition": [
+          27178,
+          2000,
+          -16214
+        ],
+        "finishGamePosition": [
+          27178,
+          -2000,
+          16480
+        ],
+        "finishBrowserPosition": [
+          27178,
+          2000,
+          -16480
+        ],
+        "interpolationFrames": 35
+      }
+    }
+  ],
+  "reservedSelector": 17
+}

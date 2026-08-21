@@ -14,6 +14,8 @@ SCENE_COUNT = 14
 SCENE_INDEX_ADDRESS = 0x80095830
 SCENE_SELECTOR_FUNCTION = 0x8004121C
 SCENE_SELECTOR_TABLE = 0x8001205C
+ENDING_APPROACH_TABLE = 0x8007AE1C
+ENDING_FINISH_TABLE = 0x8007AED0
 
 
 class PsxExecutable:
@@ -31,6 +33,9 @@ class PsxExecutable:
 
     def word(self, address: int) -> int:
         return struct.unpack_from("<I", self.data, self.offset(address))[0]
+
+    def signed_words(self, address: int, count: int) -> tuple[int, ...]:
+        return struct.unpack_from(f"<{count}i", self.data, self.offset(address))
 
 
 def signed_16(value: int) -> int:
@@ -58,17 +63,28 @@ def extract(executable: PsxExecutable) -> dict:
 
     scenes = []
     for scene_index in range(SCENE_COUNT):
+        approach = executable.signed_words(ENDING_APPROACH_TABLE + scene_index * 12, 3)
+        finish = executable.signed_words(ENDING_FINISH_TABLE + scene_index * 12, 3)
         scenes.append({
             "sceneIndex": scene_index,
             "resourceSelector": selectors[scene_index],
             "discFamily": f"{scene_index + 2:X}",
             "discDirectory": f"CDDATA/{scene_index + 2:X}",
+            "ending": {
+                "approachGamePosition": list(approach),
+                "approachBrowserPosition": [approach[0], -approach[1], -approach[2]],
+                "finishGamePosition": list(finish),
+                "finishBrowserPosition": [finish[0], -finish[1], -finish[2]],
+                "interpolationFrames": 35,
+            },
         })
     return {
-        "format": "Pepsiman retail flow map v1",
-        "provenance": "SLPS_017.62 scene dispatch at 0x8004121c",
+        "format": "Pepsiman retail flow map v2",
+        "provenance": "SLPS_017.62 scene dispatch at 0x8004121c and ending tables consumed by overlay controller 0x800f7abc",
         "executableLoadAddress": f"0x{executable.load_address:08x}",
         "sceneIndexAddress": f"0x{SCENE_INDEX_ADDRESS:08x}",
+        "endingApproachTableAddress": f"0x{ENDING_APPROACH_TABLE:08x}",
+        "endingFinishTableAddress": f"0x{ENDING_FINISH_TABLE:08x}",
         "sceneCount": SCENE_COUNT,
         "scenes": scenes,
         "reservedSelector": selectors[SCENE_COUNT],

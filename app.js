@@ -10,6 +10,7 @@ const RETAIL_PICKUP_RADIUS = 50 * RETAIL_WORLD_SCALE;
 const RETAIL_ENCOUNTER_PROXIMITY = 600 * RETAIL_WORLD_SCALE;
 const RETAIL_REACTION_FPS = 30;
 const RETAIL_REACTION_FRAMES = 15;
+const RETAIL_FPS = 30;
 const lanes = [-2.25, 0, 2.25];
 const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
@@ -85,6 +86,7 @@ const retailEvents=new Map();
 const retailEncounters=[];
 const retailCollidedEncounterIds=new Set();
 let retailCanTexture=null;
+let stageOneEndingFlow=null;
 const upAxis=new THREE.Vector3(0,1,0);
 function coursePointAt(distance){
   if(!retailCourse.path.length)return null;
@@ -107,11 +109,13 @@ function updateRetailCourse(distance){
   retailCourse.group.position.set(-anchor.x,-anchor.y,1.3-anchor.z);
 }
 async function loadStageOneCourse(){
-  const [model,propModel,entityTable]=await Promise.all([
+  const [model,propModel,entityTable,retailFlow]=await Promise.all([
     fetch(`${STAGE_ONE_ROOT}2003.json`).then(response=>response.json()),
     fetch(`${STAGE_ONE_ROOT}2004.json`).then(response=>response.json()),
-    fetch(`${STAGE_ONE_ROOT}2006-entities.json`).then(response=>response.json())
+    fetch(`${STAGE_ONE_ROOT}2006-entities.json`).then(response=>response.json()),
+    fetch("./assets/ripped/retail-flow.json").then(response=>response.json())
   ]);
+  stageOneEndingFlow=retailFlow.scenes.find(scene=>scene.sceneIndex===0)?.ending||null;
   const group=new THREE.Group();group.name="retail-stage-1-course";group.scale.setScalar(RETAIL_WORLD_SCALE);world.add(group);
   const textureLoader=new THREE.TextureLoader(),materials=new Map();
   const materialFor=name=>{
@@ -219,7 +223,7 @@ async function loadStageOneCourse(){
   retailCourse.group=group;retailCourse.length=retailCourse.path.at(-1).distance;retailCourse.ready=true;prototypeRoad.visible=false;prototypeBuildings.visible=false;updateRetailCourse(0);
 }
 
-let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip;
+let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, proneClip;
 const nodes = new Map();
 const baseTransforms = new Map();
 const bindTransforms = new Map();
@@ -264,6 +268,7 @@ async function loadCharacter() {
   jumpClip=animations.clips.find(clip=>clip.id===6);
   airborneClip=animations.clips.find(clip=>clip.id===7);
   landingClip=animations.clips.find(clip=>clip.id===8);
+  proneClip=animations.clips.find(clip=>clip.id===19);
 }
 
 function lerpAngle(a,b,t){return a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*t;}
@@ -294,7 +299,7 @@ function sampleAnimation(clip,time,loop=true,lockPelvisHeight=false){
 
 const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
-const state={running:false,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
+const state={running:false,completed:false,ending:null,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
 function jump(){if(state.running&&state.grounded&&state.slide<=0){state.vy=JUMP_VELOCITY;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
 function slide(){if(state.running&&state.grounded){state.landingTime=0;state.slide=.65;callout("SLIDE!");}}
@@ -340,9 +345,31 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.completed=false;state.ending=null;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
-function clearStageOne(){if(!state.running)return;state.running=false;ui.music.pause();ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;callout("STAGE CLEAR!");}
+function beginStageOneEnding(){
+  if(!state.running||state.ending||!stageOneEndingFlow)return;
+  scene.updateMatrixWorld(true);
+  const toWorld=position=>retailCourse.group.localToWorld(new THREE.Vector3().fromArray(position));
+  state.ending={phase:1,elapsed:0,animationTime:0,start:rig.position.clone(),approach:toWorld(stageOneEndingFlow.approachBrowserPosition),finish:toWorld(stageOneEndingFlow.finishBrowserPosition)};
+  state.vx=0;state.vy=0;state.grounded=true;rig.visible=true;callout("STAGE CLEAR!");
+}
+function updateStageOneEnding(dt){
+  const ending=state.ending,duration=stageOneEndingFlow.interpolationFrames/RETAIL_FPS;
+  rig.visible=true;
+  ending.elapsed+=dt;ending.animationTime+=dt;
+  if(ending.phase===1){
+    rig.position.lerpVectors(ending.start,ending.approach,THREE.MathUtils.clamp(ending.elapsed/duration,0,1));sampleAnimation(runClip,ending.animationTime);
+    if(ending.elapsed>=duration){ending.phase=2;ending.elapsed-=duration;ending.start.copy(ending.approach);}
+  }else if(ending.phase===2){
+    rig.position.lerpVectors(ending.start,ending.finish,THREE.MathUtils.clamp(ending.elapsed/duration,0,1));sampleAnimation(runClip,ending.animationTime);
+    if(ending.elapsed>=duration){ending.phase=3;ending.elapsed=0;ending.animationTime=0;rig.position.copy(ending.finish);}
+  }else{
+    sampleAnimation(proneClip,ending.animationTime,false);
+    if(ending.elapsed>=41/RETAIL_FPS)clearStageOne();
+  }
+}
+function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;ui.music.pause();ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
 
 const collisionCenter=new THREE.Vector3();
@@ -390,7 +417,7 @@ function updateRetailEncounters(dt){
     if(event.state!==0)continue;
     for(let index=0;index<4;index++)retailCourse.group.localToWorld(eventWorldVertices[index].copy(event.vertices[index]));
     const[a,b,c,d]=eventWorldVertices;
-    if(pointInTriangleXZ(rig.position.x,rig.position.z,a,b,c)||pointInTriangleXZ(rig.position.x,rig.position.z,b,d,c)){event.state=1;if(event.id===196)clearStageOne();}
+    if(pointInTriangleXZ(rig.position.x,rig.position.z,a,b,c)||pointInTriangleXZ(rig.position.x,rig.position.z,b,d,c)){event.state=1;if(event.id===196)beginStageOneEnding();}
   }
   for(const event of retailEvents.values()){
     if(event.id%2!==1||event.state!==1)continue;
@@ -438,6 +465,8 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
   if(retailCanTexture)retailCanTexture.offset.x=(Math.floor(now*8)%2)*.5;
   if(state.running){
     readGamepad();
+    if(state.ending){updateStageOneEnding(dt);updateHud();}
+    else{
     state.sprint=Math.max(0,state.sprint-dt);state.brake=Math.max(0,state.brake-dt);const baseSpeed=Math.min(25,12+state.distance/500);state.speed=baseSpeed*(state.sprint>0?1.3:state.brake>0?.62:1);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
     const keyboardSteering=(input.right?1:0)-(input.left?1:0),steering=keyboardSteering||input.gamepadX,targetVx=steering*STEER_SPEED;
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-ROAD_EDGE_X,ROAD_EDGE_X);if(Math.abs(state.x)===ROAD_EDGE_X&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
@@ -454,7 +483,8 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     updateRetailEncounters(dt);testRetailCollectibles();testRetailCollisions();
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
     updateHud();
-  } else if(rig){rig.visible=true;sampleAnimation(idleClip,now);updateRetailCourse(0);}
+    }
+  } else if(rig){rig.visible=true;if(state.completed)sampleAnimation(proneClip,(proneClip.frameCount-1)/proneClip.fps,false);else{sampleAnimation(idleClip,now);updateRetailCourse(0);}}
   camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2,5,dt);renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);
