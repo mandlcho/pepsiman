@@ -248,7 +248,7 @@ async function loadRetailCourse(segmentIndex=0){
     return[frameId,new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:false})];
   })));
   const encounterActivationEventIds=new Set(activeEncounterRecords.map(record=>record.eventRecordIndex));
-  const linkedEventIds=new Set([...encounterActivationEventIds].flatMap(eventId=>[eventId,eventId+1]));if(segmentIndex===0){linkedEventIds.add(194);linkedEventIds.add(196);}
+  const linkedEventIds=new Set([...encounterActivationEventIds].flatMap(eventId=>[eventId,eventId+1]));if(segmentIndex===0){linkedEventIds.add(194);linkedEventIds.add(196);}else if(segmentIndex===1)linkedEventIds.add(198);
   for(const event of entityTable.eventRecords){
     if(!linkedEventIds.has(event.id))continue;
     retailEvents.set(event.id,{id:event.id,initialState:event.initialState,state:event.initialState,vertices:event.triggerVertices.map(vertex=>new THREE.Vector3().fromArray(vertex))});
@@ -283,7 +283,7 @@ async function loadRetailCourse(segmentIndex=0){
   state.segmentIndex=segmentIndex;
 }
 
-let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, proneClip;
+let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, proneClip, endingApproachClip, endingCameraClip;
 const nodes = new Map();
 const baseTransforms = new Map();
 const bindTransforms = new Map();
@@ -329,6 +329,8 @@ async function loadCharacter() {
   airborneClip=animations.clips.find(clip=>clip.id===7);
   landingClip=animations.clips.find(clip=>clip.id===8);
   proneClip=animations.clips.find(clip=>clip.id===19);
+  endingApproachClip=animations.clips.find(clip=>clip.id===23);
+  endingCameraClip=animations.clips.find(clip=>clip.id===25);
 }
 
 function lerpAngle(a,b,t){return a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*t;}
@@ -429,6 +431,7 @@ function beginStageOneEnding(){
   state.vx=0;state.vy=0;state.grounded=true;rig.visible=true;
 }
 function updateStageOneEnding(dt){
+  if(stageOneEndingFlow.eventRecordIndex===198){updateSegmentOneEnding(dt);return;}
   const ending=state.ending,duration=stageOneEndingFlow.interpolationFrames/RETAIL_FPS;
   rig.visible=true;
   ending.elapsed+=dt;ending.animationTime+=dt;
@@ -444,6 +447,27 @@ function updateStageOneEnding(dt){
   }else{
     sampleAnimation(proneClip,ending.animationTime);
     if(ending.elapsed>=stageOneEndingFlow.holdFrames/RETAIL_FPS)clearStageOne();
+  }
+}
+function updateSegmentOneEnding(dt){
+  const ending=state.ending;ending.elapsed+=dt;ending.animationTime+=dt;rig.visible=true;
+  if(ending.phase===1){
+    const duration=stageOneEndingFlow.approachInterpolationFrames/RETAIL_FPS;
+    rig.position.lerpVectors(ending.start,ending.approach,THREE.MathUtils.clamp(ending.elapsed/duration,0,1));sampleAnimation(runClip,ending.animationTime);
+    if(ending.elapsed>=duration){ending.phase=2;ending.elapsed-=duration;ending.animationTime=0;ending.start.copy(ending.approach);rig.position.copy(ending.approach);}
+  }else if(ending.phase===2){
+    const movementDuration=stageOneEndingFlow.finishMovementFrames/RETAIL_FPS,mix=THREE.MathUtils.clamp(ending.elapsed*RETAIL_FPS/stageOneEndingFlow.finishInterpolationDenominatorFrames,0,1);
+    rig.position.lerpVectors(ending.start,ending.finish,mix);sampleAnimation(endingApproachClip,ending.animationTime);
+    if(ending.elapsed>=movementDuration){ending.phase=3;ending.elapsed=0;ending.animationTime=0;rig.position.copy(ending.finish);}
+  }else if(ending.phase===3){
+    sampleAnimation(proneClip,ending.animationTime);
+    if(ending.elapsed>=stageOneEndingFlow.preCameraHoldFrames/RETAIL_FPS){ending.phase=4;ending.elapsed=0;ending.animationTime=0;}
+  }else if(ending.phase===4){
+    sampleAnimation(endingCameraClip,ending.animationTime);
+    if(ending.elapsed>=stageOneEndingFlow.cameraAdvanceCounterFrames/RETAIL_FPS){ending.phase=5;ending.elapsed=0;}
+  }else{
+    sampleAnimation(endingCameraClip,ending.animationTime);
+    if(ending.elapsed>=stageOneEndingFlow.preResultEffectFrames/RETAIL_FPS)clearStageOne();
   }
 }
 function setRetailDigits(element,text){const glyphs={":":10,"/":11};element.replaceChildren(...[...text].map(character=>{const glyph=document.createElement("i");glyph.style.setProperty("--glyph",glyphs[character]??Number(character));return glyph;}));}
@@ -667,7 +691,7 @@ function updateRetailEncounters(dt){
     if(event.state!==0)continue;
     for(let index=0;index<4;index++)retailCourse.group.localToWorld(eventWorldVertices[index].copy(event.vertices[index]));
     const[a,b,c,d]=eventWorldVertices;
-    if(pointInTriangleXZ(rig.position.x,rig.position.z,a,b,c)||pointInTriangleXZ(rig.position.x,rig.position.z,b,d,c)){event.state=1;if(event.id===194)beginStageOneScriptedEvent();if(event.id===196)beginStageOneEnding();}
+    if(pointInTriangleXZ(rig.position.x,rig.position.z,a,b,c)||pointInTriangleXZ(rig.position.x,rig.position.z,b,d,c)){event.state=1;if(event.id===194)beginStageOneScriptedEvent();if(event.id===196||event.id===198)beginStageOneEnding();}
   }
   for(const event of retailEvents.values()){
     if(event.id%2!==1||event.state!==1)continue;

@@ -260,6 +260,22 @@ The browser now drives its original-art results overlay from those exact boundar
 
 State 6 waits for the overlay child controller and the global transition guard at `0x800958f8`. State 7 handles the special mode-3 exit. In the ordinary retail path, state 8 waits 9 frames and calls the lookup at `0x80041158`: its first table is the next-segment map `[1, 2, ..., 15, 0]`, so scene index 0 advances to scene index 1 (`CDDATA/3`). The adjacent `[2,2,2,3,3,3,...]` table is the retail stage-number grouping. The full score-count and record-comparison branches of the result effect remain under reconstruction.
 
+Scene index 1 finishes through event record 198 and outer controller
+`0x800f77a0`, rather than reusing event 196. Its child controller at
+`0x800f7efc` first interpolates the player for 35 frames to browser position
+`(6385, 0, 23383)` and selects character animation 23. It then interpolates
+toward `(6123, 0, 23383)` with denominator 100 for 101 movement ticks and selects
+animation 19. After a 31-tick hold, it selects animation 25 and advances a
+41-tick camera phase whose transform interpolation occupies the first 20 ticks.
+The child pre-result effect completes before the outer controller begins the
+shared retail result sequence, after which transition selector 1 advances to
+scene index 2. The browser now registers event 198 and reproduces the authored
+player destinations, animation IDs, movement denominators, holds, camera-phase
+duration, pre-result timing, and shared result transition instead of dead-ending
+at the end of the second segment. The exact six-component camera target built by
+the overlay remains to be connected, so the current camera stays on its gameplay
+transform during those 20 interpolation ticks.
+
 Event record 194 drives a separate five-state Stage 1 set-piece through overlay controller `0x800f7584`. It disables player input, preserves the initial player/camera transforms, and linearly centers X/Z over 25 frames at executable-table game position `(-5700, -9080, 18500)`, corresponding to browser position `(-5700, 9080, -18500)`. After a one-frame transition it runs a nine-frame sound phase, invoking retail sound ID 56 at counters 2, 4, and 6. It then submits 40 effects at ten-unit vertical intervals, changes player runtime state, restores control, and runs a closing screen effect for 30 frames.
 
 The accompanying constructor at `0x800f1ae8` allocates eight randomized objects with retail render-model ID 184 and removes each after 61 update frames. The current browser mapping from that ID to `2004` TMD object 79 is inferred from the 80-object Stage 1 prop-library range and remains labelled as such until its loader base is proven. The browser now performs the exact control lock, authored centering target, phase durations, course-distance resumption, alternating sound cues, eight-model burst, 61-frame cleanup, and simultaneous closing-phase control restoration. Particle velocity distributions and the synthesized sound are approximations; the 40 additional effect submissions and closing framebuffer effect remain pending their render-path decode.
