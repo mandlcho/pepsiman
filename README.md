@@ -72,7 +72,7 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
 - Rigging: recovered root + original 16-joint TOD hierarchy, rigid skin weights, corrected bind transforms, and validated absolute integer-degree motion packets
 - Gameplay: continuous lateral steering, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
-- Stage 1: original textured road chunks following the recovered 813-unit retail course centerline plus 170 original prop instances; retail collision and event behavior reconstruction remains in progress
+- Stage 1: original textured road chunks following the recovered 813-unit retail course centerline, 170 original prop instances, and all 100 course-indexed retail pickups using the extracted two-frame can sprite; retail encounter and event behavior reconstruction remains in progress
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 
 This fan project contains assets from the original game. Do not distribute it unless you have the necessary rights.

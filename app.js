@@ -3,7 +3,9 @@ import { applyExtractedPelvisMotion, applySetupTransform, TOD_TRANSLATION_SCALE 
 
 const ASSET_ROOT = "./assets/ripped/pepsiman/";
 const STAGE_ONE_ROOT = "./assets/ripped/stages/2/";
+const RETAIL_TEXTURE_ROOT = "./assets/ripped/textures/0/";
 const RETAIL_WORLD_SCALE = .008;
+const RETAIL_PICKUP_RADIUS = 50 * RETAIL_WORLD_SCALE;
 const lanes = [-2.25, 0, 2.25];
 const ROAD_EDGE_X = 3.8;
 const STEER_SPEED = 7.2;
@@ -68,10 +70,13 @@ for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
   }
 }
 
-const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0,collisionMeshes:[]};
+const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0,collectibleCount:0,collisionMeshes:[]};
 const retailColliders=[];
 const retailCollisionSurfaces=[];
 const retailCollidedEntities=new Set();
+const retailCollectibles=[];
+const retailCollectedIds=new Set();
+let retailCanTexture=null;
 const upAxis=new THREE.Vector3(0,1,0);
 function coursePointAt(distance){
   if(!retailCourse.path.length)return null;
@@ -156,6 +161,15 @@ async function loadStageOneCourse(){
       vertices:surface.vertices.map(vertex=>new THREE.Vector3().fromArray(vertex))
     });
   }
+  retailCanTexture=await textureLoader.loadAsync(`${RETAIL_TEXTURE_ROOT}0001-023.png`);
+  retailCanTexture.colorSpace=THREE.SRGBColorSpace;retailCanTexture.magFilter=THREE.NearestFilter;retailCanTexture.minFilter=THREE.NearestFilter;retailCanTexture.repeat.set(.5,1);
+  const canMaterial=new THREE.SpriteMaterial({map:retailCanTexture,transparent:true,alphaTest:.05,depthWrite:false});
+  for(const collectible of entityTable.collectibles){
+    if(!collectible.active)continue;
+    const sprite=new THREE.Sprite(canMaterial);sprite.name=`retail-collectible-${collectible.id}`;sprite.position.fromArray(collectible.position);sprite.scale.set(60,60,1);sprite.center.set(.5,0);group.add(sprite);
+    retailCollectibles.push({id:collectible.id,sprite});
+  }
+  retailCourse.collectibleCount=retailCollectibles.length;
   for(let index=0;index<retailCourse.path.length;index++){
     const previous=retailCourse.path[Math.max(0,index-1)].position,next=retailCourse.path[Math.min(retailCourse.path.length-1,index+1)].position;
     retailCourse.path[index].tangent=next.clone().sub(previous).normalize();
@@ -285,19 +299,23 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
 
 const collisionCenter=new THREE.Vector3();
+const collectibleCenter=new THREE.Vector3();
 const playerProbeCenters=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const PLAYER_PROBE_RADII=[20*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE];
-function testRetailCollisions(){
-  if(!retailCourse.ready||!rig)return;
+function updatePlayerProbeCenters(){
   scene.updateMatrixWorld(true);
   nodes.get(10).getWorldPosition(playerProbeCenters[0]);
   nodes.get(1).getWorldPosition(playerProbeCenters[1]);
   nodes.get(1).localToWorld(playerProbeCenters[2].set(0,0,-14));
+}
+function testRetailCollisions(){
+  if(!retailCourse.ready||!rig)return;
+  updatePlayerProbeCenters();
   for(const collider of retailColliders){
     if(collider.collisionClass===0||retailCollidedEntities.has(collider.entityId))continue;
     collider.object.localToWorld(collisionCenter.copy(collider.center));
@@ -309,9 +327,23 @@ function testRetailCollisions(){
     }
   }
 }
+function testRetailCollectibles(){
+  if(!retailCourse.ready||!rig)return;
+  updatePlayerProbeCenters();
+  for(const collectible of retailCollectibles){
+    if(retailCollectedIds.has(collectible.id))continue;
+    collectible.sprite.getWorldPosition(collectibleCenter);
+    for(let probeIndex=0;probeIndex<playerProbeCenters.length;probeIndex++){
+      const combinedRadius=RETAIL_PICKUP_RADIUS+PLAYER_PROBE_RADII[probeIndex];
+      if(collectibleCenter.distanceToSquared(playerProbeCenters[probeIndex])>combinedRadius*combinedRadius)continue;
+      retailCollectedIds.add(collectible.id);collectible.sprite.visible=false;state.cans++;blip(900);callout("PEPSI!");break;
+    }
+  }
+}
 
 let previous=performance.now()/1000;
 function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.min(.04,now-previous);previous=now;
+  if(retailCanTexture)retailCanTexture.offset.x=(Math.floor(now*8)%2)*.5;
   if(state.running){
     readGamepad();
     state.sprint=Math.max(0,state.sprint-dt);state.brake=Math.max(0,state.brake-dt);const baseSpeed=Math.min(25,12+state.distance/500);state.speed=baseSpeed*(state.sprint>0?1.3:state.brake>0?.62:1);state.distance+=state.speed*dt;state.invulnerable=Math.max(0,state.invulnerable-dt);
@@ -327,7 +359,7 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     else if(state.landingTime>0&&state.landingTime<=landingRecoveryDuration)sampleAnimation(landingClip,landingContactTime+state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
-    testRetailCollisions();
+    testRetailCollectibles();testRetailCollisions();
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
     updateHud();
   } else if(rig){rig.visible=true;sampleAnimation(idleClip,now);updateRetailCourse(0);}
@@ -342,4 +374,4 @@ document.querySelectorAll("[data-control]").forEach(button=>{const control=butto
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.collectibleCount} RETAIL CANS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
