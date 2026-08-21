@@ -96,6 +96,25 @@ The post-trigger pass at `0x8002c5d0` establishes paired lifetimes: it examines 
 
 The Stage 1 world file `2003` also contains the authoritative runner path and spawn before its TMD at file offset `0x30`. Its twelve-word scene-control header points to 211 eight-byte course records at `0x5da6c` and the eight-byte spawn record at `0x5ec70`. Each course record supplies signed X/Z and boundary-normal halfwords. The Stage 1 initializer at `0x800faa30` reads the spawn record through runtime pointer `0x80095840`, negates its X/Y/Z/heading into the player state, and initializes course index zero. The resulting browser-space spawn is `(-23940, 9079, 19480)` with heading zero; its X/Z exactly matches event 0's trigger center. The v2 `2003.json` export now preserves the header offsets, all 211 course points and normals, and the source/game/browser spawn forms. The browser follows this retail path instead of approximating the route from the 21 render-chunk centers.
 
+## Retail segment 1 extraction
+
+The ordinary result handoff from segment 0 selects `CDDATA/3`. Its file roles match
+the proven family-2 pipeline: `3000` is a 65,344-byte relocated scene overlay,
+`3002`/`3005` are TIM packs, `3003` is the world TMD container, `3004` is the
+80-object prop TMD, and `3006` is the collision/entity/event/encounter/pickup pack.
+Files `3007` and `3008` are additional 32-entry TIM packs loaded by the special
+`segmentIndex % 3 == 1` resource path and are not folded into geometry textures
+without tracing their runtime registration role.
+
+The repeatable world conversion proves 27 world chunks with 7,003 triangles, 80
+prop objects with 3,309 triangles, 271 authored course points, and browser spawn
+`(-27100, 9079, -26000)` with source heading 1024. The generalized entity extractor
+validates 125 active entities, 302 collision spheres, 9 landing surfaces, 106 active
+event records, 99 active encounter records, and 100 course-indexed Pepsi pickups.
+The entity pack retains an 8,248-byte embedded TOD beginning at the same `0x10708`
+offset used by family 2. These assets are preserved under `assets/ripped/stages/3`;
+runtime integration is the next delivery batch.
+
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 
 The original extracted texture `assets/ripped/textures/0/0001-023.png` is a 32×16 two-frame Pepsi-can sprite sheet. The exact retail asset-ID-to-TIM lookup for asset 250 remains under trace, so the browser uses this visually verified original can sheet while keeping that final numeric mapping explicitly unclaimed. The browser currently renders the 170 active world entities, all 100 course-indexed pickups, and the 67 encounter sprites using original transforms and authored positions. The 26 linked event quads activate those sprites at their authored approach points, and collision-enabled records use the retail radius derived from `abs(field32) / 3`.

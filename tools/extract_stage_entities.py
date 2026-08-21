@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract Stage 1's retail collision, entity, encounter, and pickup data from 2006."""
+"""Extract a retail segment's collision, entity, encounter, and pickup data."""
 
 from __future__ import annotations
 
@@ -31,12 +31,12 @@ ENCOUNTER_RECORDS_OFFSET = 0xE798
 ENCOUNTER_RECORD_COUNT = 100
 ENCOUNTER_RECORD_SIZE = 0x3C
 ENCOUNTER_SPRITE_BASE_ASSET_ID = 30
-ENCOUNTER_SPRITE_FRAME_COUNT = 60
+DEFAULT_ENCOUNTER_SPRITE_FRAME_COUNT = 60
 COLLECTIBLE_TABLE_OFFSET = 0xFF08
 COLLECTIBLE_TABLE_SIZE = 0x800
 COLLECTIBLE_RECORD_SIZE = 0x08
 EMBEDDED_TOD_OFFSET = 0x10708
-EXPECTED_FILE_SIZE = 0x10EEC
+MINIMUM_FILE_SIZE = EMBEDDED_TOD_OFFSET + 12
 
 
 def s16(data: bytes, offset: int) -> int:
@@ -47,11 +47,14 @@ def s32(data: bytes, offset: int) -> int:
     return struct.unpack_from("<i", data, offset)[0]
 
 
-def extract(data: bytes) -> dict:
-    if len(data) != EXPECTED_FILE_SIZE:
-        raise ValueError(
-            f"unexpected Stage 1 entity pack size: expected {EXPECTED_FILE_SIZE} bytes, got {len(data)}"
-        )
+def extract(
+    data: bytes,
+    source_name: str = "CDDATA/2/2006",
+    course_chunk_count: int | None = 21,
+    encounter_sprite_frame_count: int = DEFAULT_ENCOUNTER_SPRITE_FRAME_COUNT,
+) -> dict:
+    if len(data) < MINIMUM_FILE_SIZE:
+        raise ValueError(f"entity pack is truncated: need {MINIMUM_FILE_SIZE} bytes, got {len(data)}")
     required = ENTITY_TABLE_OFFSET + ENTITY_CAPACITY * ENTITY_SIZE
     if len(data) < required:
         raise ValueError(f"entity pack is truncated: need {required} bytes, got {len(data)}")
@@ -190,11 +193,11 @@ def extract(data: bytes) -> dict:
             "raw": record.hex(),
         })
 
-    expected_initial_states = {0: 96, 1: 1, 255: 103}
-    if dict(sorted(initial_state_counts.items())) != expected_initial_states:
+    unsupported_states = set(initial_state_counts) - {0, 1, 2, 0xFF}
+    if unsupported_states:
         raise ValueError(
-            "unexpected event initial-state distribution: "
-            f"expected {expected_initial_states}, got {dict(sorted(initial_state_counts.items()))}"
+            "unexpected event initial states: "
+            f"{sorted(unsupported_states)} in {dict(sorted(initial_state_counts.items()))}"
         )
 
     encounter_records = []
@@ -205,11 +208,11 @@ def extract(data: bytes) -> dict:
         if render_model_id >= 0 and not (
             ENCOUNTER_SPRITE_BASE_ASSET_ID
             <= render_model_id
-            < ENCOUNTER_SPRITE_BASE_ASSET_ID + ENCOUNTER_SPRITE_FRAME_COUNT
+            < ENCOUNTER_SPRITE_BASE_ASSET_ID + encounter_sprite_frame_count
         ):
             raise ValueError(
                 f"encounter record {index} references sprite asset {render_model_id} "
-                "outside the Stage 1 TIM registration range"
+                "outside the segment TIM registration range"
             )
         sprite_frame_id = (
             render_model_id - ENCOUNTER_SPRITE_BASE_ASSET_ID + 1
@@ -231,7 +234,7 @@ def extract(data: bytes) -> dict:
             "renderModelId": render_model_id,
             "spriteFrameId": sprite_frame_id,
             "spriteTexture": (
-                f"assets/ripped/textures/2/2005-{sprite_frame_id:03d}.png"
+                f"assets/ripped/textures/{source_name.split('/')[1]}/{source_name.split('/')[-1][0]}005-{sprite_frame_id:03d}.png"
                 if sprite_frame_id is not None
                 else None
             ),
@@ -258,10 +261,13 @@ def extract(data: bytes) -> dict:
     collectible_table_data = data[
         COLLECTIBLE_TABLE_OFFSET : COLLECTIBLE_TABLE_OFFSET + COLLECTIBLE_TABLE_SIZE
     ]
-    course_chunk_count, collectible_data_offset = struct.unpack_from("<II", collectible_table_data)
-    if course_chunk_count != 21:
-        raise ValueError(f"unexpected collectible course-chunk count {course_chunk_count}")
-    expected_data_offset = 8 + course_chunk_count * 8
+    stored_course_chunk_count, collectible_data_offset = struct.unpack_from("<II", collectible_table_data)
+    if course_chunk_count is not None and stored_course_chunk_count != course_chunk_count:
+        raise ValueError(
+            f"unexpected collectible course-chunk count {stored_course_chunk_count}; "
+            f"world model has {course_chunk_count}"
+        )
+    expected_data_offset = 8 + stored_course_chunk_count * 8
     if collectible_data_offset != expected_data_offset:
         raise ValueError(
             f"unexpected collectible data offset {collectible_data_offset}, "
@@ -269,7 +275,7 @@ def extract(data: bytes) -> dict:
         )
     collectible_chunk_index = []
     indexed_records = []
-    for chunk in range(course_chunk_count):
+    for chunk in range(stored_course_chunk_count):
         start, count = struct.unpack_from("<II", collectible_table_data, 8 + chunk * 8)
         indexed_records.extend(range(start, start + count))
         collectible_chunk_index.append({"courseChunk": chunk, "start": start, "count": count})
@@ -314,8 +320,8 @@ def extract(data: bytes) -> dict:
         raise ValueError("embedded Stage 1 animation does not contain the expected TOD signature")
 
     return {
-        "format": "Pepsiman Stage 1 retail collision, entity, encounter, and pickup data v5",
-        "source": "CDDATA/2/2006",
+        "format": "Pepsiman retail collision, entity, encounter, and pickup data v6",
+        "source": source_name,
         "sourceSize": len(data),
         "sourceSha256": hashlib.sha256(data).hexdigest(),
         "tableOffset": ENTITY_TABLE_OFFSET,
@@ -348,8 +354,8 @@ def extract(data: bytes) -> dict:
         "encounterRecordCount": ENCOUNTER_RECORD_COUNT,
         "activeEncounterRecordCount": sum(record["active"] for record in encounter_records),
         "encounterSpriteBaseAssetId": ENCOUNTER_SPRITE_BASE_ASSET_ID,
-        "encounterSpriteFrameCount": ENCOUNTER_SPRITE_FRAME_COUNT,
-        "encounterSpriteSource": "CDDATA/2/2005",
+        "encounterSpriteFrameCount": encounter_sprite_frame_count,
+        "encounterSpriteSource": f"{source_name[:-1]}5",
         "encounterRecords": encounter_records,
         "collectibleTableOffset": COLLECTIBLE_TABLE_OFFSET,
         "collectibleTableSize": COLLECTIBLE_TABLE_SIZE,
@@ -374,8 +380,22 @@ def main() -> None:
     parser = ArgumentParser()
     parser.add_argument("source", type=Path)
     parser.add_argument("destination", type=Path)
+    parser.add_argument("--source-name")
+    parser.add_argument("--course-chunk-count", type=int)
+    parser.add_argument(
+        "--encounter-sprite-frame-count",
+        type=int,
+        default=DEFAULT_ENCOUNTER_SPRITE_FRAME_COUNT,
+    )
     args = parser.parse_args()
-    result = extract(args.source.read_bytes())
+    family = args.source.name[0]
+    source_name = args.source_name or f"CDDATA/{family}/{args.source.name}"
+    result = extract(
+        args.source.read_bytes(),
+        source_name,
+        args.course_chunk_count,
+        args.encounter_sprite_frame_count,
+    )
     args.destination.parent.mkdir(parents=True, exist_ok=True)
     args.destination.write_text(json.dumps(result, separators=(",", ":")) + "\n")
     print(
