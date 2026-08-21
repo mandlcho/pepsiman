@@ -164,6 +164,19 @@ source units per frame and the pre-impact controller advances continuously along
 the authored heading. That proven pre-impact movement is connected in the browser;
 the controller's separate collision/crash phase still remains to be reproduced.
 
+Behavior 18 dispatches through `0x800f9700` to the paired-vehicle controller at
+`0x800f36d4`. State 0 allocates a copy of the 72-byte entity record, increments
+the copy's model index, and applies a game-space Y offset of -150 to both records.
+The active retail records therefore render original model 76 together with model
+77 and use both models' collision spheres. Subtypes 0 and 1 move the pair for 60
+frames at 10 and 20 source units per frame respectively. State 2 then runs for 40
+frames: speed interpolates from 45 to zero along heading +227 PSX angle units,
+X/Z each receive random jitter from -2 through +2, the original heading decreases
+by 11 angle units per frame, and the paired heading increases by 5. The browser
+now reproduces the paired mesh/collider allocation, movement, deceleration, jitter,
+and opposite rotations. The particle constructor called during the skid remains
+queued with the broader retail effects work.
+
 Behaviors 44 and 45 are paired proximity model swaps rather than continuous
 motion. Both dispatch through `0x800fa3c0` into `0x800f721c`; subtypes 0, 1, and 2
 select 500-, 1,000-, and 1,500-source-unit trigger radii. Behavior 44 increments

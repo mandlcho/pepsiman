@@ -198,13 +198,20 @@ async function loadRetailCourse(segmentIndex=0){
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
     prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
     let dynamic=null;
-    if([1,2,5,6,7,8,15,20,44,45,46].includes(entity.behavior)){
-      dynamic={entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),baseModel:entity.currentModel,currentModel:entity.currentModel,collisionSpheresByModel,scaleFactor:Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),colliders:[],courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false};
+    if([1,2,5,6,7,8,15,18,20,44,45,46].includes(entity.behavior)){
+      dynamic={entityId:entity.id,object:prop,secondary:null,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),baseModel:entity.currentModel,currentModel:entity.currentModel,collisionSpheresByModel,scaleFactor:Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),colliders:[],courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false};
+      if(entity.behavior===18&&propTemplates[entity.currentModel+1]){
+        const secondary=propTemplates[entity.currentModel+1].clone(true);secondary.name=`retail-entity-${entity.id}-paired`;secondary.position.copy(prop.position);secondary.rotation.copy(prop.rotation);secondary.scale.copy(prop.scale);secondary.visible=false;group.add(secondary);dynamic.secondary=secondary;
+      }
       retailDynamicEntities.push(dynamic);
     }
     for(const sphere of collisionSpheresByModel[entity.currentModel]){
       const collider={entityId:entity.id,object:prop,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
       retailColliders.push(collider);dynamic?.colliders.push(collider);
+    }
+    if(dynamic?.secondary)for(const sphere of collisionSpheresByModel[entity.currentModel+1]){
+      const collider={entityId:entity.id,object:dynamic.secondary,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*dynamic.scaleFactor,collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
+      retailColliders.push(collider);dynamic.colliders.push(collider);
     }
     for(const surface of collisionSurfacesByModel[entity.currentModel])retailCollisionSurfaces.push({
       entityId:entity.id,
@@ -403,7 +410,7 @@ function setRetailDynamicModel(dynamic,modelIndex){
   dynamic.currentModel=modelIndex;
 }
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.basePosition);dynamic.secondary.rotation.y=dynamic.baseRotationY;dynamic.secondary.visible=false;}dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginStageOneEnding(){
   if(!state.running||state.ending||!stageOneEndingFlow)return;
@@ -489,6 +496,15 @@ const playerCoursePosition=new THREE.Vector3();
 const eventWorldVertices=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const playerProbeCenters=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const PLAYER_PROBE_RADII=[20*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE,35*RETAIL_WORLD_SCALE];
+function moveRetailDynamicPair(dynamic,distance,heading=dynamic.heading){
+  const x=Math.sin(heading)*distance,z=-Math.cos(heading)*distance;
+  dynamic.object.position.x+=x;dynamic.object.position.z+=z;
+  if(dynamic.secondary){dynamic.secondary.position.x+=x;dynamic.secondary.position.z+=z;}
+}
+function retailCrashJitter(entityId,frame,axis){
+  let value=(entityId*0x45d9f3b+frame*0x27d4eb2d+axis*0x165667b1)|0;
+  value=Math.imul(value^(value>>>16),0x45d9f3b);value=Math.imul(value^(value>>>16),0x45d9f3b);return((value^(value>>>16))>>>0)%5-2;
+}
 function updatePlayerProbeCenters(){
   scene.updateMatrixWorld(true);
   nodes.get(10).getWorldPosition(playerProbeCenters[0]);
@@ -523,9 +539,13 @@ function updateRetailDynamicEntities(dt){
         if(dynamicWorldPosition.distanceTo(rig.position)>=(dynamic.variant+1)*500*RETAIL_WORLD_SCALE)continue;
       }else if(state.distance<dynamic.courseDistance-18||state.distance>dynamic.courseDistance+8)continue;
       dynamic.active=true;dynamic.object.visible=true;
+      if(dynamic.behavior===18){
+        dynamic.object.position.y=dynamic.basePosition.y+150;
+        if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.object.position);dynamic.secondary.visible=true;}
+      }
       if(dynamic.behavior===44||dynamic.behavior===45)setRetailDynamicModel(dynamic,dynamic.baseModel+(dynamic.behavior===44?1:-1));
     }
-    if(state.distance>dynamic.courseDistance+24){dynamic.object.visible=false;continue;}
+    if(state.distance>dynamic.courseDistance+24){dynamic.object.visible=false;if(dynamic.secondary)dynamic.secondary.visible=false;continue;}
     if(dynamic.behavior===44||dynamic.behavior===45)continue;
     const frameDelta=dt*RETAIL_FPS;
     if(dynamic.behavior===20){
@@ -540,6 +560,24 @@ function updateRetailDynamicEntities(dt){
       dynamic.object.position.x=dynamic.basePosition.x-Math.sin(sideHeading)*radius;
       dynamic.object.position.y=dynamic.basePosition.y-Math.abs(Math.sin(THREE.MathUtils.degToRad(dynamic.ageFrames*20))*41);
       dynamic.object.position.z=dynamic.basePosition.z-Math.cos(sideHeading)*radius;
+      continue;
+    }
+    if(dynamic.behavior===18){
+      if(dynamic.phase===0){
+        const duration=dynamic.variant<3?60:90,speed=(dynamic.variant<3?dynamic.variant+1:dynamic.variant-2)*10;
+        const frames=Math.min(frameDelta,Math.max(0,duration-dynamic.phaseFrames));dynamic.phaseFrames+=frames;moveRetailDynamicPair(dynamic,speed*frames);
+        if(dynamic.phaseFrames>=duration){dynamic.phase=1;dynamic.phaseFrames=0;}
+      }else if(dynamic.phase===1){
+        const previousFrame=Math.floor(dynamic.phaseFrames),nextFrames=Math.min(40,dynamic.phaseFrames+frameDelta);dynamic.phaseFrames=nextFrames;
+        const skidHeading=dynamic.initialHeading+227/4096*Math.PI*2;
+        for(let frame=previousFrame;frame<Math.floor(nextFrames);frame++){
+          moveRetailDynamicPair(dynamic,45*(1-frame/40),skidHeading);
+          const x=retailCrashJitter(dynamic.entityId,frame,0),z=retailCrashJitter(dynamic.entityId,frame,1);dynamic.object.position.x+=x;dynamic.object.position.z+=z;if(dynamic.secondary){dynamic.secondary.position.x+=x;dynamic.secondary.position.z+=z;}
+        }
+        dynamic.object.rotation.y=dynamic.baseRotationY+11/4096*Math.PI*2*dynamic.phaseFrames;
+        if(dynamic.secondary)dynamic.secondary.rotation.y=dynamic.baseRotationY-5/4096*Math.PI*2*dynamic.phaseFrames;
+        if(dynamic.phaseFrames>=40){dynamic.phase=2;dynamic.phaseFrames=0;}
+      }
       continue;
     }
     if(dynamic.behavior<=2||dynamic.behavior===15){
