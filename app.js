@@ -197,7 +197,7 @@ async function loadRetailCourse(segmentIndex=0){
     const prop=propTemplates[entity.currentModel].clone(true);prop.name=`retail-entity-${entity.id}`;
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
     prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
-    if(entity.behavior===1||entity.behavior===2)retailDynamicEntities.push({entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,basePosition:prop.position.clone(),courseDistance:0,age:0,active:false});
+    if([1,2,5,6,7,8].includes(entity.behavior))retailDynamicEntities.push({entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false});
     for(const sphere of collisionSpheresByModel[entity.currentModel])retailColliders.push({
       entityId:entity.id,
       object:prop,
@@ -392,7 +392,7 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const dynamic of retailDynamicEntities){dynamic.object.position.copy(dynamic.basePosition);dynamic.object.visible=false;dynamic.age=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const dynamic of retailDynamicEntities){dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=false;dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginStageOneEnding(){
   if(!state.running||state.ending||!stageOneEndingFlow)return;
@@ -503,12 +503,36 @@ function updateRetailDynamicEntities(dt){
       if(state.distance<dynamic.courseDistance-18||state.distance>dynamic.courseDistance+8)continue;
       dynamic.active=true;dynamic.object.visible=true;
     }
-    if(dynamic.age>=150/RETAIL_FPS){if(state.distance>dynamic.courseDistance+24)dynamic.object.visible=false;continue;}
-    dynamic.age+=dt;
-    const speed=(dynamic.variant<=10?dynamic.variant:dynamic.variant-10)*10;
-    const distance=speed*dt*RETAIL_FPS;
-    dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;
-    dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;
+    if(state.distance>dynamic.courseDistance+24){dynamic.object.visible=false;continue;}
+    const frameDelta=dt*RETAIL_FPS;
+    if(dynamic.behavior<=2){
+      const motionFrames=dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
+      if(dynamic.ageFrames>=motionFrames)continue;
+      dynamic.ageFrames=Math.min(motionFrames,dynamic.ageFrames+frameDelta);
+      const speed=(dynamic.variant<=10?dynamic.variant:dynamic.variant-10)*10;
+      const distance=speed*frameDelta;
+      dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;
+      dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;
+      continue;
+    }
+    const variantIndex=Math.max(0,dynamic.variant-1),group=Math.floor(variantIndex/5),withinGroup=variantIndex%5;
+    const speed=(withinGroup+(dynamic.behavior<=6?2:1))*10;
+    const initialTravel=(group+1)*500+(dynamic.behavior<=6?500:0);
+    if(dynamic.phase===0){
+      const distance=Math.min(speed*frameDelta,Math.max(0,initialTravel-dynamic.phaseDistance));
+      dynamic.phaseDistance+=distance;dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;
+      if(dynamic.phaseDistance>=initialTravel){dynamic.phase=1;dynamic.phaseFrames=0;}
+    }else if(dynamic.phase===1){
+      const frames=Math.min(frameDelta,31-dynamic.phaseFrames),distance=speed*frames;
+      dynamic.phaseFrames+=frames;dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;
+      const direction=[5,7].includes(dynamic.behavior)?-1:1;
+      dynamic.heading=dynamic.initialHeading+direction*Math.PI*.5*(dynamic.phaseFrames/31);
+      dynamic.object.rotation.y=dynamic.baseRotationY-(dynamic.heading-dynamic.initialHeading);
+      if(dynamic.phaseFrames>=31){dynamic.phase=2;dynamic.phaseFrames=0;}
+    }else if(dynamic.phaseFrames<150){
+      const frames=Math.min(frameDelta,150-dynamic.phaseFrames),distance=speed*frames;
+      dynamic.phaseFrames+=frames;dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;
+    }
   }
 }
 function testRetailCollectibles(){

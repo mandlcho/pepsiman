@@ -139,6 +139,16 @@ visibility/lifecycle helper at `0x8002c0ec` is not fully decoded yet. Remaining
 behavior classes—including rotating, falling, and scripted obstacle controllers—
 remain next in the overlay reconstruction queue.
 
+The next traffic family is dispatched by behaviors 5 through 8. Wrappers
+`0x800f22b4` and `0x800f23ec` map the entity subtype into a speed and an initial
+travel distance, then call the shared three-phase controller at `0x800f2f94`.
+The vehicle first travels that subtype-defined distance, turns left or right by
+`0x400` PSX angle units (90 degrees) over 31 frames, and continues on the new
+heading for a maximum of 150 frames. The browser reproduces those profiles and
+updates the visible model rotation as well as its collider-bearing transform.
+This covers the authored turning traffic in the first two extracted segments;
+non-traffic behavior classes remain separately queued.
+
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 
 The original extracted texture `assets/ripped/textures/0/0001-023.png` is a 32×16 two-frame Pepsi-can sprite sheet. The exact retail asset-ID-to-TIM lookup for asset 250 remains under trace, so the browser uses this visually verified original can sheet while keeping that final numeric mapping explicitly unclaimed. The browser currently renders the 170 active world entities, all 100 course-indexed pickups, and the 67 encounter sprites using original transforms and authored positions. The 26 linked event quads activate those sprites at their authored approach points, and collision-enabled records use the retail radius derived from `abs(field32) / 3`.
