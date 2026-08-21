@@ -28,6 +28,8 @@ Confirmed tagged archives include:
 - `CDDATA/0/0100` through `0108`: paired VH/VB sound banks;
 - numbered scene families containing large TIM archives and TMD geometry.
 
+The global `CDDATA/0/0003` PIC archive is now losslessly traversed as a sequential chain of 30 embedded TIM images plus four zero-padding bytes. The exported artwork includes the original HUD glyph sheets, warning/callout graphics, particles, results-background tiles, scene-clear/results labels, record/perfect graphics, and pause art. `tools/extract_pic.py` writes the browser PNGs and an offset/dimension/hash manifest to `assets/ripped/ui`. Runtime asset identifiers remain deliberately unassigned in that manifest until the executable registration path is proven; visual recognition alone is not treated as numeric provenance.
+
 The numbered scene families are not ordinary file extensions. Each family mixes direct TMD geometry, table-based containers, texture archives, and runtime/script data. Their roles and retail ordering must be established from executable references before assigning stage names.
 
 ## Authoritative retail segment order

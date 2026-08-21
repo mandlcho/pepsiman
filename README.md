@@ -11,6 +11,7 @@ The player character uses data decoded from the supplied Japanese disc:
 - original CD-audio music track
 - 2,170 TIM textures extracted as PNG for continued level reconstruction
 - original Stage 1 road geometry (21 retail TMD chunks), 211-point authored course path, exact retail spawn, and 80-object prop library
+- original global HUD/results PIC artwork exported as 30 provenance-preserving browser textures
 
 ## Play locally
 

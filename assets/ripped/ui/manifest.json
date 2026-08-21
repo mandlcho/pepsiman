@@ -1,0 +1,252 @@
+{
+  "format": "Pepsiman global PIC web export v1",
+  "source": "CDDATA/0/0003",
+  "sourceSize": 102716,
+  "sourceSha256": "009ab1d4f8b9e31d62e9c2bf3215baf02addcceeb04a7c7fc5be19255190f16b",
+  "provenance": "sequential TIM payload beginning at the PIC header's first offset",
+  "retailAssetMapping": "unassigned",
+  "trailingPaddingBytes": 4,
+  "entryCount": 30,
+  "entries": [
+    {
+      "picIndex": 0,
+      "sourceOffset": 16,
+      "width": 256,
+      "height": 32,
+      "file": "global-000.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 1,
+      "sourceOffset": 4176,
+      "width": 160,
+      "height": 16,
+      "file": "global-001.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 2,
+      "sourceOffset": 5520,
+      "width": 88,
+      "height": 40,
+      "file": "global-002.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 3,
+      "sourceOffset": 7344,
+      "width": 192,
+      "height": 64,
+      "file": "global-003.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 4,
+      "sourceOffset": 13552,
+      "width": 64,
+      "height": 64,
+      "file": "global-004.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 5,
+      "sourceOffset": 15664,
+      "width": 32,
+      "height": 32,
+      "file": "global-005.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 6,
+      "sourceOffset": 16240,
+      "width": 256,
+      "height": 64,
+      "file": "global-006.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 7,
+      "sourceOffset": 24496,
+      "width": 160,
+      "height": 16,
+      "file": "global-007.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 8,
+      "sourceOffset": 25840,
+      "width": 160,
+      "height": 8,
+      "file": "global-008.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 9,
+      "sourceOffset": 26544,
+      "width": 32,
+      "height": 32,
+      "file": "global-009.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 10,
+      "sourceOffset": 27120,
+      "width": 32,
+      "height": 32,
+      "file": "global-010.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 11,
+      "sourceOffset": 27696,
+      "width": 144,
+      "height": 24,
+      "file": "global-011.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 12,
+      "sourceOffset": 29488,
+      "width": 128,
+      "height": 96,
+      "file": "global-012.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 13,
+      "sourceOffset": 35696,
+      "width": 128,
+      "height": 96,
+      "file": "global-013.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 14,
+      "sourceOffset": 41904,
+      "width": 128,
+      "height": 96,
+      "file": "global-014.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 15,
+      "sourceOffset": 48112,
+      "width": 128,
+      "height": 96,
+      "file": "global-015.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 16,
+      "sourceOffset": 54320,
+      "width": 128,
+      "height": 96,
+      "file": "global-016.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 17,
+      "sourceOffset": 60528,
+      "width": 128,
+      "height": 96,
+      "file": "global-017.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 18,
+      "sourceOffset": 66736,
+      "width": 128,
+      "height": 96,
+      "file": "global-018.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 19,
+      "sourceOffset": 72944,
+      "width": 128,
+      "height": 96,
+      "file": "global-019.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 20,
+      "sourceOffset": 79152,
+      "width": 64,
+      "height": 64,
+      "file": "global-020.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 21,
+      "sourceOffset": 81264,
+      "width": 384,
+      "height": 64,
+      "file": "global-021.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 22,
+      "sourceOffset": 93616,
+      "width": 192,
+      "height": 32,
+      "file": "global-022.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 23,
+      "sourceOffset": 96752,
+      "width": 128,
+      "height": 16,
+      "file": "global-023.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 24,
+      "sourceOffset": 97840,
+      "width": 104,
+      "height": 16,
+      "file": "global-024.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 25,
+      "sourceOffset": 98736,
+      "width": 4,
+      "height": 1,
+      "file": "global-025.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 26,
+      "sourceOffset": 99284,
+      "width": 4,
+      "height": 1,
+      "file": "global-026.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 27,
+      "sourceOffset": 99832,
+      "width": 16,
+      "height": 16,
+      "file": "global-027.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 28,
+      "sourceOffset": 100024,
+      "width": 32,
+      "height": 32,
+      "file": "global-028.png",
+      "retailAssetId": null
+    },
+    {
+      "picIndex": 29,
+      "sourceOffset": 100600,
+      "width": 128,
+      "height": 32,
+      "file": "global-029.png",
+      "retailAssetId": null
+    }
+  ]
+}

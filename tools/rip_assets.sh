@@ -14,6 +14,8 @@ mkdir -p "$WORK/disc" "$ROOT/assets/ripped/textures" "$ROOT/assets/audio"
 python3 "$ROOT/tools/extract_mode2.py" "$DISC" "$WORK/pepsiman.iso"
 bsdtar -xf "$WORK/pepsiman.iso" -C "$WORK/disc" CDDATA 2>/dev/null || true
 python3 "$ROOT/tools/extract_tim.py" "$WORK/disc/CDDATA" "$ROOT/assets/ripped/textures"
+python3 "$ROOT/tools/extract_pic.py" \
+  "$WORK/disc/CDDATA/0/0003" "$ROOT/assets/ripped/ui"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/2/2003" "$ROOT/assets/ripped/stages/2" \
   --tim "$WORK/disc/CDDATA/2/2002" --tim "$WORK/disc/CDDATA/2/2005"
