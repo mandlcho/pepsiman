@@ -519,11 +519,11 @@
       39
     ],
     "resultRevealMilestones": {
-      "backgroundFrame": 0,
-      "secondaryEffectFrame": 24,
-      "firstScorecardFrame": 40,
-      "secondScorecardFrame": 64,
-      "secondScorecardSettleFrame": 68,
+      "effectSlot0Frame": 0,
+      "effectSlot1OffsetFrame": 24,
+      "effectSlot1Frame": 40,
+      "effectSlot2Frame": 64,
+      "effectSlot3Frame": 68,
       "countStartFrame": 80
     },
     "transitionGuardAddress": "0x800958f8",

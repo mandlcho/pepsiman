@@ -90,6 +90,7 @@ const retailScriptParticles=[];
 let retailCanTexture=null;
 let stageOneEndingFlow=null;
 let stageOneScriptedFlow=null;
+let retailFinishFlow=null;
 let retailPropTemplates=[];
 const upAxis=new THREE.Vector3(0,1,0);
 function coursePointAt(distance){
@@ -131,6 +132,7 @@ async function loadStageOneCourse(){
   ]);
   stageOneEndingFlow=retailFlow.scenes.find(scene=>scene.sceneIndex===0)?.ending||null;
   stageOneScriptedFlow=retailFlow.stageOneScriptedEvents.find(event=>event.eventRecordIndex===194)||null;
+  retailFinishFlow=retailFlow.finishController||null;
   const group=new THREE.Group();group.name="retail-stage-1-course";group.scale.setScalar(RETAIL_WORLD_SCALE);world.add(group);
   const textureLoader=new THREE.TextureLoader(),materials=new Map();
   const materialFor=name=>{
@@ -315,7 +317,7 @@ function sampleAnimation(clip,time,loop=true,lockPelvisHeight=false){
 
 const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
-const state={running:false,completed:false,ending:null,scripted:null,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,elapsed:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
+const state={running:false,completed:false,ending:null,scripted:null,results:null,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,elapsed:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function playerControlLocked(){return Boolean(state.ending||(state.scripted&&state.scripted.phase<4));}
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
 function jump(){if(state.running&&!playerControlLocked()&&state.grounded&&state.slide<=0){state.vy=JUMP_VELOCITY;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
@@ -362,7 +364,7 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.classList.remove("retail-clear");ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginStageOneEnding(){
   if(!state.running||state.ending||!stageOneEndingFlow)return;
@@ -390,7 +392,16 @@ function updateStageOneEnding(dt){
   }
 }
 function setRetailDigits(element,text){const glyphs={":":10,"/":11};element.replaceChildren(...[...text].map(character=>{const glyph=document.createElement("i");glyph.style.setProperty("--glyph",glyphs[character]??Number(character));return glyph;}));}
-function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;ui.music.pause();ui.over.classList.add("retail-clear");ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;setRetailDigits(ui.resultCans,String(state.cans).padStart(3,"0"));const minutes=Math.floor(state.elapsed/60),seconds=Math.floor(state.elapsed%60);setRetailDigits(ui.resultTime,`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`);ui.over.hidden=false;}
+function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0};ui.music.pause();ui.over.className="game-over retail-clear";ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;setRetailDigits(ui.resultCans,"000");const minutes=Math.floor(state.elapsed/60),seconds=Math.floor(state.elapsed%60);setRetailDigits(ui.resultTime,`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`);ui.over.hidden=false;}
+function updateRetailResults(dt){
+  if(!state.results||!retailFinishFlow)return;
+  state.results.elapsed+=dt;const frame=Math.floor(state.results.elapsed*RETAIL_FPS),milestones=retailFinishFlow.resultRevealMilestones;
+  ui.over.classList.toggle("results-slot-0",frame>=milestones.effectSlot0Frame);
+  ui.over.classList.toggle("results-slot-1",frame>=milestones.effectSlot1Frame);
+  ui.over.classList.toggle("results-slot-2",frame>=milestones.effectSlot2Frame);
+  if(frame>=milestones.countStartFrame){const displayCans=Math.min(state.cans,frame-milestones.countStartFrame);if(displayCans!==state.results.displayCans){state.results.displayCans=displayCans;setRetailDigits(ui.resultCans,String(displayCans).padStart(3,"0"));}}
+  ui.over.classList.toggle("results-complete",frame>=milestones.countStartFrame+state.cans+60);
+}
 function beginStageOneScriptedEvent(){
   if(!state.running||state.scripted||!stageOneScriptedFlow)return;
   scene.updateMatrixWorld(true);
@@ -539,7 +550,7 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
     updateHud();
     }
-  } else if(rig){rig.visible=true;if(state.completed)sampleAnimation(proneClip,(proneClip.frameCount-1)/proneClip.fps,false);else{sampleAnimation(idleClip,now);updateRetailCourse(0);}}
+  } else if(rig){rig.visible=true;if(state.completed){sampleAnimation(proneClip,(proneClip.frameCount-1)/proneClip.fps,false);updateRetailResults(dt);}else{sampleAnimation(idleClip,now);updateRetailCourse(0);}}
   updateStageOneScriptParticles(dt);
   camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2,5,dt);renderer.render(scene,camera);
 }

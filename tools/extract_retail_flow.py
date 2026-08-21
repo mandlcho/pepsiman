@@ -122,11 +122,11 @@ def extract(executable: PsxExecutable) -> dict:
             "resultConfigAddress": f"0x{RESULT_CONFIG_ADDRESS:08x}",
             "resultConfigBytes": list(executable.bytes(RESULT_CONFIG_ADDRESS, 8)),
             "resultRevealMilestones": {
-                "backgroundFrame": 0,
-                "secondaryEffectFrame": 24,
-                "firstScorecardFrame": 40,
-                "secondScorecardFrame": 64,
-                "secondScorecardSettleFrame": 68,
+                "effectSlot0Frame": 0,
+                "effectSlot1OffsetFrame": 24,
+                "effectSlot1Frame": 40,
+                "effectSlot2Frame": 64,
+                "effectSlot3Frame": 68,
                 "countStartFrame": 80
             },
             "transitionGuardAddress": "0x800958f8",
