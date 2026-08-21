@@ -11,6 +11,8 @@ import math
 from pathlib import Path
 import struct
 
+from extract_character import parse_compressed_animation_pack
+
 
 ENTITY_TABLE_OFFSET = 0x6778
 ENTITY_CAPACITY = 200
@@ -320,7 +322,10 @@ def extract(
 
     embedded_tod = data[EMBEDDED_TOD_OFFSET:]
     if embedded_tod[8:12] != b"TOD\0":
-        raise ValueError("embedded Stage 1 animation does not contain the expected TOD signature")
+        raise ValueError("embedded retail animation does not contain the expected TOD signature")
+    embedded_tod_clips = parse_compressed_animation_pack(embedded_tod, first_entry=0)
+    if not embedded_tod_clips:
+        raise ValueError("embedded retail animation archive contains no compact TOD clips")
 
     return {
         "format": "Pepsiman retail collision, entity, encounter, and pickup data v6",
@@ -374,6 +379,9 @@ def extract(
         "embeddedTodOffset": EMBEDDED_TOD_OFFSET,
         "embeddedTodSize": len(embedded_tod),
         "embeddedTodSha256": hashlib.sha256(embedded_tod).hexdigest(),
+        "embeddedTodClipCount": len(embedded_tod_clips),
+        "embeddedTodClipIds": [clip["id"] for clip in embedded_tod_clips],
+        "embeddedTodClips": embedded_tod_clips,
         "embeddedTodRaw": embedded_tod.hex(),
         "entities": entities,
     }

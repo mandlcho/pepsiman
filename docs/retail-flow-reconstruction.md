@@ -84,7 +84,7 @@ The `2006` loader establishes a fixed-capacity layout used by the retail executa
 - 200 world-entity records of 72 bytes beginning at file offset `0x6778`;
 - 200 runtime event records of 92 bytes immediately afterward;
 - 100 encounter records of 60 bytes at `0xe798`, followed by a 2,048-byte course-indexed collectible table at `0xff08`;
-- a 2,020-byte embedded TOD animation beginning at `0x10708` and ending exactly at the end of the file.
+- a 2,020-byte embedded compact TOD archive beginning at `0x10708` and ending exactly at the end of the file; its single ID-1 clip contains 16 frames of 16-joint character motion at 30 Hz.
 
 The layout is proven by the retail copy routine at `0x8002c2b4`: it copies `0x3840` bytes (`200×72`) to the live entity array, `0x47e0` bytes (`200×92`) to the live event array, `0x1770` bytes (`100×60`) to the live encounter array, and the following `0x800` bytes to a separate runtime table. The event updater uses an encounter record's halfword at `0x2c` to index the 92-byte event array. The renderer receives the encounter's first halfword as its retail model identifier, while the player-contact path at `0x8002bd00` iterates all 100 records and calls the retail player collision detector at `0x80028ae4` for enabled records.
 
@@ -111,8 +111,11 @@ prop objects with 3,309 triangles, 271 authored course points, and browser spawn
 `(-27100, 9079, -26000)` with source heading 1024. The generalized entity extractor
 validates 125 active entities, 302 collision spheres, 9 landing surfaces, 106 active
 event records, 99 active encounter records, and 100 course-indexed Pepsi pickups.
-The entity pack retains an 8,248-byte embedded TOD beginning at the same `0x10708`
-offset used by family 2. These assets are preserved under `assets/ripped/stages/3`.
+The entity pack retains an 8,248-byte embedded compact TOD beginning at the same
+`0x10708` offset used by family 2. It contains nine 30 Hz, 16-joint character clips
+with IDs 1–9 and frame counts 2, 3, 3, 3, 3, 6, 26, 3, and 6. The repeatable entity
+export now decodes every joint frame while preserving the complete source bytes.
+These assets are preserved under `assets/ripped/stages/3`.
 The browser course loader is now segment-aware and, after the result effect and
 the proven 9-frame handoff, replaces family 2 with the original family-3 world,
 props, collisions, pickups, encounters, authored path, and spawn. Family-2-only
@@ -183,10 +186,11 @@ Behavior 20 dispatches through `0x800fa0bc` to `0x800f6708`. Subtype pairs selec
 Once triggered, the controller interpolates the obstacle heading from zero to
 `0x800` (180 degrees) over exactly 40 retail frames and retains the rotated
 collision profile afterward. The active records use subtypes 3 and 4, producing
-opposite 2,000- and 3,000-unit rotations. The browser applies that proven heading
-to the visible model and its four attached collision spheres. Applying the local
-collision-copy heading to the visible mesh is currently an explicit visual
-inference; the embedded stage TOD linkage still needs to be decoded independently.
+opposite 2,000- and 3,000-unit rotations. The shared consumer at `0x8002a7d8`
+passes each transformed copy through the entity renderer at `0x8002a5b0` before
+testing its collision records, proving that the authored heading drives both the
+visible model and its four collision spheres. The browser applies the same shared
+transform.
 
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 

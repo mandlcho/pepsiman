@@ -215,7 +215,7 @@ def parse_animation_pack(pack: bytes) -> list[dict]:
     return clips
 
 
-def parse_compressed_animation_pack(pack: bytes) -> list[dict]:
+def parse_compressed_animation_pack(pack: bytes, first_entry: int = 1) -> list[dict]:
     """Decode Pepsiman's compact, absolute TOD transform packets.
 
     This layout was recovered from the game's transform routine at
@@ -228,7 +228,7 @@ def parse_compressed_animation_pack(pack: bytes) -> list[dict]:
     """
     first_offset = u32(pack, 0)
     clips = []
-    for entry in range(1, first_offset // 16):
+    for entry in range(first_entry, first_offset // 16):
         header = entry * 16
         if pack[header + 8 : header + 12] != b"TOD\0":
             continue
