@@ -136,11 +136,19 @@ follows the full 9080-to-0 descent instead of losing its environment underground
 
 The next handoff selects `CDDATA/4`, whose resource roles differ from the first two
 families. `4002`, not `4003`, contains the scene geometry: it has a TMD at offset
-`0x14` with four objects. `4003` is a tagged archive of 181 TIM images. `4004` is
-a direct 30-object prop TMD, and `4005` supplies another 34 TIM images. The
-repeatable conversion exports the four world objects, 30 prop objects, and 56
-referenced texture palettes under `assets/ripped/stages/4`; `tools/rip_assets.sh`
-now rebuilds both segment 1 and these segment-2 assets from the original disc.
+`0x14` with four objects. `4001` is a raw, contiguous stream of 135 TIM images
+rather than the tagged archive used by the ordinary extractor. It ends at file
+offset `0x3c930` followed by four zero padding bytes. All seven material CLUT/page
+pairs referenced by `4002` resolve in this stream, including the streetscape,
+shopfront, tree, sign, and crushed-can art. Feeding `4002` the later tagged packs
+produced seven transparent 334-byte pages; the repeatable converter now uploads
+`4001` at its authored VRAM coordinates and emits the populated 19–27 KB pages.
+`4003` is a tagged archive of 181 TIM images used by the prop set, `4004` is a
+direct 30-object prop TMD, and `4005` supplies another 34 TIM images. The
+repeatable conversion exports the four world objects, 30 prop objects, all 135
+raw source images, and 56 referenced texture palettes under
+`assets/ripped/stages/4`; `tools/rip_assets.sh` rebuilds them from the original
+disc.
 
 `4006` is only 36,448 bytes and does not match the 67,348-byte fixed entity-pack
 layout shared by `2006` and `3006`. Its exact compact layout is 200 entity records

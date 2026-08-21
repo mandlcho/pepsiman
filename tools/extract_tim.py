@@ -101,16 +101,40 @@ def extract_pack(source: Path, destination: Path) -> int:
     return extracted
 
 
+def extract_direct_sequence(source: Path, destination: Path) -> int:
+    """Extract a padding-free sequence of raw TIM images such as CDDATA/4/4001."""
+    data = source.read_bytes()
+    cursor = 0
+    images: list[tuple[int, int, bytes]] = []
+    while cursor + 8 <= len(data) and u32(data, cursor) == 0x10:
+        flags = u32(data, cursor + 4)
+        block_cursor = cursor + 8
+        if flags & 8:
+            block_cursor += u32(data, block_cursor)
+        end = block_cursor + u32(data, block_cursor)
+        if end <= cursor or end > len(data):
+            raise ValueError(f"invalid direct TIM boundary at {cursor:#x}")
+        images.append(decode_tim(data, cursor))
+        cursor = end
+    if not images or any(data[cursor:]):
+        raise ValueError(f"{source} is not a zero-padded direct TIM sequence")
+    destination.mkdir(parents=True, exist_ok=True)
+    for index, (width, height, rgba) in enumerate(images, 1):
+        write_png(destination / f"{source.name}-{index:03d}.png", width, height, rgba)
+    return len(images)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("source", type=Path)
     parser.add_argument("destination", type=Path)
+    parser.add_argument("--direct-sequence", action="store_true")
     args = parser.parse_args()
     total = 0
     sources = args.source.rglob("*") if args.source.is_dir() else [args.source]
     for source in sources:
         if source.is_file():
-            count = extract_pack(source, args.destination / source.parent.name)
+            count = extract_direct_sequence(source, args.destination / source.parent.name) if args.direct_sequence else extract_pack(source, args.destination / source.parent.name)
             if count:
                 print(f"{source}: {count} textures")
                 total += count

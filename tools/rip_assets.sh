@@ -14,6 +14,8 @@ mkdir -p "$WORK/disc" "$ROOT/assets/ripped/textures" "$ROOT/assets/audio"
 python3 "$ROOT/tools/extract_mode2.py" "$DISC" "$WORK/pepsiman.iso"
 bsdtar -xf "$WORK/pepsiman.iso" -C "$WORK/disc" CDDATA 2>/dev/null || true
 python3 "$ROOT/tools/extract_tim.py" "$WORK/disc/CDDATA" "$ROOT/assets/ripped/textures"
+python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
+  "$WORK/disc/CDDATA/4/4001" "$ROOT/assets/ripped/textures"
 python3 "$ROOT/tools/extract_pic.py" \
   "$WORK/disc/CDDATA/0/0003" "$ROOT/assets/ripped/ui"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
@@ -36,7 +38,7 @@ python3 "$ROOT/tools/extract_stage_entities.py" \
   "$WORK/disc/CDDATA/3/3006" "$ROOT/assets/ripped/stages/3/3006-entities.json"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/4/4002" "$ROOT/assets/ripped/stages/4" \
-  --tim "$WORK/disc/CDDATA/4/4003" --tim "$WORK/disc/CDDATA/4/4005"
+  --tim "$WORK/disc/CDDATA/4/4001"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/4/4004" "$ROOT/assets/ripped/stages/4" \
   --tim "$WORK/disc/CDDATA/4/4003" --tim "$WORK/disc/CDDATA/4/4005"

@@ -13,10 +13,40 @@ import struct
 from extract_tim import psx_color, u16, u32, write_png
 
 
-def upload_tim_pack(vram: list[int], path: Path) -> None:
+def upload_tim(vram: list[int], data: bytes, cursor: int) -> int:
+    if cursor + 8 > len(data) or u32(data, cursor) != 0x10:
+        raise ValueError(f"invalid TIM at {cursor:#x}")
+    flags = u32(data, cursor + 4)
+    cursor += 8
+    blocks = 2 if flags & 8 else 1
+    for _ in range(blocks):
+        size = u32(data, cursor)
+        if size < 12 or cursor + size > len(data):
+            raise ValueError(f"invalid TIM block at {cursor:#x}")
+        x, y, width, height = struct.unpack_from("<4H", data, cursor + 4)
+        pixels = data[cursor + 12 : cursor + size]
+        for row in range(height):
+            start = row * width * 2
+            for column in range(width):
+                target = (y + row) * 1024 + x + column
+                if 0 <= target < len(vram):
+                    vram[target] = u16(pixels, start + column * 2)
+        cursor += size
+    return cursor
+
+
+def upload_tim_source(vram: list[int], path: Path) -> None:
+    """Upload either a tagged Pepsiman TIM archive or a raw TIM sequence."""
     data = path.read_bytes()
     if len(data) < 16:
-        raise ValueError(f"{path} is not a TIM archive")
+        raise ValueError(f"{path} is not a TIM source")
+    if u32(data, 0) == 0x10:
+        cursor = 0
+        while cursor + 8 <= len(data) and u32(data, cursor) == 0x10:
+            cursor = upload_tim(vram, data, cursor)
+        if any(data[cursor:]):
+            raise ValueError(f"non-zero tail after raw TIM sequence in {path}")
+        return
     entry_count = u32(data, 0) // 16
     for entry in range(entry_count):
         header = entry * 16
@@ -25,20 +55,10 @@ def upload_tim_pack(vram: list[int], path: Path) -> None:
         cursor = u32(data, header)
         if cursor + 8 > len(data) or u32(data, cursor) != 0x10:
             continue
-        flags = u32(data, cursor + 4)
-        cursor += 8
-        blocks = 2 if flags & 8 else 1
-        for _ in range(blocks):
-            size = u32(data, cursor)
-            x, y, width, height = struct.unpack_from("<4H", data, cursor + 4)
-            pixels = data[cursor + 12 : cursor + size]
-            for row in range(height):
-                start = row * width * 2
-                for column in range(width):
-                    target = (y + row) * 1024 + x + column
-                    if 0 <= target < len(vram):
-                        vram[target] = u16(pixels, start + column * 2)
-            cursor += size
+        try:
+            upload_tim(vram, data, cursor)
+        except (ValueError, IndexError, struct.error):
+            continue
 
 
 def render_texture_page(vram: list[int], cba: int, tsb: int) -> bytes:
@@ -235,7 +255,7 @@ def main() -> None:
     texture_directory.mkdir(exist_ok=True)
     vram = [0] * (1024 * 512)
     for tim_pack in args.tim:
-        upload_tim_pack(vram, tim_pack)
+        upload_tim_source(vram, tim_pack)
     for cba, tsb in sorted(materials):
         write_png(texture_directory / f"{cba:04x}-{tsb:04x}.png", 256, 256, render_texture_page(vram, cba, tsb))
     (args.destination / f"{args.tmd.name}.json").write_text(json.dumps(model, separators=(",", ":")) + "\n")
