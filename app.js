@@ -68,7 +68,7 @@ for (let z=-110;z<12;z+=8) for (const side of [-1,1]) {
   }
 }
 
-const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0,visibleEncounterCount:0,pendingEncounterModelCount:0,collisionMeshes:[]};
+const retailCourse={group:null,path:[],length:0,ready:false,visiblePropCount:0,collisionMeshes:[]};
 const retailColliders=[];
 const retailCollisionSurfaces=[];
 const retailCollidedEntities=new Set();
@@ -155,14 +155,6 @@ async function loadStageOneCourse(){
       object:prop,
       vertices:surface.vertices.map(vertex=>new THREE.Vector3().fromArray(vertex))
     });
-  }
-  for(const encounter of entityTable.encounterRecords||[]){
-    if(!encounter.active)continue;
-    const template=propTemplates[encounter.renderModelId];
-    if(!template){retailCourse.pendingEncounterModelCount++;continue;}
-    const object=template.clone(true);object.name=`retail-encounter-${encounter.id}`;
-    object.position.fromArray(encounter.position);object.userData.retailEncounter=encounter;group.add(object);
-    retailCourse.visibleEncounterCount++;
   }
   for(let index=0;index<retailCourse.path.length;index++){
     const previous=retailCourse.path[Math.max(0,index-1)].position,next=retailCourse.path[Math.min(retailCourse.path.length-1,index+1)].position;
@@ -350,4 +342,4 @@ document.querySelectorAll("[data-control]").forEach(button=>{const control=butto
 ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.visibleEncounterCount} AUTHORED ENCOUNTERS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadStageOneCourse()]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.path.length} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
