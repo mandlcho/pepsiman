@@ -368,7 +368,7 @@ function beginStageOneEnding(){
   scene.updateMatrixWorld(true);
   const toWorld=position=>retailCourse.group.localToWorld(new THREE.Vector3().fromArray(position));
   state.ending={phase:1,elapsed:0,animationTime:0,start:rig.position.clone(),approach:toWorld(stageOneEndingFlow.approachBrowserPosition),finish:toWorld(stageOneEndingFlow.finishBrowserPosition)};
-  state.vx=0;state.vy=0;state.grounded=true;rig.visible=true;callout("STAGE CLEAR!");
+  state.vx=0;state.vy=0;state.grounded=true;rig.visible=true;
 }
 function updateStageOneEnding(dt){
   const ending=state.ending,duration=stageOneEndingFlow.interpolationFrames/RETAIL_FPS;
@@ -380,9 +380,12 @@ function updateStageOneEnding(dt){
   }else if(ending.phase===2){
     rig.position.lerpVectors(ending.start,ending.finish,THREE.MathUtils.clamp(ending.elapsed/duration,0,1));sampleAnimation(runClip,ending.animationTime);
     if(ending.elapsed>=duration){ending.phase=3;ending.elapsed=0;ending.animationTime=0;rig.position.copy(ending.finish);}
-  }else{
+  }else if(ending.phase===3){
     sampleAnimation(proneClip,ending.animationTime,false);
-    if(ending.elapsed>=stageOneEndingFlow.cameraAdvanceCounterFrames/RETAIL_FPS)clearStageOne();
+    if(ending.elapsed>=stageOneEndingFlow.cameraAdvanceCounterFrames/RETAIL_FPS){ending.phase=4;ending.elapsed=0;}
+  }else{
+    sampleAnimation(proneClip,ending.animationTime);
+    if(ending.elapsed>=stageOneEndingFlow.holdFrames/RETAIL_FPS)clearStageOne();
   }
 }
 function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;ui.music.pause();ui.over.classList.add("retail-clear");ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}
