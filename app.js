@@ -140,8 +140,6 @@ async function loadStageOneCourse(){
   for(const object of model.objects){
     const chunk=await makeObject(object,`course-chunk-${object.id}`);group.add(chunk);
     chunk.traverse(child=>{if(child.isMesh)retailCourse.collisionMeshes.push(child);});
-    const min=object.bounds.min,max=object.bounds.max;
-    retailCourse.path.push({position:new THREE.Vector3((min[0]+max[0])/2,roadHeight,(min[2]+max[2])/2),distance:0,tangent:null});
   }
   retailCourse.chunkCount=model.objects.length;
   const propTemplates=await Promise.all(propModel.objects.map(object=>makeObject(object,`prop-template-${object.id}`)));
@@ -200,7 +198,17 @@ async function loadStageOneCourse(){
     retailEncounters.push({id:encounter.id,eventId:encounter.eventRecordIndex,sprite,basePosition:sprite.position.clone(),baseMaterial:sprite.material,nextMaterial:encounterMaterials.get(encounter.spriteFrameId+1),behaviorState,collisionEnabled:Boolean(encounter.runtimeBytes36To39[2]&0x80),radius:Math.abs(encounter.field32)/3*RETAIL_WORLD_SCALE,reaction:null,removed:false});
   }
   retailCourse.encounterCount=retailEncounters.length;
-  retailCourse.path.unshift({position:new THREE.Vector3().fromArray(entityTable.eventRecords[0].triggerCenter),distance:0,tangent:null});
+  const authoredPath=model.sceneControl?.coursePath||[];
+  const authoredSpawn=model.sceneControl?.spawn?.position;
+  if(authoredSpawn&&authoredPath.length){
+    retailCourse.path.push({position:new THREE.Vector3(...authoredSpawn),distance:0,tangent:null});
+    for(const point of authoredPath.slice(1))retailCourse.path.push({position:new THREE.Vector3(point.position[0],roadHeight,point.position[1]),distance:0,tangent:null});
+  }else{
+    for(const object of model.objects){
+      const min=object.bounds.min,max=object.bounds.max;
+      retailCourse.path.push({position:new THREE.Vector3((min[0]+max[0])/2,roadHeight,(min[2]+max[2])/2),distance:0,tangent:null});
+    }
+  }
   for(let index=0;index<retailCourse.path.length;index++){
     const previous=retailCourse.path[Math.max(0,index-1)].position,next=retailCourse.path[Math.min(retailCourse.path.length-1,index+1)].position;
     retailCourse.path[index].tangent=next.clone().sub(previous).normalize();
@@ -391,7 +399,7 @@ function updateRetailEncounters(dt){
       const frame=Math.floor(encounter.reaction.elapsed*RETAIL_REACTION_FPS)+1;
       if(frame>RETAIL_REACTION_FRAMES){encounter.removed=true;encounter.sprite.visible=false;continue;}
       const travel=frame*20,angle=THREE.MathUtils.degToRad(frame*10);
-      encounter.sprite.position.copy(encounter.basePosition).addScaledVector(encounter.reaction.direction,travel);encounter.sprite.position.y+=Math.abs(Math.sin(angle))*200;
+      encounter.sprite.position.copy(encounter.basePosition).addScaledVector(encounter.reaction.direction,travel);encounter.sprite.position.y=encounter.reaction.baseY+Math.abs(Math.sin(angle))*200;
       encounter.sprite.visible=eventActive&&frame%3!==0;
       continue;
     }
@@ -409,8 +417,8 @@ function updateRetailEncounters(dt){
       if(encounter.behaviorState===2&&encounter.nextMaterial){
         encounter.sprite.material=encounter.nextMaterial;
         playerCoursePosition.copy(rig.position);retailCourse.group.worldToLocal(playerCoursePosition);
-        const direction=encounter.basePosition.clone().sub(playerCoursePosition);direction.y=0;if(direction.lengthSq()<1)direction.set(0,0,-1);direction.normalize();
-        encounter.reaction={elapsed:0,direction};
+        const direction=(coursePointAt(state.distance)?.tangent||new THREE.Vector3(0,0,-1)).clone();direction.y=0;direction.normalize();
+        encounter.reaction={elapsed:0,direction,baseY:playerCoursePosition.y};
       }
       hit();break;
     }

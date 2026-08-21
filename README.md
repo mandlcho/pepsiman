@@ -10,7 +10,7 @@ The player character uses data decoded from the supplied Japanese disc:
 - 50 validated compact animation clips decoded from the original TOD stream
 - original CD-audio music track
 - 2,170 TIM textures extracted as PNG for continued level reconstruction
-- original Stage 1 road geometry (21 retail TMD chunks) and 80-object prop library
+- original Stage 1 road geometry (21 retail TMD chunks), 211-point authored course path, exact retail spawn, and 80-object prop library
 
 ## Play locally
 
@@ -72,7 +72,7 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
 - Rigging: recovered root + original 16-joint TOD hierarchy, rigid skin weights, corrected bind transforms, and validated absolute integer-degree motion packets
 - Gameplay: continuous lateral steering, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
-- Stage 1: original textured road chunks, retail start point and course centerline, 170 original prop instances, all 100 course-indexed pickups, and 67 original-frame encounters gated by 26 authored approach triggers, including proximity poses and 15-frame collision reactions; broader event behavior remains in progress
+- Stage 1: original textured road chunks, exact retail spawn and 211-point course path, 170 original prop instances, all 100 course-indexed pickups, and 67 original-frame encounters gated by 26 authored approach triggers, including proximity poses and course-directed 15-frame collision reactions; broader event behavior remains in progress
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 
 This fan project contains assets from the original game. Do not distribute it unless you have the necessary rights.

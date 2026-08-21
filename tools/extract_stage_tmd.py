@@ -74,6 +74,45 @@ def find_tmd(data: bytes) -> int:
     raise ValueError("no TMD header in the first 256 bytes")
 
 
+def parse_scene_control(data: bytes, tmd_offset: int) -> dict | None:
+    """Decode the course path and initial player transform preceding a world TMD."""
+    if tmd_offset < 0x30:
+        return None
+    header_offsets = list(struct.unpack_from("<12I", data, 0))
+    if header_offsets[0] != tmd_offset:
+        return None
+    course_offset = header_offsets[3]
+    spawn_offset = header_offsets[7]
+    if course_offset + 4 > len(data) or spawn_offset + 8 > len(data):
+        raise ValueError("scene-control offsets extend beyond the stage file")
+    point_count = u32(data, course_offset)
+    if point_count == 0 or course_offset + 4 + point_count * 8 > len(data):
+        raise ValueError(f"invalid authored course-path count {point_count}")
+    points = []
+    for index in range(point_count):
+        x, z, normal_x, normal_z = struct.unpack_from("<4h", data, course_offset + 4 + index * 8)
+        points.append({
+            "id": index,
+            "position": [x, -z],
+            "boundaryNormal": [normal_x, -normal_z],
+        })
+    source_x, source_y, source_z, source_heading = struct.unpack_from("<4h", data, spawn_offset)
+    return {
+        "headerOffsets": header_offsets,
+        "coursePathOffset": course_offset,
+        "coursePathCount": point_count,
+        "coursePath": points,
+        "spawnOffset": spawn_offset,
+        "spawn": {
+            "sourcePosition": [source_x, source_y, source_z],
+            "gamePosition": [-source_x, -source_y, -source_z],
+            "position": [-source_x, source_y, source_z],
+            "sourceHeading": source_heading,
+            "gameHeading": -source_heading,
+        },
+    }
+
+
 def packet_layout(mode: int) -> tuple[int, bool, bool]:
     polygon = mode & 0x3C
     layouts = {
@@ -93,6 +132,7 @@ def packet_layout(mode: int) -> tuple[int, bool, bool]:
 
 def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]]:
     tmd_offset = find_tmd(data)
+    scene_control = parse_scene_control(data, tmd_offset)
     flags = u32(data, tmd_offset + 4)
     if flags != 0:
         raise ValueError("absolute-address TMDs are unsupported")
@@ -170,13 +210,16 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
             "groups": [{"material": key, **value} for key, value in sorted(groups.items())],
         })
 
-    return ({
-        "format": "Pepsiman stage TMD web mesh v1",
+    result = {
+        "format": "Pepsiman stage TMD web mesh v2",
         "source": source_name,
         "tmdOffset": tmd_offset,
         "objects": objects,
         "bounds": {"min": bounds_min, "max": bounds_max},
-    }, materials)
+    }
+    if scene_control is not None:
+        result["sceneControl"] = scene_control
+    return (result, materials)
 
 
 def main() -> None:
