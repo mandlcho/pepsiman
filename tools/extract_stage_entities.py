@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract Stage 1's retail collision, entity, and encounter data from 2006."""
+"""Extract Stage 1's retail collision, entity, encounter, and pickup data from 2006."""
 
 from __future__ import annotations
 
@@ -30,8 +30,9 @@ EVENT_RECORD_SIZE = 0x5C
 ENCOUNTER_RECORDS_OFFSET = 0xE798
 ENCOUNTER_RECORD_COUNT = 100
 ENCOUNTER_RECORD_SIZE = 0x3C
-ENCOUNTER_INDEX_OFFSET = 0xFF08
-ENCOUNTER_INDEX_SIZE = 0x800
+COLLECTIBLE_TABLE_OFFSET = 0xFF08
+COLLECTIBLE_TABLE_SIZE = 0x800
+COLLECTIBLE_RECORD_SIZE = 0x08
 EMBEDDED_TOD_OFFSET = 0x10708
 EXPECTED_FILE_SIZE = 0x10EEC
 
@@ -224,28 +225,66 @@ def extract(data: bytes) -> dict:
             "raw": record.hex(),
         })
 
-    encounter_index_data = data[
-        ENCOUNTER_INDEX_OFFSET : ENCOUNTER_INDEX_OFFSET + ENCOUNTER_INDEX_SIZE
+    collectible_table_data = data[
+        COLLECTIBLE_TABLE_OFFSET : COLLECTIBLE_TABLE_OFFSET + COLLECTIBLE_TABLE_SIZE
     ]
-    course_chunk_count, second_header_word = struct.unpack_from("<II", encounter_index_data)
+    course_chunk_count, collectible_data_offset = struct.unpack_from("<II", collectible_table_data)
     if course_chunk_count != 21:
-        raise ValueError(f"unexpected encounter course-chunk count {course_chunk_count}")
-    encounter_chunk_index = []
+        raise ValueError(f"unexpected collectible course-chunk count {course_chunk_count}")
+    expected_data_offset = 8 + course_chunk_count * 8
+    if collectible_data_offset != expected_data_offset:
+        raise ValueError(
+            f"unexpected collectible data offset {collectible_data_offset}, "
+            f"expected {expected_data_offset}"
+        )
+    collectible_chunk_index = []
     indexed_records = []
     for chunk in range(course_chunk_count):
-        start, count = struct.unpack_from("<II", encounter_index_data, 8 + chunk * 8)
+        start, count = struct.unpack_from("<II", collectible_table_data, 8 + chunk * 8)
         indexed_records.extend(range(start, start + count))
-        encounter_chunk_index.append({"courseChunk": chunk, "start": start, "count": count})
-    if indexed_records != list(range(ENCOUNTER_RECORD_COUNT)):
-        raise ValueError("encounter course-chunk index does not partition all 100 records")
+        collectible_chunk_index.append({"courseChunk": chunk, "start": start, "count": count})
+    collectible_count = len(indexed_records)
+    if indexed_records != list(range(collectible_count)):
+        raise ValueError("collectible course-chunk index is not contiguous from record zero")
 
-    encounter_index_header_size = 8 + course_chunk_count * 8
+    collectible_capacity = (
+        COLLECTIBLE_TABLE_SIZE - collectible_data_offset
+    ) // COLLECTIBLE_RECORD_SIZE
+    collectibles = []
+    for index in range(collectible_capacity):
+        offset = collectible_data_offset + index * COLLECTIBLE_RECORD_SIZE
+        record = collectible_table_data[offset : offset + COLLECTIBLE_RECORD_SIZE]
+        x, y, z, raw_type = struct.unpack("<hhhh", record)
+        active = index < collectible_count
+        if active and raw_type == 0:
+            raise ValueError(f"indexed collectible record {index} has no type")
+        if not active and record != bytes(COLLECTIBLE_RECORD_SIZE):
+            raise ValueError(f"unused collectible record {index} is not zero-filled")
+        collectibles.append({
+            "id": index,
+            "active": active,
+            "position": [x, -y, -z],
+            "type": raw_type & 0x7FFF,
+            "consumed": bool(raw_type & 0x8000),
+            "rawType": raw_type,
+            "raw": record.hex(),
+        })
+
+    active_collectible_types = Counter(
+        collectible["type"] for collectible in collectibles if collectible["active"]
+    )
+    if active_collectible_types != {1: 100}:
+        raise ValueError(
+            "unexpected active collectible type distribution: "
+            f"expected {{1: 100}}, got {dict(active_collectible_types)}"
+        )
+
     embedded_tod = data[EMBEDDED_TOD_OFFSET:]
     if embedded_tod[8:12] != b"TOD\0":
         raise ValueError("embedded Stage 1 animation does not contain the expected TOD signature")
 
     return {
-        "format": "Pepsiman Stage 1 retail collision, entity, and encounter data v3",
+        "format": "Pepsiman Stage 1 retail collision, entity, encounter, and pickup data v4",
         "source": "CDDATA/2/2006",
         "sourceSize": len(data),
         "sourceSha256": hashlib.sha256(data).hexdigest(),
@@ -279,11 +318,17 @@ def extract(data: bytes) -> dict:
         "encounterRecordCount": ENCOUNTER_RECORD_COUNT,
         "activeEncounterRecordCount": sum(record["active"] for record in encounter_records),
         "encounterRecords": encounter_records,
-        "encounterIndexOffset": ENCOUNTER_INDEX_OFFSET,
-        "encounterIndexSize": ENCOUNTER_INDEX_SIZE,
-        "encounterIndexSecondHeaderWord": second_header_word,
-        "encounterChunkIndex": encounter_chunk_index,
-        "encounterIndexRemainingRaw": encounter_index_data[encounter_index_header_size:].hex(),
+        "collectibleTableOffset": COLLECTIBLE_TABLE_OFFSET,
+        "collectibleTableSize": COLLECTIBLE_TABLE_SIZE,
+        "collectibleDataOffset": collectible_data_offset,
+        "collectibleRecordSize": COLLECTIBLE_RECORD_SIZE,
+        "collectibleCapacity": collectible_capacity,
+        "collectibleCount": collectible_count,
+        "activeCollectibleTypeCounts": {
+            str(key): value for key, value in sorted(active_collectible_types.items())
+        },
+        "collectibleChunkIndex": collectible_chunk_index,
+        "collectibles": collectibles,
         "embeddedTodOffset": EMBEDDED_TOD_OFFSET,
         "embeddedTodSize": len(embedded_tod),
         "embeddedTodSha256": hashlib.sha256(embedded_tod).hexdigest(),
@@ -305,7 +350,8 @@ def main() -> None:
         f"{result['collisionSphereCount']} collision spheres and "
         f"{result['collisionSurfaceCount']} collision surfaces, "
         f"{result['activeEventRecordCount']} active event records, and "
-        f"{result['activeEncounterRecordCount']} active encounter records"
+        f"{result['activeEncounterRecordCount']} active encounter records, and "
+        f"{result['collectibleCount']} collectibles"
     )
 
 
