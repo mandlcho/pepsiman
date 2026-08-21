@@ -16,6 +16,7 @@ SCENE_SELECTOR_FUNCTION = 0x8004121C
 SCENE_SELECTOR_TABLE = 0x8001205C
 ENDING_APPROACH_TABLE = 0x8007AE1C
 ENDING_FINISH_TABLE = 0x8007AED0
+SCRIPTED_CENTER_TABLE = 0x8007AD68
 
 
 class PsxExecutable:
@@ -76,18 +77,39 @@ def extract(executable: PsxExecutable) -> dict:
                 "finishGamePosition": list(finish),
                 "finishBrowserPosition": [finish[0], -finish[1], -finish[2]],
                 "interpolationFrames": 35,
+                "cameraInterpolationFrames": 30,
+                "cameraAdvanceCounterFrames": 41,
+                "holdFrames": 241,
+                "finalDelayFrames": 9,
             },
         })
     return {
-        "format": "Pepsiman retail flow map v2",
-        "provenance": "SLPS_017.62 scene dispatch at 0x8004121c and ending tables consumed by overlay controller 0x800f7abc",
+        "format": "Pepsiman retail flow map v3",
+        "provenance": "SLPS_017.62 scene dispatch and position tables consumed by Stage 1 overlay controllers 0x800f7584 and 0x800f7abc",
         "executableLoadAddress": f"0x{executable.load_address:08x}",
         "sceneIndexAddress": f"0x{SCENE_INDEX_ADDRESS:08x}",
         "endingApproachTableAddress": f"0x{ENDING_APPROACH_TABLE:08x}",
         "endingFinishTableAddress": f"0x{ENDING_FINISH_TABLE:08x}",
+        "scriptedCenterTableAddress": f"0x{SCRIPTED_CENTER_TABLE:08x}",
         "sceneCount": SCENE_COUNT,
         "scenes": scenes,
         "reservedSelector": selectors[SCENE_COUNT],
+        "stageOneScriptedEvents": [{
+            "eventRecordIndex": 194,
+            "controllerAddress": "0x800f7584",
+            "targetGamePosition": list(executable.signed_words(SCRIPTED_CENTER_TABLE, 3)),
+            "targetBrowserPosition": [
+                executable.signed_words(SCRIPTED_CENTER_TABLE, 3)[0],
+                -executable.signed_words(SCRIPTED_CENTER_TABLE, 3)[1],
+                -executable.signed_words(SCRIPTED_CENTER_TABLE, 3)[2],
+            ],
+            "centeringFrames": 25,
+            "soundFrames": 9,
+            "soundAssetId": 56,
+            "effectSpawnCount": 40,
+            "effectVerticalStep": 10,
+            "closingEffectFrames": 30,
+        }],
     }
 
 

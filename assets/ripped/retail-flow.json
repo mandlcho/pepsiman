@@ -1,10 +1,11 @@
 {
-  "format": "Pepsiman retail flow map v2",
-  "provenance": "SLPS_017.62 scene dispatch at 0x8004121c and ending tables consumed by overlay controller 0x800f7abc",
+  "format": "Pepsiman retail flow map v3",
+  "provenance": "SLPS_017.62 scene dispatch and position tables consumed by Stage 1 overlay controllers 0x800f7584 and 0x800f7abc",
   "executableLoadAddress": "0x80010000",
   "sceneIndexAddress": "0x80095830",
   "endingApproachTableAddress": "0x8007ae1c",
   "endingFinishTableAddress": "0x8007aed0",
+  "scriptedCenterTableAddress": "0x8007ad68",
   "sceneCount": 14,
   "scenes": [
     {
@@ -33,7 +34,11 @@
           9080,
           6120
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -62,7 +67,11 @@
           0,
           23383
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -91,7 +100,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -120,7 +133,11 @@
           300,
           25402
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -149,7 +166,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -178,7 +199,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -207,7 +232,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -236,7 +265,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -265,7 +298,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -294,7 +331,11 @@
           0,
           -3858
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -323,7 +364,11 @@
           -610,
           21361
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -352,7 +397,11 @@
           0,
           0
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -381,7 +430,11 @@
           0,
           -19607
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     },
     {
@@ -410,9 +463,35 @@
           2000,
           -16480
         ],
-        "interpolationFrames": 35
+        "interpolationFrames": 35,
+        "cameraInterpolationFrames": 30,
+        "cameraAdvanceCounterFrames": 41,
+        "holdFrames": 241,
+        "finalDelayFrames": 9
       }
     }
   ],
-  "reservedSelector": 17
+  "reservedSelector": 17,
+  "stageOneScriptedEvents": [
+    {
+      "eventRecordIndex": 194,
+      "controllerAddress": "0x800f7584",
+      "targetGamePosition": [
+        -5700,
+        -9080,
+        18500
+      ],
+      "targetBrowserPosition": [
+        -5700,
+        9080,
+        -18500
+      ],
+      "centeringFrames": 25,
+      "soundFrames": 9,
+      "soundAssetId": 56,
+      "effectSpawnCount": 40,
+      "effectVerticalStep": 10,
+      "closingEffectFrames": 30
+    }
+  ]
 }

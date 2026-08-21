@@ -366,7 +366,7 @@ function updateStageOneEnding(dt){
     if(ending.elapsed>=duration){ending.phase=3;ending.elapsed=0;ending.animationTime=0;rig.position.copy(ending.finish);}
   }else{
     sampleAnimation(proneClip,ending.animationTime,false);
-    if(ending.elapsed>=41/RETAIL_FPS)clearStageOne();
+    if(ending.elapsed>=stageOneEndingFlow.cameraAdvanceCounterFrames/RETAIL_FPS)clearStageOne();
   }
 }
 function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;ui.music.pause();ui.over.classList.add("retail-clear");ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}
