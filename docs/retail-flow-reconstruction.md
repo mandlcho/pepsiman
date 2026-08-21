@@ -120,8 +120,8 @@ The browser course loader is now segment-aware and, after the result effect and
 the proven 9-frame handoff, replaces family 2 with the original family-3 world,
 props, collisions, pickups, encounters, authored path, and spawn. Family-2-only
 event IDs 194 and 196 are not injected into the second segment. The second
-segment's overlay-specific scripted events and ending trigger still require the
-same controller-level reconstruction already completed for family 2.
+segment instead registers its source-proven ending trigger at event ID 198 and
+uses its separately decoded controller timings below.
 
 Segment 1 is not vertically flat. Its authored world starts at raw elevation 9080,
 descends through successive ramp chunks, and finishes at elevation 0. The initial
@@ -131,6 +131,22 @@ The loader now samples the original TMD triangles under every authored X/Z path
 point and uses the resulting surface elevation when moving the world beneath the
 runner. All Stage 1 points resolve at the expected road height; segment 1 now
 follows the full 9080-to-0 descent instead of losing its environment underground.
+
+## Retail segment 2 extraction
+
+The next handoff selects `CDDATA/4`, whose resource roles differ from the first two
+families. `4002`, not `4003`, contains the scene geometry: it has a TMD at offset
+`0x14` with four objects. `4003` is a tagged archive of 181 TIM images. `4004` is
+a direct 30-object prop TMD, and `4005` supplies another 34 TIM images. The
+repeatable conversion exports the four world objects, 30 prop objects, and 56
+referenced texture palettes under `assets/ripped/stages/4`; `tools/rip_assets.sh`
+now rebuilds both segment 1 and these segment-2 assets from the original disc.
+
+`4006` is only 36,448 bytes and does not match the 67,348-byte fixed entity-pack
+layout shared by `2006` and `3006`. The generalized extractor rejects it as
+truncated instead of silently assigning incorrect entity/event offsets. Its
+placement and set-piece format remains under overlay trace, so the browser does
+not yet register scene index 2 from the partial geometry export alone.
 
 The first retail moving-entity dispatch is also connected. Overlay behaviors 1 and
 2 route through `0x800f9190`/`0x800f9274`; their subtype supplies speeds in ten-unit

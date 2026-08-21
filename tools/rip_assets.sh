@@ -26,6 +26,20 @@ python3 "$ROOT/tools/extract_stage_entities.py" \
   "$WORK/disc/CDDATA/2/2006" "$ROOT/assets/ripped/stages/2/2006-entities.json"
 python3 "$ROOT/tools/extract_stage_auxiliary.py" \
   "$WORK/disc/CDDATA/2/2007" "$ROOT/assets/ripped/stages/2/2007-auxiliary.json"
+python3 "$ROOT/tools/extract_stage_tmd.py" \
+  "$WORK/disc/CDDATA/3/3003" "$ROOT/assets/ripped/stages/3" \
+  --tim "$WORK/disc/CDDATA/3/3002" --tim "$WORK/disc/CDDATA/3/3005"
+python3 "$ROOT/tools/extract_stage_tmd.py" \
+  "$WORK/disc/CDDATA/3/3004" "$ROOT/assets/ripped/stages/3" \
+  --tim "$WORK/disc/CDDATA/3/3002" --tim "$WORK/disc/CDDATA/3/3005"
+python3 "$ROOT/tools/extract_stage_entities.py" \
+  "$WORK/disc/CDDATA/3/3006" "$ROOT/assets/ripped/stages/3/3006-entities.json"
+python3 "$ROOT/tools/extract_stage_tmd.py" \
+  "$WORK/disc/CDDATA/4/4002" "$ROOT/assets/ripped/stages/4" \
+  --tim "$WORK/disc/CDDATA/4/4003" --tim "$WORK/disc/CDDATA/4/4005"
+python3 "$ROOT/tools/extract_stage_tmd.py" \
+  "$WORK/disc/CDDATA/4/4004" "$ROOT/assets/ripped/stages/4" \
+  --tim "$WORK/disc/CDDATA/4/4003" --tim "$WORK/disc/CDDATA/4/4005"
 python3 "$ROOT/tools/extract_character.py" \
   "$WORK/disc/CDDATA/0/0000" \
   "$WORK/disc/CDDATA/0/0001" \
