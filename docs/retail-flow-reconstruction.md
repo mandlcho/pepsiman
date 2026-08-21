@@ -219,6 +219,27 @@ testing its collision records, proving that the authored heading drives both the
 visible model and its four collision spheres. The browser applies the same shared
 transform.
 
+The remaining Stage 1 car records use behaviors 36 and 38. Their wrapper at
+`0x800fa1f8` selects the scene-zero controllers `0x800f87e4` and `0x800f82e0`
+from the current retail scene index. Both save the authored start position, wait
+until the player's three-dimensional distance is at most 1,500 source units, and
+derive their live heading from the original 211-point course through helper
+`0x8002af6c`. During the main travel phase both subtract 20 from game-space Y per
+30 Hz tick. Behavior 38 advances 40 source units per tick until its three-axis
+distance from the start exceeds 3,400 units. Behavior 36 advances 5 units per tick,
+except when its phase counter modulo 47 equals 1, when the source effect helper and
+a 40-unit step are used; its travel threshold is 7,600 units. The thresholds are
+proven directly by squared constants `0x00b06440` and `0x03715900`.
+
+After the threshold, both controllers interpolate over counters 0 through 30 and
+move 20 units per tick. Behavior 38 turns by `-0x400` PSX angle units (left 90°),
+while behavior 36 turns by `+0x400` (right 90°); their final state continues at 20
+units per tick on the new heading. The browser now reproduces the proximity gate,
+course-derived heading, vertical and forward motion, exact distance thresholds,
+31-tick turns, final travel, mesh rotation, and collider-bearing transform. The
+periodic constructor called by `0x800f85f0`/`0x800f8b2c` is an effects-only path
+and remains queued with the retail particle pass.
+
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 
 The original extracted texture `assets/ripped/textures/0/0001-023.png` is a 32×16 two-frame Pepsi-can sprite sheet. The exact retail asset-ID-to-TIM lookup for asset 250 remains under trace, so the browser uses this visually verified original can sheet while keeping that final numeric mapping explicitly unclaimed. The browser currently renders the 170 active world entities, all 100 course-indexed pickups, and the 67 encounter sprites using original transforms and authored positions. The 26 linked event quads activate those sprites at their authored approach points, and collision-enabled records use the retail radius derived from `abs(field32) / 3`.
