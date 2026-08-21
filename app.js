@@ -197,7 +197,7 @@ async function loadRetailCourse(segmentIndex=0){
     const prop=propTemplates[entity.currentModel].clone(true);prop.name=`retail-entity-${entity.id}`;
     prop.position.fromArray(entity.position);prop.rotation.y=entity.baseYawRadians;
     prop.scale.set(Math.abs(entity.scale[0]),Math.abs(entity.scale[1]),Math.abs(entity.scale[0]));group.add(prop);retailCourse.visiblePropCount++;
-    if([1,2,5,6,7,8].includes(entity.behavior))retailDynamicEntities.push({entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false});
+    if([1,2,5,6,7,8,15].includes(entity.behavior))retailDynamicEntities.push({entityId:entity.id,object:prop,behavior:entity.behavior,variant:entity.motionVariant,heading:entity.motionHeadingRadians,initialHeading:entity.motionHeadingRadians,baseRotationY:prop.rotation.y,basePosition:prop.position.clone(),courseDistance:0,ageFrames:0,phase:0,phaseFrames:0,phaseDistance:0,active:false});
     for(const sphere of collisionSpheresByModel[entity.currentModel])retailColliders.push({
       entityId:entity.id,
       object:prop,
@@ -473,6 +473,7 @@ function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).
 
 const collisionCenter=new THREE.Vector3();
 const collectibleCenter=new THREE.Vector3();
+const dynamicWorldPosition=new THREE.Vector3();
 const playerCoursePosition=new THREE.Vector3();
 const eventWorldVertices=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const playerProbeCenters=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
@@ -500,16 +501,19 @@ function testRetailCollisions(){
 function updateRetailDynamicEntities(dt){
   for(const dynamic of retailDynamicEntities){
     if(!dynamic.active){
-      if(state.distance<dynamic.courseDistance-18||state.distance>dynamic.courseDistance+8)continue;
+      if(dynamic.behavior===7||dynamic.behavior===8){
+        dynamic.object.getWorldPosition(dynamicWorldPosition);
+        if(dynamicWorldPosition.distanceTo(rig.position)>=3000*RETAIL_WORLD_SCALE)continue;
+      }else if(state.distance<dynamic.courseDistance-18||state.distance>dynamic.courseDistance+8)continue;
       dynamic.active=true;dynamic.object.visible=true;
     }
     if(state.distance>dynamic.courseDistance+24){dynamic.object.visible=false;continue;}
     const frameDelta=dt*RETAIL_FPS;
-    if(dynamic.behavior<=2){
-      const motionFrames=dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
+    if(dynamic.behavior<=2||dynamic.behavior===15){
+      const motionFrames=dynamic.behavior===15||dynamic.behavior===1&&dynamic.variant>10?Infinity:150;
       if(dynamic.ageFrames>=motionFrames)continue;
       dynamic.ageFrames=Math.min(motionFrames,dynamic.ageFrames+frameDelta);
-      const speed=(dynamic.variant<=10?dynamic.variant:dynamic.variant-10)*10;
+      const speed=(dynamic.behavior===15?dynamic.variant:dynamic.variant<=10?dynamic.variant:dynamic.variant-10)*10;
       const distance=speed*frameDelta;
       dynamic.object.position.x+=Math.sin(dynamic.heading)*distance;
       dynamic.object.position.z-=Math.cos(dynamic.heading)*distance;

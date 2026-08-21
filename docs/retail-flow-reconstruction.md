@@ -142,12 +142,24 @@ remain next in the overlay reconstruction queue.
 The next traffic family is dispatched by behaviors 5 through 8. Wrappers
 `0x800f22b4` and `0x800f23ec` map the entity subtype into a speed and an initial
 travel distance, then call the shared three-phase controller at `0x800f2f94`.
+For the observed behavior-7/8 subtypes, `0x800f23ec` first routes through the
+proximity gate at `0x800f9f20`: the stationary vehicle switches to its subtype
+plus 100 only when the player comes within 3,000 source units, after which the
+same movement profiles run. The browser uses that original three-dimensional
+24-unit browser-space proximity test instead of the general inferred look-ahead.
 The vehicle first travels that subtype-defined distance, turns left or right by
 `0x400` PSX angle units (90 degrees) over 31 frames, and continues on the new
 heading for a maximum of 150 frames. The browser reproduces those profiles and
 updates the visible model rotation as well as its collider-bearing transform.
 This covers the authored turning traffic in the first two extracted segments;
 non-traffic behavior classes remain separately queued.
+
+Behavior 15 drives the larger model-76/model-78 vehicles through wrapper
+`0x800f95d8` and the shared vehicle controller at `0x800f3304`. For the active
+records in the extracted segments, the subtype maps directly to 20, 30, or 40
+source units per frame and the pre-impact controller advances continuously along
+the authored heading. That proven pre-impact movement is connected in the browser;
+the controller's separate collision/crash phase still remains to be reproduced.
 
 The separate 2,048-byte table is now traced through its runtime consumer at `0x8002d0c4`. It begins with a 21-entry start/count index—exactly the number of `2003` course chunks—and an offset of 176 to 234 fixed-capacity records of eight bytes. The index covers records 0 through 99 once and in order; each indexed record is a signed `(x, y, z, type)` tuple with source type `1`, while all remaining capacity is zero-filled. The render path draws each indexed record with fixed retail asset ID `250`. The contact path calls the retail player collision routine with radius `0x32`, plays sound `0x35`, creates the pickup effects, and sets bit `0x8000` in the record type to mark it consumed. This identifies the indexed records as the authored Stage 1 collectible pickups rather than an index over encounter records. The repeatable v5 export exposes the 21 chunk ranges and all 234 records, including raw bytes; its 100 active records are the authoritative browser pickup positions.
 
