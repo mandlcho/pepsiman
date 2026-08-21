@@ -22,6 +22,8 @@ python3 "$ROOT/tools/extract_stage_tmd.py" \
   --tim "$WORK/disc/CDDATA/2/2002" --tim "$WORK/disc/CDDATA/2/2005"
 python3 "$ROOT/tools/extract_stage_entities.py" \
   "$WORK/disc/CDDATA/2/2006" "$ROOT/assets/ripped/stages/2/2006-entities.json"
+python3 "$ROOT/tools/extract_stage_auxiliary.py" \
+  "$WORK/disc/CDDATA/2/2007" "$ROOT/assets/ripped/stages/2/2007-auxiliary.json"
 python3 "$ROOT/tools/extract_character.py" \
   "$WORK/disc/CDDATA/0/0000" \
   "$WORK/disc/CDDATA/0/0001" \
