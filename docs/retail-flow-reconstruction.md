@@ -102,6 +102,8 @@ The encounter reaction flags are also traced. In `0x8002b8f8`, low state 1 rende
 
 The reaction direction is now traced rather than inferred. Every active Stage 1 update, the overlay at `0x800f809c` passes the player X/Y/Z and current course index to `0x8003b9b4`. That helper advances the authored course index, derives the tangent angle between the current and following 211-point path records, and returns it; the overlay adds `0x800` (180 degrees) and stores the result at `0x800a7682`. The reaction updater converts that angle to a 20-unit sine/cosine vector and subtracts it from encounter X/Z, moving the hit sprite forward along the authored course. The browser now uses the matching current course tangent and player contact height. Broader event-state transitions remain under reconstruction.
 
+Stage 1 completion is authored as event record 196 rather than a raw route-length test. The stage ending controller at `0x800f7abc` reads state byte `0x800d36f0`; with the live event base at `0x800cf080`, that address is exactly `base + 196 × 92`. Record 196's trigger center is browser-space `(26672, 9080, 5327)`, alongside path point 207 with about 12 browser route units remaining, and entering its quad changes the record to state 1 before the ending controller begins. The browser now uses this exact finish quad for an interim Stage 1 clear screen. The retail ending choreography and results presentation are still being decoded and are not yet claimed by that interim UI.
+
 `2007` has now been losslessly partitioned without assigning speculative gameplay roles:
 
 - 200 records of 60 bytes from `0x0000` through `0x2edf`; every record repeats its initial three signed 32-bit coordinates;

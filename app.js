@@ -23,6 +23,7 @@ const ui = {
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
   distance: document.querySelector("#distance"), cans: document.querySelector("#cans"),
   lives: [...document.querySelectorAll("#lives i")], over: document.querySelector("#game-over"),
+  overKicker: document.querySelector("#game-over > p"), overTitle: document.querySelector("#game-over h2"),
   final: document.querySelector("#final-distance"), retry: document.querySelector("#retry"),
   callout: document.querySelector("#callout"), sound: document.querySelector("#sound"),
   music: document.querySelector("#music")
@@ -187,7 +188,7 @@ async function loadStageOneCourse(){
     return[frameId,new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:false})];
   })));
   const encounterActivationEventIds=new Set(activeEncounterRecords.map(record=>record.eventRecordIndex));
-  const linkedEventIds=new Set([...encounterActivationEventIds].flatMap(eventId=>[eventId,eventId+1]));
+  const linkedEventIds=new Set([...encounterActivationEventIds].flatMap(eventId=>[eventId,eventId+1]));linkedEventIds.add(196);
   for(const event of entityTable.eventRecords){
     if(!linkedEventIds.has(event.id))continue;
     retailEvents.set(event.id,{id:event.id,initialState:event.initialState,state:event.initialState,vertices:event.triggerVertices.map(vertex=>new THREE.Vector3().fromArray(vertex))});
@@ -339,8 +340,9 @@ function updateVerticalMotion(dt,groundHeight){
 function callout(text){ui.callout.textContent=text;ui.callout.classList.add("show");setTimeout(()=>ui.callout.classList.remove("show"),380);}
 function blip(frequency=650){if(state.muted)return;const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=frequency;gain.gain.setValueAtTime(.08,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.13);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}state.running=true;state.distance=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
+function clearStageOne(){if(!state.running)return;state.running=false;ui.music.pause();ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;callout("STAGE CLEAR!");}
 function updateHud(){ui.distance.textContent=String(Math.floor(state.distance)).padStart(4,"0");ui.cans.textContent=String(state.cans).padStart(2,"0");ui.lives.forEach((life,i)=>life.classList.toggle("off",i>=state.lives));}
 
 const collisionCenter=new THREE.Vector3();
@@ -388,7 +390,7 @@ function updateRetailEncounters(dt){
     if(event.state!==0)continue;
     for(let index=0;index<4;index++)retailCourse.group.localToWorld(eventWorldVertices[index].copy(event.vertices[index]));
     const[a,b,c,d]=eventWorldVertices;
-    if(pointInTriangleXZ(rig.position.x,rig.position.z,a,b,c)||pointInTriangleXZ(rig.position.x,rig.position.z,b,d,c))event.state=1;
+    if(pointInTriangleXZ(rig.position.x,rig.position.z,a,b,c)||pointInTriangleXZ(rig.position.x,rig.position.z,b,d,c)){event.state=1;if(event.id===196)clearStageOne();}
   }
   for(const event of retailEvents.values()){
     if(event.id%2!==1||event.state!==1)continue;
