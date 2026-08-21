@@ -21,6 +21,17 @@ ACTOR_DISPATCH_OFFSET = 0x7B0C
 ACTOR_HANDLER_COUNT = 13
 EXPECTED_SIZE = 33044
 
+ACTIVE_CONTROLLER_METADATA = [
+    {"soundId": 56, "collision": [20, 80, 80], "displayVerticalOffset": 0, "response": "damage"},
+    {"soundId": 59, "collision": [20, 60, 120], "displayVerticalOffset": 0, "response": "damage"},
+    {"soundId": 59, "collision": [20, 70, 200], "displayVerticalOffset": 0, "response": "damage"},
+    {"soundId": 56, "collision": [50, 60, 80], "displayVerticalOffset": 0, "response": "damage"},
+    {"soundId": 58, "collision": [20, 95, 100], "displayVerticalOffset": 0, "response": "damage"},
+    {"soundId": 57, "collision": [35, 45, 80], "displayVerticalOffset": 60, "response": "damage"},
+    {"soundId": 58, "collision": [20, 105, 90], "displayVerticalOffset": 0, "response": "damage"},
+    {"soundId": 57, "collision": [60, 70, 150], "displayVerticalOffset": 60, "response": "block-forward"},
+]
+
 
 def pointer(data: bytes, offset: int) -> int:
     return struct.unpack_from("<I", data, offset)[0]
@@ -89,6 +100,34 @@ def extract(data: bytes, source_name: str = "CDDATA/4/4000") -> dict:
         "actorDispatchOffset": ACTOR_DISPATCH_OFFSET,
         "actorHandlerCount": ACTOR_HANDLER_COUNT,
         "actorHandlers": [f"0x{handler:08x}" for handler in actor_handlers],
+        "activeControllerMetadata": [
+            {
+                "controllerType": index,
+                "handlerAddress": f"0x{actor_handlers[index]:08x}",
+                "spriteFrameId": index + 1,
+                "spriteTexture": f"assets/ripped/textures/4/4005-{index + 1:03d}.png",
+                "renderDefinitionAddress": f"0x{0x800960A8 + index * 0x10:08x}",
+                "soundId": metadata["soundId"],
+                "collisionForwardRadius": metadata["collision"][0],
+                "collisionLateralRadius": metadata["collision"][1],
+                "collisionVerticalLowerExtent": metadata["collision"][2],
+                "displayBrowserVerticalOffset": metadata["displayVerticalOffset"],
+                "collisionResponse": metadata["response"],
+                "blockForwardOffset": 60 if metadata["response"] == "block-forward" else None,
+            }
+            for index, metadata in enumerate(ACTIVE_CONTROLLER_METADATA)
+        ],
+        "visibilityAhead": 2000,
+        "visibilityBehind": 10000,
+        "automaticReactionBehindScrollingOrigin": 120,
+        "scrollingOriginBehindPlayer": 620,
+        "playerStartForward": -1800,
+        "finishForward": 30001,
+        "retailAdvanceUnitsPerFrame": 30,
+        "reactionFrames": 16,
+        "reactionForwardUnitsPerFrame": 45,
+        "reactionLateralUnitsPerFrame": 25,
+        "reactionVerticalAmplitude": 200,
         "activeControllerTypeCounts": {str(key): value for key, value in sorted(type_counts.items())},
         "nonMonotonicForwardRecordIds": backward_records,
         "actors": actors,

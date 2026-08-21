@@ -168,8 +168,21 @@ starts with a 61-entry top-level scene-state jump table used by `0x800f4794`.
 `tools/extract_stage_overlay_setpiece.py` validates all overlay pointers and table
 boundaries, preserves every raw actor record and exports both dispatch tables to
 `assets/ripped/stages/4/4000-overlay-setpiece.json`. Controller semantics and the
-browser coordinate mapping remain unassigned until their eight handlers are
-decoded; the new export is provenance data, not a guessed obstacle implementation.
+browser coordinate mapping were then established from handlers `0x800f0bb8`
+through `0x800f2bbc`. They share a player-relative visibility range of 2,000
+source units ahead and 10,000 behind. The export now records each type's original
+sprite frame, render-definition address, sound ID, collision envelope, display
+offset, and collision response. Types 0 through 6 damage Pepsiman and enter a
+16-frame knock-away; type 7 instead writes the player forward coordinate to 60
+units before the pedestrian, acting as a blocker until the player steers around.
+The knock-away advances 45 units per frame, moves laterally by 25 units per frame,
+and uses a 200-unit sine lift. Scene state 20 at `0x800f58b0` proves the chase
+spawn at source X -1,800, an advance of 30 source units per 30 Hz frame, and the
+ending threshold at X 30,001. The browser registers segment 2 on that straight
+course, loads all 109 active compact props and 103 authored pedestrian records,
+and uses the exact 7.2 browser-unit-per-second retail base speed. The larger
+chase-object, camera-facing presentation, and overlay ending states remain to be
+connected before this segment is considered visually complete.
 
 The first retail moving-entity dispatch is also connected. Overlay behaviors 1 and
 2 route through `0x800f9190`/`0x800f9274`; their subtype supplies speeds in ten-unit
