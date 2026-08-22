@@ -15,12 +15,16 @@ python3 "$ROOT/tools/extract_mode2.py" "$DISC" "$WORK/pepsiman.iso"
 bsdtar -xf "$WORK/pepsiman.iso" -C "$WORK/disc" CDDATA 2>/dev/null || true
 python3 "$ROOT/tools/extract_tim.py" "$WORK/disc/CDDATA" "$ROOT/assets/ripped/textures"
 python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
+  "$WORK/disc/CDDATA/2/2001" "$ROOT/assets/ripped/textures"
+python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
+  "$WORK/disc/CDDATA/3/3001" "$ROOT/assets/ripped/textures"
+python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
   "$WORK/disc/CDDATA/4/4001" "$ROOT/assets/ripped/textures"
 python3 "$ROOT/tools/extract_pic.py" \
   "$WORK/disc/CDDATA/0/0003" "$ROOT/assets/ripped/ui"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/2/2003" "$ROOT/assets/ripped/stages/2" \
-  --tim "$WORK/disc/CDDATA/2/2002" --tim "$WORK/disc/CDDATA/2/2005"
+  --tim "$WORK/disc/CDDATA/2/2001"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/2/2004" "$ROOT/assets/ripped/stages/2" \
   --tim "$WORK/disc/CDDATA/2/2002" --tim "$WORK/disc/CDDATA/2/2005"
@@ -30,7 +34,7 @@ python3 "$ROOT/tools/extract_stage_auxiliary.py" \
   "$WORK/disc/CDDATA/2/2007" "$ROOT/assets/ripped/stages/2/2007-auxiliary.json"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/3/3003" "$ROOT/assets/ripped/stages/3" \
-  --tim "$WORK/disc/CDDATA/3/3002" --tim "$WORK/disc/CDDATA/3/3005"
+  --tim "$WORK/disc/CDDATA/3/3001"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/3/3004" "$ROOT/assets/ripped/stages/3" \
   --tim "$WORK/disc/CDDATA/3/3002" --tim "$WORK/disc/CDDATA/3/3005"

@@ -257,7 +257,13 @@ def main() -> None:
     for tim_pack in args.tim:
         upload_tim_source(vram, tim_pack)
     for cba, tsb in sorted(materials):
-        write_png(texture_directory / f"{cba:04x}-{tsb:04x}.png", 256, 256, render_texture_page(vram, cba, tsb))
+        rgba = render_texture_page(vram, cba, tsb)
+        if not any(rgba[3::4]):
+            raise ValueError(
+                f"material {cba:04x}-{tsb:04x} is fully transparent; "
+                "the TMD is paired with the wrong TIM source"
+            )
+        write_png(texture_directory / f"{cba:04x}-{tsb:04x}.png", 256, 256, rgba)
     (args.destination / f"{args.tmd.name}.json").write_text(json.dumps(model, separators=(",", ":")) + "\n")
     print(f"Extracted {len(model['objects'])} objects and {len(materials)} texture palettes from {args.tmd}")
 

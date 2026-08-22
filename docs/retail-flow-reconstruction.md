@@ -74,8 +74,17 @@ The TMD conversion now establishes two concrete Stage 1 geometry roles:
 
 - `2003` contains 21 world-positioned course chunks, totaling 5,904 browser triangles after quad triangulation;
 - `2004` contains 80 reusable local-space prop models, totaling 2,949 browser triangles;
-- their polygon packets reference 133 unique CLUT/texture-page combinations reconstructed from `2002` and `2005`;
+- `2001` is a contiguous stream of 144 raw TIMs ending at `0x33cd0` plus four zero bytes, and supplies all 25 CLUT/texture-page combinations referenced by the `2003` world;
+- the `2004` prop packets use the tagged `2002` and `2005` archives, bringing the family total to 133 unique referenced combinations;
 - the ordered course-chunk centers form an approximately 813-unit browser-space route, including the retail road's turns.
+
+The initial converter applied the tagged prop/sprite archives to both TMD files.
+That left most `2003` world pages as transparent 334-byte PNGs even though the
+geometry was present, producing floating cars and pedestrians over the clear
+color. The source-aware conversion now uploads `2001` at its authored VRAM
+coordinates for `2003`; headless gameplay captures verify that the original road,
+intersections, sidewalks, grass lots, lane markings, and moving traffic render
+together. The raw source images are also exported individually and reproducibly.
 
 The `2006` loader establishes a fixed-capacity layout used by the retail executable:
 
@@ -100,13 +109,14 @@ The Stage 1 world file `2003` also contains the authoritative runner path and sp
 
 The ordinary result handoff from segment 0 selects `CDDATA/3`. Its file roles match
 the proven family-2 pipeline: `3000` is a 65,344-byte relocated scene overlay,
-`3002`/`3005` are TIM packs, `3003` is the world TMD container, `3004` is the
-80-object prop TMD, and `3006` is the collision/entity/event/encounter/pickup pack.
+`3001` is a 139-image raw TIM stream ending at `0x3a8c0` plus four zero bytes,
+`3002`/`3005` are tagged TIM packs, `3003` is the world TMD container, `3004` is
+the 80-object prop TMD, and `3006` is the collision/entity/event/encounter/pickup pack.
 Files `3007` and `3008` are additional 32-entry TIM packs loaded by the special
 `segmentIndex % 3 == 1` resource path and are not folded into geometry textures
 without tracing their runtime registration role.
 
-The repeatable world conversion proves 27 world chunks with 7,003 triangles, 80
+The repeatable world conversion resolves `3003` against `3001` and proves 27 world chunks with 7,003 triangles, 80
 prop objects with 3,309 triangles, 271 authored course points, and browser spawn
 `(-27100, 9079, -26000)` with source heading 1024. The generalized entity extractor
 validates 125 active entities, 302 collision spheres, 9 landing surfaces, 106 active
