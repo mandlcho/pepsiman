@@ -9,6 +9,7 @@ The player character uses data decoded from the supplied Japanese disc:
 - original TOD parent/child joint hierarchy
 - 50 validated compact animation clips decoded from the original TOD stream
 - original CD-audio music track
+- all six original 320×240 MDEC/XA movie streams and six H000 XA audio programs
 - 2,170 TIM textures extracted as PNG for continued level reconstruction
 - original Stage 1 road geometry (21 retail TMD chunks), 211-point authored course path, exact retail spawn, and 80-object prop library
 - original global HUD/results PIC artwork exported as 30 provenance-preserving browser textures
@@ -48,6 +49,7 @@ The committed browser assets can be regenerated from a legally obtained Pepsiman
 
 ```sh
 ./tools/rip_assets.sh
+./tools/rip_movies.sh
 ```
 
 The pipeline:
@@ -59,6 +61,7 @@ The pipeline:
 5. converts the original TMD segmented character mesh to compact web JSON;
 6. converts standard and Pepsiman-compressed TOD motion packets to browser animation tracks;
 7. converts the selected Red Book CD-audio track to MP3.
+8. restores the original 2,352-byte movie/XA sectors and transcodes browser MP4/MP3 copies.
 
 The `.bin` and `.cue` disc files are explicitly gitignored and must never be committed.
 

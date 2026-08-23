@@ -1,0 +1,112 @@
+{
+  "format": "Pepsiman raw PlayStation media export v1",
+  "source": "Pepsiman (Japan) (Track 1).bin",
+  "sectorSize": 2352,
+  "movies": [
+    {
+      "name": "MOVIE0.STR",
+      "lba": 15857,
+      "directorySize": 16416768,
+      "sectorCount": 8016,
+      "rawSize": 18853632,
+      "submodeCounts": {
+        "0x48": 7510,
+        "0x64": 500,
+        "0x00": 5,
+        "0xe4": 1
+      },
+      "sha256": "85aa4bf19ef95cac4782bfb22b5dd36af6969147e0932ae524f1666761437847",
+      "path": "movie0.str"
+    },
+    {
+      "name": "MOVIE1.STR",
+      "lba": 23873,
+      "directorySize": 3899392,
+      "sectorCount": 1904,
+      "rawSize": 4478208,
+      "submodeCounts": {
+        "0x48": 1782,
+        "0x64": 118,
+        "0x00": 3,
+        "0xe4": 1
+      },
+      "sha256": "abb2a1471f71ac003f575a3bc3390c83daa3ed5a9689ac83e115ee86fafa7dab",
+      "path": "movie1.str"
+    },
+    {
+      "name": "MOVIE2.STR",
+      "lba": 25777,
+      "directorySize": 7372800,
+      "sectorCount": 3600,
+      "rawSize": 8467200,
+      "submodeCounts": {
+        "0x48": 3375,
+        "0x64": 224,
+        "0xe4": 1
+      },
+      "sha256": "c234834dc6aefc652aa0879fd0d2a83586b2ef00d211750698bfbeed3a3cffca",
+      "path": "movie2.str"
+    },
+    {
+      "name": "MOVIE3.STR",
+      "lba": 29377,
+      "directorySize": 6160384,
+      "sectorCount": 3008,
+      "rawSize": 7074816,
+      "submodeCounts": {
+        "0x48": 2813,
+        "0x64": 187,
+        "0x00": 7,
+        "0xe4": 1
+      },
+      "sha256": "2f6a13bb47ee3225e969016fe38e1dd953ac8fa50b3f0c1990004c1dc72bd4d7",
+      "path": "movie3.str"
+    },
+    {
+      "name": "MOVIE4.STR",
+      "lba": 32385,
+      "directorySize": 7995392,
+      "sectorCount": 3904,
+      "rawSize": 9182208,
+      "submodeCounts": {
+        "0x48": 3657,
+        "0x64": 243,
+        "0x00": 3,
+        "0xe4": 1
+      },
+      "sha256": "e2631014910c1a145e191af71e1f2582e4eaabcdb1b70b2067da9297b836d521",
+      "path": "movie4.str"
+    },
+    {
+      "name": "MOVIE5.STR",
+      "lba": 36289,
+      "directorySize": 33488896,
+      "sectorCount": 16352,
+      "rawSize": 38459904,
+      "submodeCounts": {
+        "0x48": 15329,
+        "0x64": 1021,
+        "0x00": 1,
+        "0xe4": 1
+      },
+      "sha256": "79fb31094e3a99b5cf93ac7c6839811909c0f04aa26b23df98a62776fde5516f",
+      "path": "movie5.str"
+    }
+  ],
+  "xaArchive": {
+    "name": "CDDATA/H/H000",
+    "streamCount": 6,
+    "lba": 7937,
+    "directorySize": 16220160,
+    "sectorCount": 7920,
+    "rawSize": 18627840,
+    "submodeCounts": {
+      "0x64": 4528,
+      "0x00": 3385,
+      "0xe4": 6,
+      "0x80": 1
+    },
+    "sha256": "5d5e066c012d1ff03060c7f0e2f56af292c33ce98006dc5e2f00d59e27367bbb",
+    "path": "h000.raw.xa"
+  }
+}
