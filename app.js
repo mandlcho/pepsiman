@@ -8,10 +8,13 @@ const RETAIL_SEGMENTS = {
   2:{root:"./assets/ripped/stages/4/",world:"4002",props:"4004",entities:"4006-setpiece",overlayActors:"4000-overlay-setpiece",spriteRoot:"./assets/ripped/textures/4/",spritePack:"4005",chaseSprite:"4001-106.png",setpiece:true},
   3:{root:"./assets/ripped/stages/5/",world:"5003",props:"5004",entities:"5006-entities",spriteRoot:"./assets/ripped/textures/5/",spritePack:"5005"},
   4:{root:"./assets/ripped/stages/6/",world:"6003",props:"6004",entities:"6006-entities",spriteRoot:"./assets/ripped/textures/6/",spritePack:"6005"},
+  5:{root:"./assets/ripped/stages/7/",world:"7002",props:"7004",entities:"7006-setpiece",spriteRoot:"./assets/ripped/textures/7/",spritePack:"7005",inferredRouteEnd:true},
   6:{root:"./assets/ripped/stages/8/",world:"8003",props:"8004",entities:"8006-entities",spriteRoot:"./assets/ripped/textures/8/",spritePack:"8005"},
   7:{root:"./assets/ripped/stages/9/",world:"9003",props:"9004",entities:"9006-entities",spriteRoot:"./assets/ripped/textures/9/",spritePack:"9005"},
+  8:{root:"./assets/ripped/stages/A/",world:"A002",inferredRouteEnd:true},
   9:{root:"./assets/ripped/stages/B/",world:"B003",props:"B004",entities:"B006-entities",spriteRoot:"./assets/ripped/textures/B/",spritePack:"B005"},
   10:{root:"./assets/ripped/stages/C/",world:"C003",props:"C004",entities:"C006-entities",spriteRoot:"./assets/ripped/textures/C/",spritePack:"C005"},
+  11:{root:"./assets/ripped/stages/D/",world:"D002",inferredRouteEnd:true},
   12:{root:"./assets/ripped/stages/E/",world:"E003",props:"E004",entities:"E006-entities",spriteRoot:"./assets/ripped/textures/E/",spritePack:"E005"},
   13:{root:"./assets/ripped/stages/F/",world:"F003",props:"F004",entities:"F006-entities",spriteRoot:"./assets/ripped/textures/F/",spritePack:"F005"}
 };
@@ -169,8 +172,8 @@ async function loadRetailCourse(segmentIndex=0){
   unloadRetailCourse();
   const [model,propModel,entityTable,retailFlow,setpieceTable]=await Promise.all([
     fetch(`${resources.root}${resources.world}.json`).then(response=>response.json()),
-    fetch(`${resources.root}${resources.props}.json`).then(response=>response.json()),
-    fetch(`${resources.root}${resources.entities}.json`).then(response=>response.json()),
+    resources.props?fetch(`${resources.root}${resources.props}.json`).then(response=>response.json()):{objects:[]},
+    resources.entities?fetch(`${resources.root}${resources.entities}.json`).then(response=>response.json()):{entities:[],collisionSpheres:[],collisionSurfaces:[],collectibles:[],encounterRecords:[],eventRecords:[]},
     fetch("./assets/ripped/retail-flow.json").then(response=>response.json()),
     resources.overlayActors?fetch(`${resources.root}${resources.overlayActors}.json`).then(response=>response.json()):null
   ]);
@@ -596,7 +599,7 @@ function updateRetailResults(dt){
   if(frame>=milestones.countStartFrame){const displayCans=Math.min(state.cans,frame-milestones.countStartFrame);if(displayCans!==state.results.displayCans){state.results.displayCans=displayCans;setRetailDigits(ui.resultCans,String(displayCans).padStart(3,"0"));}}
   const effectCompleteFrame=milestones.countStartFrame+state.cans+60;
   ui.over.classList.toggle("results-complete",frame>=effectCompleteFrame);
-  if(!state.results.transitioning&&frame>=effectCompleteFrame+retailFinishFlow.transitionDelayFrames){state.results.transitioning=true;if(state.segmentIndex<2)advanceRetailSegment();else{ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";}}
+  if(!state.results.transitioning&&frame>=effectCompleteFrame+retailFinishFlow.transitionDelayFrames){state.results.transitioning=true;if(state.segmentIndex<13)advanceRetailSegment();else{ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";}}
 }
 function beginStageOneScriptedEvent(){
   if(!state.running||state.scripted||!stageOneScriptedFlow)return;
@@ -899,6 +902,8 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
     updateRetailDynamicEntities(dt);updateRetailEncounters(dt);updateRetailSetpieceActors(dt);testRetailCollectibles();testRetailCollisions();
+    // ponytail: route-end fallback for untraced post-Stage-1 overlays; replace with each authored finish event/controller.
+    if(state.segmentIndex>=3&&state.distance>=retailCourse.length&&!state.ending)clearStageOne();
     for(const mark of markings){mark.position.z+=state.speed*dt;if(mark.position.z>18)mark.position.z-=126;}
     updateHud();
     }

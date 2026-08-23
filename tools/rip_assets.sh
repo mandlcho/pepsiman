@@ -50,6 +50,20 @@ python3 "$ROOT/tools/extract_stage_setpiece.py" \
   "$WORK/disc/CDDATA/4/4006" "$ROOT/assets/ripped/stages/4/4006-setpiece.json"
 python3 "$ROOT/tools/extract_stage_overlay_setpiece.py" \
   "$WORK/disc/CDDATA/4/4000" "$ROOT/assets/ripped/stages/4/4000-overlay-setpiece.json"
+python3 "$ROOT/tools/extract_stage_tmd.py" \
+  "$WORK/disc/CDDATA/7/7002" "$ROOT/assets/ripped/stages/7" \
+  --tim "$WORK/disc/CDDATA/7/7001"
+python3 "$ROOT/tools/extract_stage_tmd.py" \
+  "$WORK/disc/CDDATA/7/7004" "$ROOT/assets/ripped/stages/7" \
+  --tim "$WORK/disc/CDDATA/0/0001" --tim "$WORK/disc/CDDATA/7/7001" \
+  --tim "$WORK/disc/CDDATA/7/7003" --tim "$WORK/disc/CDDATA/7/7005"
+python3 "$ROOT/tools/extract_stage_setpiece.py" \
+  "$WORK/disc/CDDATA/7/7006" "$ROOT/assets/ripped/stages/7/7006-setpiece.json"
+for FAMILY in A D; do
+  python3 "$ROOT/tools/extract_stage_tmd.py" \
+    "$WORK/disc/CDDATA/$FAMILY/${FAMILY}002" "$ROOT/assets/ripped/stages/$FAMILY" \
+    --tim "$WORK/disc/CDDATA/$FAMILY/${FAMILY}001"
+done
 for FAMILY in 5 6 8 9 B C E F; do
   STAGE="$ROOT/assets/ripped/stages/$FAMILY"
   FRAMES=60

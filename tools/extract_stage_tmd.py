@@ -174,7 +174,7 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
         object_max = [-math.inf, -math.inf, -math.inf]
         cursor = base + primitive_offset
 
-        for _ in range(primitive_count):
+        for primitive_index in range(primitive_count):
             _, input_words, flag, mode = data[cursor : cursor + 4]
             packet = cursor + 4
             vertex_total, textured, gouraud = packet_layout(mode)
@@ -198,11 +198,12 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
                 color_cursor = packet
 
             if lit:
-                colors = [(1, 1, 1)] * vertex_total
+                lit_index_cursor = color_cursor + (0 if textured else 4)
+                colors = ([(1, 1, 1)] if textured else [tuple(channel / 255 for channel in data[color_cursor : color_cursor + 3])]) * vertex_total
                 indices = (
-                    [u16(data, color_cursor + corner * 4 + 2) for corner in range(vertex_total)]
+                    [u16(data, lit_index_cursor + corner * 4 + 2) for corner in range(vertex_total)]
                     if gouraud else
-                    [u16(data, color_cursor + 2)] + [u16(data, color_cursor + 4 + corner * 2) for corner in range(vertex_total - 1)]
+                    [u16(data, lit_index_cursor + 2 + corner * 2) for corner in range(vertex_total)]
                 )
             else:
                 color_total = vertex_total if gouraud else 1
@@ -212,6 +213,8 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
                     colors.append((red / 255, green / 255, blue / 255))
                 index_cursor = color_cursor + color_total * 4
                 indices = [u16(data, index_cursor + corner * 2) for corner in range(vertex_total)]
+            if any(index >= vertex_count for index in indices):
+                raise ValueError(f"object {object_index} primitive {primitive_index} mode {mode:#x} has invalid vertex indices {indices}")
             triangles = ((0, 1, 2), (1, 3, 2)) if vertex_total == 4 else ((0, 1, 2),)
             group = groups[material]
             for triangle in triangles:
@@ -230,6 +233,8 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
                         bounds_max[axis] = max(bounds_max[axis], value)
             cursor += 4 + input_words * 4
 
+        if not math.isfinite(object_min[0]):
+            object_min = object_max = [0, 0, 0]
         objects.append({
             "id": object_index,
             "scale": scale,
