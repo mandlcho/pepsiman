@@ -545,6 +545,12 @@ function updateStageOneEnding(dt){
     if(ending.elapsed>=stageOneEndingFlow.holdFrames/RETAIL_FPS)clearStageOne();
   }
 }
+function beginSegmentOneEndingCamera(ending){
+  const flow=stageOneEndingFlow.cameraTarget,angleScale=Math.PI*2/flow.psxAngleUnitsPerTurn,eyeAngle=flow.eyeHeadingOffsetPsx*angleScale,lookAngle=flow.lookHeadingOffsetPsx*angleScale;
+  ending.cameraStartPosition=camera.position.clone();ending.cameraStartLookAt=new THREE.Vector3(0,1.5,-9);ending.cameraMix=0;
+  ending.cameraEndPosition=new THREE.Vector3(rig.position.x+Math.sin(eyeAngle)*flow.eyeRadius*RETAIL_WORLD_SCALE,rig.position.y-flow.eyeVerticalOffset*RETAIL_WORLD_SCALE,rig.position.z-Math.cos(eyeAngle)*flow.eyeRadius*RETAIL_WORLD_SCALE);
+  ending.cameraEndLookAt=new THREE.Vector3(rig.position.x+Math.sin(lookAngle)*flow.lookRadius*RETAIL_WORLD_SCALE,rig.position.y-flow.lookVerticalOffset*RETAIL_WORLD_SCALE,rig.position.z-Math.cos(lookAngle)*flow.lookRadius*RETAIL_WORLD_SCALE);
+}
 function updateSegmentOneEnding(dt){
   const ending=state.ending;ending.elapsed+=dt;ending.animationTime+=dt;rig.visible=true;
   if(ending.phase===1){
@@ -557,9 +563,9 @@ function updateSegmentOneEnding(dt){
     if(ending.elapsed>=movementDuration){ending.phase=3;ending.elapsed=0;ending.animationTime=0;rig.position.copy(ending.finish);}
   }else if(ending.phase===3){
     sampleAnimation(proneClip,ending.animationTime);
-    if(ending.elapsed>=stageOneEndingFlow.preCameraHoldFrames/RETAIL_FPS){ending.phase=4;ending.elapsed=0;ending.animationTime=0;}
+    if(ending.elapsed>=stageOneEndingFlow.preCameraHoldFrames/RETAIL_FPS){ending.phase=4;ending.elapsed=0;ending.animationTime=0;beginSegmentOneEndingCamera(ending);}
   }else if(ending.phase===4){
-    sampleAnimation(endingCameraClip,ending.animationTime);
+    ending.cameraMix=THREE.MathUtils.clamp(ending.elapsed*RETAIL_FPS/stageOneEndingFlow.cameraInterpolationFrames,0,1);sampleAnimation(endingCameraClip,ending.animationTime);
     if(ending.elapsed>=stageOneEndingFlow.cameraAdvanceCounterFrames/RETAIL_FPS){ending.phase=5;ending.elapsed=0;}
   }else{
     sampleAnimation(endingCameraClip,ending.animationTime);
@@ -893,7 +899,8 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
   const chaseCamera=retailCourse.setpiece&&state.running;
   const chaseView=retailSetpieceFlow?.chaseCamera;
   const endingShakeX=state.ending?.cameraShakeX||0,endingShakeY=state.ending?.cameraShakeY||0;
-  camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2+endingShakeX,5,dt);camera.position.y=THREE.MathUtils.damp(camera.position.y,(chaseCamera?chaseView.browserPosition[1]:4.2)+endingShakeY,6,dt);camera.position.z=THREE.MathUtils.damp(camera.position.z,chaseCamera?chaseView.browserPosition[2]:8.5,6,dt);camera.lookAt(endingShakeX,(chaseCamera?chaseView.browserLookAt[1]:1.5)+endingShakeY,chaseCamera?chaseView.browserLookAt[2]:-9);renderer.render(scene,camera);
+  if(state.ending?.cameraEndPosition){camera.position.lerpVectors(state.ending.cameraStartPosition,state.ending.cameraEndPosition,state.ending.cameraMix);camera.lookAt(new THREE.Vector3().lerpVectors(state.ending.cameraStartLookAt,state.ending.cameraEndLookAt,state.ending.cameraMix));}
+  else{camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2+endingShakeX,5,dt);camera.position.y=THREE.MathUtils.damp(camera.position.y,(chaseCamera?chaseView.browserPosition[1]:4.2)+endingShakeY,6,dt);camera.position.z=THREE.MathUtils.damp(camera.position.z,chaseCamera?chaseView.browserPosition[2]:8.5,6,dt);camera.lookAt(endingShakeX,(chaseCamera?chaseView.browserLookAt[1]:1.5)+endingShakeY,chaseCamera?chaseView.browserLookAt[2]:-9);}renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);
 

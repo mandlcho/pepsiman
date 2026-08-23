@@ -88,6 +88,18 @@
         "cameraAnimationId": 25,
         "cameraInterpolationFrames": 20,
         "cameraAdvanceCounterFrames": 41,
+        "cameraTarget": {
+          "constructionAddress": "0x800f8194",
+          "interpolationAddress": "0x800f8274",
+          "eyeHeadingOffsetPsx": 1821,
+          "eyeRadius": 200,
+          "eyeVerticalOffset": -280,
+          "lookHeadingOffsetPsx": 2048,
+          "lookRadius": 50,
+          "lookVerticalOffset": -130,
+          "psxAngleUnitsPerTurn": 4096,
+          "browserCoordinateApplicationInferred": true
+        },
         "preResultEffectFrames": 24,
         "finalDelayFrames": 9,
         "transitionLookupSelector": 1

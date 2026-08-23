@@ -352,9 +352,12 @@ shared retail result sequence, after which transition selector 1 advances to
 scene index 2. The browser now registers event 198 and reproduces the authored
 player destinations, animation IDs, movement denominators, holds, camera-phase
 duration, pre-result timing, and shared result transition instead of dead-ending
-at the end of the second segment. The exact six-component camera target built by
-the overlay remains to be connected, so the current camera stays on its gameplay
-transform during those 20 interpolation ticks.
+at the end of the second segment. The camera target built at `0x800f8194` places
+the eye 200 units from the runner at heading offset `0x71d` and 280 units above,
+and the look point 50 units away at offset `0x800` and 130 units above. State 4
+interpolates all six components for 20 frames through `0x80018d04`. Those exact
+values now drive the browser close-up; applying the relative PS1 camera vector
+to the browser's fixed-runner coordinate system is explicitly marked inferred.
 
 Event record 194 drives a separate five-state Stage 1 set-piece through overlay controller `0x800f7584`. It disables player input, preserves the initial player/camera transforms, and linearly centers X/Z over 25 frames at executable-table game position `(-5700, -9080, 18500)`, corresponding to browser position `(-5700, 9080, -18500)`. After a one-frame transition it runs a nine-frame sound phase, invoking retail sound ID 56 at counters 2, 4, and 6. It then submits 40 effects at ten-unit vertical intervals, changes player runtime state, restores control, and runs a closing screen effect for 30 frames.
 
