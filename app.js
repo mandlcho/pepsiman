@@ -236,11 +236,11 @@ async function loadRetailCourse(segmentIndex=0){
       retailDynamicEntities.push(dynamic);
     }
     for(const sphere of collisionSpheresByModel[entity.currentModel]){
-      const collider={entityId:entity.id,object:prop,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
+      const collider={entityId:entity.id,behavior:entity.behavior,object:prop,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*Math.max(Math.abs(entity.scale[0]),Math.abs(entity.scale[1])),collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
       retailColliders.push(collider);dynamic?.colliders.push(collider);
     }
     if(dynamic?.secondary)for(const sphere of collisionSpheresByModel[entity.currentModel+1]){
-      const collider={entityId:entity.id,object:dynamic.secondary,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*dynamic.scaleFactor,collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
+      const collider={entityId:entity.id,behavior:entity.behavior,object:dynamic.secondary,center:new THREE.Vector3().fromArray(sphere.center),radius:sphere.radius*RETAIL_WORLD_SCALE*dynamic.scaleFactor,collisionClass:sphere.collisionClass,collisionVariant:sphere.collisionVariant,reactionParameters:sphere.reactionParameters};
       retailColliders.push(collider);dynamic.colliders.push(collider);
     }
     for(const surface of collisionSurfacesByModel[entity.currentModel])retailCollisionSurfaces.push({
@@ -333,7 +333,7 @@ async function loadRetailCourse(segmentIndex=0){
   state.segmentIndex=segmentIndex;
 }
 
-let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, slideEntryClip, slideLoopClip, collisionClip, proneClip, endingApproachClip, endingCameraClip;
+let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, slideClip, collisionClip, proneClip, endingApproachClip, endingCameraClip;
 const nodes = new Map();
 const baseTransforms = new Map();
 const bindTransforms = new Map();
@@ -378,8 +378,7 @@ async function loadCharacter() {
   jumpClip=animations.clips.find(clip=>clip.id===6);
   airborneClip=animations.clips.find(clip=>clip.id===7);
   landingClip=animations.clips.find(clip=>clip.id===8);
-  slideEntryClip=animations.clips.find(clip=>clip.id===13);
-  slideLoopClip=animations.clips.find(clip=>clip.id===14);
+  slideClip=animations.clips.find(clip=>clip.id===30);
   collisionClip=animations.clips.find(clip=>clip.id===9);
   proneClip=animations.clips.find(clip=>clip.id===19);
   endingApproachClip=animations.clips.find(clip=>clip.id===23);
@@ -418,7 +417,7 @@ const state={running:false,completed:false,ending:null,scripted:null,results:nul
 function playerControlLocked(){return Boolean(state.ending||(state.scripted&&state.scripted.phase<4));}
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
 function jump(){if(state.running&&!playerControlLocked()&&state.grounded&&state.slide<=0){state.vy=JUMP_VELOCITY;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
-function slide(){if(state.running&&!playerControlLocked()&&state.grounded){state.landingTime=0;if(state.slide<=0)state.slideTime=0;state.slide=.65;state.sprint=0;state.brake=0;callout("SLIDE!");}}
+function slide(){if(state.running&&!playerControlLocked()&&state.grounded){state.landingTime=0;if(state.slide<=0)state.slideTime=0;state.slide=slideClip?(slideClip.frameCount-1)/slideClip.fps:.8;state.sprint=0;state.brake=0;callout("SLIDE!");}}
 function squareAction(){if(!state.running||playerControlLocked()||!state.grounded)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;state.slideTime=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;state.slideTime=0;callout("SKID!");}else slide();}
 function readGamepad(){
   const pad=navigator.getGamepads?.()[0];if(!pad){input.gamepadX=0;gamepadState.forward=false;gamepadState.backward=false;gamepadState.jump=false;gamepadState.slide=false;return;}
@@ -681,6 +680,7 @@ function testRetailCollisions(){
   updatePlayerProbeCenters();
   for(const collider of retailColliders){
     if(!collider.object.visible||collider.collisionClass===0||retailCollidedEntities.has(collider.entityId))continue;
+    if(state.slide>0&&collider.behavior===18)continue;
     collider.object.localToWorld(collisionCenter.copy(collider.center));
     for(let probeIndex=0;probeIndex<playerProbeCenters.length;probeIndex++){
       const combinedRadius=collider.radius+PLAYER_PROBE_RADII[probeIndex];
@@ -909,14 +909,13 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);const roadEdge=retailCourse.setpiece?2.2:ROAD_EDGE_X;state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-roadEdge,roadEdge);if(Math.abs(state.x)===roadEdge&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
     updateRetailCourse(state.distance);
     scene.updateMatrixWorld(true);updateVerticalMotion(dt,runnerGroundHeight());
-    if(state.grounded&&!playerControlLocked()&&((input.backward&&!input.square)||(gamepadState.backward&&!gamepadState.slide)))state.slide=Math.max(state.slide,.1);
     state.slide=Math.max(0,state.slide-dt);state.slideTime=state.slide>0?state.slideTime+dt:0;
     rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=.008;
-    const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingContactTime=LANDING_CONTACT_FRAME/landingClip.fps,landingRecoveryDuration=(landingClip.frameCount-1-LANDING_CONTACT_FRAME)/landingClip.fps,slideEntryDuration=(slideEntryClip.frameCount-1)/slideEntryClip.fps;
+    const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingContactTime=LANDING_CONTACT_FRAME/landingClip.fps,landingRecoveryDuration=(landingClip.frameCount-1-LANDING_CONTACT_FRAME)/landingClip.fps;
     if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false,true);
     else if(!state.grounded&&state.vy>0)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration,true,true);
     else if(!state.grounded){const descentProgress=THREE.MathUtils.clamp(-state.vy/JUMP_VELOCITY,0,1);sampleAnimation(landingClip,descentProgress*landingContactTime,false,true);}
-    else if(state.slide>0){if(state.slideTime<=slideEntryDuration)sampleAnimation(slideEntryClip,state.slideTime,false,true);else sampleAnimation(slideLoopClip,state.slideTime-slideEntryDuration,true,true);}
+    else if(state.slide>0)sampleAnimation(slideClip,state.slideTime,false);
     else if(state.landingTime>0&&state.landingTime<=landingRecoveryDuration)sampleAnimation(landingClip,landingContactTime+state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
