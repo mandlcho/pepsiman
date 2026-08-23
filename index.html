@@ -19,21 +19,19 @@
       <button id="skip-cutscene">SKIP · ENTER</button>
     </section>
 
-    <header class="hud" hidden>
-      <div class="brand"><span class="brand-disc"></span><b>PEPSIMAN</b></div>
-      <div class="meter">
-        <span>DISTANCE</span>
-        <strong><i id="distance">0000</i> m</strong>
+    <header class="hud" hidden aria-label="Retail game HUD">
+      <div class="retail-can-counter" aria-label="Pepsi cans collected"><i class="retail-can"></i><span class="large-hud-digits" id="cans"></span></div>
+      <div class="retail-countdown" aria-label="Time remaining"><i class="retail-pepsi-ball"></i><span class="large-hud-digits" id="time-left"></span></div>
+      <div class="retail-progress" aria-label="Stage progress">
+        <i class="retail-progress-track"><b id="progress-fill"></b></i>
+        <span class="small-hud-digits" id="total-time"></span><i class="retail-total-label"></i>
       </div>
-      <div class="meter cans">
-        <span>PEPSI</span>
-        <strong><i id="cans">00</i> ×</strong>
-      </div>
-      <div class="lives" id="lives" aria-label="Health">
-        <i></i><i></i><i></i>
-      </div>
+      <div class="retail-lives" aria-label="Lives"><span class="large-hud-digits" id="life-count"></span><i class="retail-runner-icon"></i></div>
+      <span id="distance" hidden>0000</span>
       <button class="sound" id="sound" aria-label="Toggle sound">♪</button>
     </header>
+
+    <section class="pause-screen" id="pause-screen" hidden aria-label="Game paused"><i aria-label="Pause"></i><small>PRESS ESC / P TO CONTINUE</small></section>
 
     <section class="start-screen" id="start-screen">
       <div class="title-lockup">
@@ -75,7 +73,7 @@
       <button id="retry">RUN AGAIN</button>
     </section>
 
-    <div class="callout" id="callout" aria-live="polite"></div>
+    <div class="callout" id="callout" aria-live="polite"><i></i></div>
 
     <nav class="mobile-controls" aria-label="Touch controls">
       <button data-control="left" aria-label="Move left">←</button>
