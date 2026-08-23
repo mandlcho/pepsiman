@@ -223,6 +223,14 @@
       "browserBillboardSize"
     ]
   },
+  "chaseCatch": {
+    "comparisonAddress": "0x800f5ec8",
+    "canForwardOffset": 120,
+    "playerState": 3,
+    "recoveryFrames": 90,
+    "browserAnimationId": 9,
+    "browserAnimationInferred": true
+  },
   "chaseCamera": {
     "presentation": "front-facing",
     "browserPosition": [

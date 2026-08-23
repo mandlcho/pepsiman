@@ -364,6 +364,8 @@ Scene index 2's chase ending is dispatched by state 20 at `0x800f58b0`. Reaching
 
 The browser now connects that complete timed handoff and transition. Exact counters, speeds, angle magnitude, cue ID, effect count, and fade ramp are exported reproducibly in `4000-overlay-setpiece.json`. The deterministic browser camera-jitter pattern, Web Audio cue used in place of unmapped sound 62, and billboard impact-particle presentation are explicitly marked as approximations; they do not claim to reconstruct the original random generator, sound sample, or effect constructor. A browser regression drives all 284 frames directly and verifies centering, the 20-effect cue, completion state, cleared fade layer, and visible retail results overlay.
 
+The same state-20 controller performs the chase failure test at `0x800f5ec8`: after advancing the can, it catches Pepsiman when `playerForward < canForward + 120`, sets player state 3, and counts 90 frames before consuming an attempt and transitioning to a reload or game over. The browser now uses that exact threshold and recovery duration, restarts the current chase with one fewer life, and preserves the existing last-life game-over path. Recovered motion 9 (`forward_stumble`) is used for the browser catch pose, but that state-to-motion mapping remains explicitly inferred until the player-state dispatcher is traced.
+
 `2007` has now been losslessly partitioned without assigning speculative gameplay roles:
 
 - 200 records of 60 bytes from `0x0000` through `0x2edf`; every record repeats its initial three signed 32-bit coordinates;

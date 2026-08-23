@@ -317,7 +317,7 @@ async function loadRetailCourse(segmentIndex=0){
   state.segmentIndex=segmentIndex;
 }
 
-let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, proneClip, endingApproachClip, endingCameraClip;
+let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, collisionClip, proneClip, endingApproachClip, endingCameraClip;
 const nodes = new Map();
 const baseTransforms = new Map();
 const bindTransforms = new Map();
@@ -362,6 +362,7 @@ async function loadCharacter() {
   jumpClip=animations.clips.find(clip=>clip.id===6);
   airborneClip=animations.clips.find(clip=>clip.id===7);
   landingClip=animations.clips.find(clip=>clip.id===8);
+  collisionClip=animations.clips.find(clip=>clip.id===9);
   proneClip=animations.clips.find(clip=>clip.id===19);
   endingApproachClip=animations.clips.find(clip=>clip.id===23);
   endingCameraClip=animations.clips.find(clip=>clip.id===25);
@@ -457,6 +458,13 @@ function setRetailDynamicModel(dynamic,modelIndex){
 
 function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const actor of retailSetpieceActors){actor.sprite.position.copy(actor.basePosition);actor.sprite.material.rotation=0;actor.sprite.visible=false;actor.state=0;actor.frame=0;}if(retailSetpieceCan){retailSetpieceCan.sourceForward=retailSetpieceCan.initialForward;retailSetpieceCan.sprite.position.set(retailSetpieceCan.sourceForward,retailSetpieceCan.vertical,retailSetpieceCan.lateral);retailSetpieceCan.sprite.visible=true;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.basePosition);dynamic.secondary.rotation.y=dynamic.baseRotationY;dynamic.secondary.visible=false;}dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.phaseStart=null;dynamic.turnStart=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
+function beginRetailChaseCatch(){if(!state.ending)state.ending={kind:"retail-catch",frame:0};}
+function updateRetailChaseCatch(dt){
+  const ending=state.ending,frameDelta=dt*RETAIL_FPS;ending.frame+=frameDelta;advanceRetailEndingCan(frameDelta);sampleAnimation(collisionClip,Math.min(ending.frame,collisionClip.frameCount-1)/collisionClip.fps,false);
+  if(ending.frame<retailSetpieceFlow.chaseCatch.recoveryFrames)return;
+  if(state.lives<=1){state.ending=null;state.invulnerable=0;hit();return;}
+  const lives=state.lives-1;startGame();state.lives=lives;updateHud();
+}
 function beginRetailSetpieceEnding(){
   if(!state.running||state.ending||!retailSetpieceFlow?.chaseEnding)return;
   state.ending={kind:"retail-setpiece",phase:"centering",frame:0,animationTime:0,baseRigYaw:rig.rotation.y,cameraShakeX:0,cameraShakeY:0,impactPulse:0,impactPlayed:false};
@@ -517,6 +525,7 @@ function beginStageOneEnding(){
   state.vx=0;state.vy=0;state.grounded=true;rig.visible=true;
 }
 function updateStageOneEnding(dt){
+  if(state.ending?.kind==="retail-catch"){updateRetailChaseCatch(dt);return;}
   if(state.ending?.kind==="retail-setpiece"){updateRetailSetpieceEnding(dt);return;}
   if(stageOneEndingFlow.eventRecordIndex===198){updateSegmentOneEnding(dt);return;}
   const ending=state.ending,duration=stageOneEndingFlow.interpolationFrames/RETAIL_FPS;
@@ -830,6 +839,7 @@ function updateRetailSetpieceActors(dt){
     retailSetpieceCan.sourceForward+=retailSetpieceFlow.retailAdvanceUnitsPerFrame*dt*RETAIL_FPS;
     retailSetpieceCan.sourceForward=Math.max(retailSetpieceCan.sourceForward,playerForward-retailSetpieceFlow.scrollingOriginBehindPlayer);
     retailSetpieceCan.sprite.position.set(retailSetpieceCan.sourceForward,retailSetpieceCan.vertical,retailSetpieceCan.lateral);
+    if(playerForward<retailSetpieceCan.sourceForward+retailSetpieceFlow.chaseCatch.canForwardOffset)beginRetailChaseCatch();
   }
   for(const actor of retailSetpieceActors){
     const delta=actor.sourcePosition.x-playerForward;

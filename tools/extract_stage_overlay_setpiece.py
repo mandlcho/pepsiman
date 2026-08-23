@@ -134,6 +134,14 @@ def extract(data: bytes, source_name: str = "CDDATA/4/4000") -> dict:
             "browserBillboardSize": 520,
             "browserPresentationFieldsInferred": ["browserVerticalCenter", "browserBillboardSize"],
         },
+        "chaseCatch": {
+            "comparisonAddress": "0x800f5ec8",
+            "canForwardOffset": 120,
+            "playerState": 3,
+            "recoveryFrames": 90,
+            "browserAnimationId": 9,
+            "browserAnimationInferred": True,
+        },
         "chaseCamera": {
             "presentation": "front-facing",
             "browserPosition": [0, 3.7, -7.4],
