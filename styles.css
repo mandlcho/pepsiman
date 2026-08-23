@@ -10,6 +10,10 @@ button { font:inherit; }
 
 .scanlines { position:fixed; inset:0; pointer-events:none; z-index:20; opacity:.11; mix-blend-mode:overlay; background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(0,0,0,.45) 4px); }
 .retail-ending-flash { position:fixed; inset:0; pointer-events:none; z-index:14; opacity:0; background:#fff; }
+.cinematic { position:fixed;z-index:30;inset:0;display:grid;place-items:center;background:#000; }
+.cinematic[hidden] { display:none; }
+.cinematic video { width:100%;height:100%;object-fit:contain;image-rendering:pixelated; }
+.cinematic button { position:absolute;right:24px;bottom:20px;padding:9px 13px;border:1px solid rgba(255,255,255,.6);color:#fff;background:rgba(0,0,0,.65);font-size:8px;font-weight:800;letter-spacing:.14em;cursor:pointer; }
 .hud { position:fixed; z-index:10; top:0; left:0; width:100%; padding:22px 30px; display:flex; align-items:flex-start; gap:34px; background:linear-gradient(to bottom,rgba(1,10,28,.78),transparent); }
 .hud[hidden] { display:none; }
 .brand { display:flex; align-items:center; gap:10px; margin-right:auto; font:900 22px/1 "Barlow Condensed"; font-style:italic; letter-spacing:.04em; text-shadow:2px 2px 0 #083a87; }

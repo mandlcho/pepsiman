@@ -35,8 +35,10 @@ const JUMP_VELOCITY = 8.3;
 const LANDING_CONTACT_FRAME = 14;
 const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(15);
 const GAMEPLAY_CAMERA = {position:[0,3.8,6.2],lookAt:[0,1.45,-5.5]};
+const RETAIL_STAGE_MOVIES = new Map([[3,2],[6,3],[9,4]]);
 const ui = {
   start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"),
+  cinematic: document.querySelector("#cinematic"), cutscene: document.querySelector("#cutscene"), skipCutscene: document.querySelector("#skip-cutscene"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
   distance: document.querySelector("#distance"), cans: document.querySelector("#cans"),
   lives: [...document.querySelectorAll("#lives i")], over: document.querySelector("#game-over"),
@@ -470,6 +472,18 @@ function setRetailDynamicModel(dynamic,modelIndex){
   dynamic.currentModel=modelIndex;
 }
 
+let cutsceneCompletion=null;
+function finishCutscene(){
+  if(!cutsceneCompletion)return;
+  const completion=cutsceneCompletion;cutsceneCompletion=null;ui.cutscene.pause();ui.cutscene.removeAttribute("src");ui.cutscene.load();ui.cinematic.hidden=true;completion();
+}
+function playCutscene(movie,completion){
+  if(cutsceneCompletion)return;
+  cutsceneCompletion=completion;ui.start.classList.add("hidden");ui.cinematic.hidden=false;ui.cutscene.src=`./assets/video/movie${movie}.mp4`;ui.cutscene.currentTime=0;ui.cutscene.muted=state.muted;
+  ui.cutscene.play().catch(error=>{console.error(error);finishCutscene();});
+}
+function beginRetailOpening(){if(!ui.button.disabled)playCutscene(1,startGame);}
+
 function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const actor of retailSetpieceActors){actor.sprite.position.copy(actor.basePosition);actor.sprite.material.rotation=0;actor.sprite.visible=false;actor.state=0;actor.frame=0;}if(retailSetpieceCan){retailSetpieceCan.sourceForward=retailSetpieceCan.initialForward;retailSetpieceCan.sprite.position.set(retailSetpieceCan.sourceForward,retailSetpieceCan.vertical,retailSetpieceCan.lateral);retailSetpieceCan.sprite.visible=true;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.basePosition);dynamic.secondary.rotation.y=dynamic.baseRotationY;dynamic.secondary.visible=false;}dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.phaseStart=null;dynamic.turnStart=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginRetailChaseCatch(){if(!state.ending)state.ending={kind:"retail-catch",frame:0};}
@@ -590,7 +604,7 @@ function setRetailDigits(element,text){const glyphs={":":10,"/":11};element.repl
 function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0,transitioning:false};ui.music.pause();ui.over.className="game-over retail-clear";ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.hidden=true;ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;setRetailDigits(ui.resultCans,"000");const minutes=Math.floor(state.elapsed/60),seconds=Math.floor(state.elapsed%60);setRetailDigits(ui.resultTime,`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`);ui.over.hidden=false;}
 async function advanceRetailSegment(){
   const nextSegment=state.segmentIndex+1;
-  try{await loadRetailCourse(nextSegment);startGame();}
+  try{await loadRetailCourse(nextSegment);const movie=RETAIL_STAGE_MOVIES.get(nextSegment);if(movie)playCutscene(movie,startGame);else startGame();}
   catch(error){console.error(error);ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";}
 }
 function updateRetailResults(dt){
@@ -602,7 +616,7 @@ function updateRetailResults(dt){
   if(frame>=milestones.countStartFrame){const displayCans=Math.min(state.cans,frame-milestones.countStartFrame);if(displayCans!==state.results.displayCans){state.results.displayCans=displayCans;setRetailDigits(ui.resultCans,String(displayCans).padStart(3,"0"));}}
   const effectCompleteFrame=milestones.countStartFrame+state.cans+60;
   ui.over.classList.toggle("results-complete",frame>=effectCompleteFrame);
-  if(!state.results.transitioning&&frame>=effectCompleteFrame+retailFinishFlow.transitionDelayFrames){state.results.transitioning=true;if(state.segmentIndex<13)advanceRetailSegment();else{ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";}}
+  if(!state.results.transitioning&&frame>=effectCompleteFrame+retailFinishFlow.transitionDelayFrames){state.results.transitioning=true;if(state.segmentIndex<13)advanceRetailSegment();else playCutscene(5,()=>{ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";});}
 }
 function beginStageOneScriptedEvent(){
   if(!state.running||state.scripted||!stageOneScriptedFlow)return;
@@ -917,11 +931,11 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
 }
 requestAnimationFrame(tick);
 
-addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key))event.preventDefault();if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,true);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,true);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=true;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=true;if(!event.repeat&&(event.key===" "||event.key.toLowerCase()==="x"))jump();if(!event.repeat&&(event.key.toLowerCase()==="c"||event.key==="Shift"))squareAction();if(event.key==="Enter"&&!state.running)startGame();});
+addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key))event.preventDefault();if(event.key==="Enter"&&cutsceneCompletion){finishCutscene();return;}if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,true);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,true);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=true;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=true;if(!event.repeat&&(event.key===" "||event.key.toLowerCase()==="x"))jump();if(!event.repeat&&(event.key.toLowerCase()==="c"||event.key==="Shift"))squareAction();if(event.key==="Enter"&&!state.running)beginRetailOpening();});
 addEventListener("keyup",event=>{if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,false);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,false);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=false;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=false;});
 addEventListener("blur",()=>{input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;});
 document.querySelectorAll("[data-control]").forEach(button=>{const control=button.dataset.control;if(control==="left"||control==="right"){const direction=control==="left"?-1:1;button.addEventListener("pointerdown",event=>{button.setPointerCapture(event.pointerId);setSteering(direction,true);});for(const type of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(type,()=>setSteering(direction,false));}else button.addEventListener("pointerdown",()=>({jump,slide}[control]()));});
-ui.button.disabled=true;ui.button.addEventListener("click",startGame);ui.retry.addEventListener("click",startGame);
+ui.button.disabled=true;ui.button.addEventListener("click",beginRetailOpening);ui.retry.addEventListener("click",startGame);ui.cutscene.addEventListener("ended",finishCutscene);ui.cutscene.addEventListener("error",finishCutscene);ui.skipCutscene.addEventListener("click",finishCutscene);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 Promise.all([loadCharacter(),loadRetailCourse(0)]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.chunkCount} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.collectibleCount} RETAIL CANS · ${retailCourse.encounterCount} TRIGGERED ENCOUNTERS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});

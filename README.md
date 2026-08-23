@@ -29,6 +29,7 @@ Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>.
 - [Combined skinned rig with all 50 animation stacks](exports/pepsiman/Pepsiman_Rig.fbx)
 - [All 50 individual animation FBXs](exports/pepsiman/Pepsiman_Animation_Clips.zip)
 - [Rig/FBX reconstruction notes](docs/rig-and-fbx.md)
+- [Original STR movie and XA reconstruction notes](docs/media-reconstruction.md)
 
 ### Controls
 
