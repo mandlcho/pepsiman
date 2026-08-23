@@ -9,6 +9,7 @@ button { font:inherit; }
 #game { background:linear-gradient(#0878d9,#7dcef2 56%,#52616a 57%); }
 
 .scanlines { position:fixed; inset:0; pointer-events:none; z-index:20; opacity:.11; mix-blend-mode:overlay; background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(0,0,0,.45) 4px); }
+.retail-ending-flash { position:fixed; inset:0; pointer-events:none; z-index:14; opacity:0; background:#fff; }
 .hud { position:fixed; z-index:10; top:0; left:0; width:100%; padding:22px 30px; display:flex; align-items:flex-start; gap:34px; background:linear-gradient(to bottom,rgba(1,10,28,.78),transparent); }
 .hud[hidden] { display:none; }
 .brand { display:flex; align-items:center; gap:10px; margin-right:auto; font:900 22px/1 "Barlow Condensed"; font-style:italic; letter-spacing:.04em; text-shadow:2px 2px 0 #083a87; }

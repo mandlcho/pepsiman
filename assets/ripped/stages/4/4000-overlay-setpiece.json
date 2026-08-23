@@ -237,6 +237,32 @@
     ],
     "browserFramingInferred": true
   },
+  "chaseEnding": {
+    "controllerState20Address": "0x800f58b0",
+    "controllerState50Address": "0x800f6088",
+    "centeringFrames": 61,
+    "lateralCenterUnitsPerFrame": 15,
+    "endingFrames": 223,
+    "playerAdvanceFrames": 120,
+    "headingTurnFrames": 52,
+    "headingUnitsPerFrame": -11,
+    "cameraTransformSaveFrame": 90,
+    "cameraShakeStartFrame": 90,
+    "cameraShakeEndFrame": 150,
+    "canAdvanceFrames": 150,
+    "impactFrame": 120,
+    "impactSoundId": 62,
+    "impactEffectCount": 20,
+    "fadeIntensityOriginFrame": 160,
+    "firstVisibleFadeFrame": 161,
+    "fadeIntensityPerFrame": 4,
+    "psxAngleUnitsPerTurn": 4096,
+    "browserApproximationFields": [
+      "cameraShakePattern",
+      "impactSound",
+      "impactEffectPresentation"
+    ]
+  },
   "playerStartForward": -1800,
   "finishForward": 30001,
   "retailAdvanceUnitsPerFrame": 30,
