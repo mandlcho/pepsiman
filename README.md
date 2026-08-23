@@ -37,12 +37,12 @@ Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>.
 | --- | --- | --- |
 | Move continuously | Left / Right or A / D | Hold arrow buttons |
 | Jump / Cross | X or Space | Up button |
-| Slide / Square | C or Shift | Down button |
+| Slide | Down/S (or C/Shift) | Down button |
 | Sprint | Up/W + C/Shift | — |
 | Slow skid | Down/S + C/Shift | — |
 | Start | Enter | Run button |
 
-Gamepads use the original-style layout directly: D-pad or left stick moves freely left/right, Cross jumps, Square slides, Up+Square sprints, and Down+Square performs a slow skid.
+Gamepads use the original-style layout directly: D-pad or left stick moves freely left/right, Cross jumps, D-pad Down or Square slides, Up+Square sprints, and Down+Square performs a slow skid.
 
 ## Rebuild ripped assets
 

@@ -333,7 +333,7 @@ async function loadRetailCourse(segmentIndex=0){
   state.segmentIndex=segmentIndex;
 }
 
-let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, collisionClip, proneClip, endingApproachClip, endingCameraClip;
+let rig, material, idleClip, runClip, jumpClip, airborneClip, landingClip, slideEntryClip, slideLoopClip, collisionClip, proneClip, endingApproachClip, endingCameraClip;
 const nodes = new Map();
 const baseTransforms = new Map();
 const bindTransforms = new Map();
@@ -378,6 +378,8 @@ async function loadCharacter() {
   jumpClip=animations.clips.find(clip=>clip.id===6);
   airborneClip=animations.clips.find(clip=>clip.id===7);
   landingClip=animations.clips.find(clip=>clip.id===8);
+  slideEntryClip=animations.clips.find(clip=>clip.id===13);
+  slideLoopClip=animations.clips.find(clip=>clip.id===14);
   collisionClip=animations.clips.find(clip=>clip.id===9);
   proneClip=animations.clips.find(clip=>clip.id===19);
   endingApproachClip=animations.clips.find(clip=>clip.id===23);
@@ -410,18 +412,18 @@ function sampleAnimation(clip,time,loop=true,lockPelvisHeight=false){
   }
 }
 
-const input={left:false,right:false,forward:false,backward:false,gamepadX:0};
+const input={left:false,right:false,forward:false,backward:false,square:false,gamepadX:0};
 const gamepadState={jump:false,slide:false,forward:false,backward:false};
-const state={running:false,completed:false,ending:null,scripted:null,results:null,segmentIndex:0,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,sprint:0,brake:0,distance:0,elapsed:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
+const state={running:false,completed:false,ending:null,scripted:null,results:null,segmentIndex:0,x:0,vx:0,y:GROUND_Y,vy:0,grounded:true,jumpTime:0,landingTime:0,slide:0,slideTime:0,sprint:0,brake:0,distance:0,elapsed:0,cans:0,lives:3,speed:12,lastSpawn:-90,muted:false,invulnerable:0};
 function playerControlLocked(){return Boolean(state.ending||(state.scripted&&state.scripted.phase<4));}
 function setSteering(direction,active){if(direction<0)input.left=active;else input.right=active;}
 function jump(){if(state.running&&!playerControlLocked()&&state.grounded&&state.slide<=0){state.vy=JUMP_VELOCITY;state.grounded=false;state.jumpTime=.0001;state.landingTime=0;callout("JUMP!");}}
-function slide(){if(state.running&&!playerControlLocked()&&state.grounded){state.landingTime=0;state.slide=.65;callout("SLIDE!");}}
-function squareAction(){if(!state.running||playerControlLocked()||!state.grounded)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;callout("SKID!");}else slide();}
+function slide(){if(state.running&&!playerControlLocked()&&state.grounded){state.landingTime=0;if(state.slide<=0)state.slideTime=0;state.slide=.65;state.sprint=0;state.brake=0;callout("SLIDE!");}}
+function squareAction(){if(!state.running||playerControlLocked()||!state.grounded)return;if(input.forward||gamepadState.forward){state.sprint=.7;state.brake=0;state.slide=0;state.slideTime=0;callout("SPRINT!");}else if(input.backward||gamepadState.backward){state.brake=.55;state.sprint=0;state.slide=0;state.slideTime=0;callout("SKID!");}else slide();}
 function readGamepad(){
-  const pad=navigator.getGamepads?.()[0];if(!pad){input.gamepadX=0;gamepadState.forward=false;gamepadState.backward=false;return;}
-  const stick=Math.abs(pad.axes[0]||0)>.16?pad.axes[0]:0,dpad=(pad.buttons[15]?.pressed?1:0)-(pad.buttons[14]?.pressed?1:0);input.gamepadX=THREE.MathUtils.clamp(stick||dpad,-1,1);gamepadState.forward=Boolean(pad.buttons[12]?.pressed);gamepadState.backward=Boolean(pad.buttons[13]?.pressed);
-  const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(slidePressed&&!gamepadState.slide)squareAction();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
+  const pad=navigator.getGamepads?.()[0];if(!pad){input.gamepadX=0;gamepadState.forward=false;gamepadState.backward=false;gamepadState.jump=false;gamepadState.slide=false;return;}
+  const wasBackward=gamepadState.backward,stick=Math.abs(pad.axes[0]||0)>.16?pad.axes[0]:0,dpad=(pad.buttons[15]?.pressed?1:0)-(pad.buttons[14]?.pressed?1:0);input.gamepadX=THREE.MathUtils.clamp(stick||dpad,-1,1);gamepadState.forward=Boolean(pad.buttons[12]?.pressed);gamepadState.backward=Boolean(pad.buttons[13]?.pressed);
+  const jumpPressed=Boolean(pad.buttons[0]?.pressed),slidePressed=Boolean(pad.buttons[2]?.pressed);if(jumpPressed&&!gamepadState.jump)jump();if(gamepadState.backward&&!wasBackward&&!slidePressed)slide();if(slidePressed&&!gamepadState.slide)squareAction();gamepadState.jump=jumpPressed;gamepadState.slide=slidePressed;
 }
 const surfaceWorldVertices=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
 const groundRaycaster=new THREE.Raycaster();
@@ -484,7 +486,7 @@ function playCutscene(movie,completion){
 }
 function beginRetailOpening(){if(!ui.button.disabled)playCutscene(1,startGame);}
 
-function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const actor of retailSetpieceActors){actor.sprite.position.copy(actor.basePosition);actor.sprite.material.rotation=0;actor.sprite.visible=false;actor.state=0;actor.frame=0;}if(retailSetpieceCan){retailSetpieceCan.sourceForward=retailSetpieceCan.initialForward;retailSetpieceCan.sprite.position.set(retailSetpieceCan.sourceForward,retailSetpieceCan.vertical,retailSetpieceCan.lateral);retailSetpieceCan.sprite.visible=true;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.basePosition);dynamic.secondary.rotation.y=dynamic.baseRotationY;dynamic.secondary.visible=false;}dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.phaseStart=null;dynamic.turnStart=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
+function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const actor of retailSetpieceActors){actor.sprite.position.copy(actor.basePosition);actor.sprite.material.rotation=0;actor.sprite.visible=false;actor.state=0;actor.frame=0;}if(retailSetpieceCan){retailSetpieceCan.sourceForward=retailSetpieceCan.initialForward;retailSetpieceCan.sprite.position.set(retailSetpieceCan.sourceForward,retailSetpieceCan.vertical,retailSetpieceCan.lateral);retailSetpieceCan.sprite.visible=true;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.basePosition);dynamic.secondary.rotation.y=dynamic.baseRotationY;dynamic.secondary.visible=false;}dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.phaseStart=null;dynamic.turnStart=0;dynamic.active=false;}state.running=true;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.slideTime=0;state.sprint=0;state.brake=0;state.invulnerable=0;input.left=false;input.right=false;input.forward=false;input.backward=false;input.square=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("OUCH!");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
 function beginRetailChaseCatch(){if(!state.ending)state.ending={kind:"retail-catch",frame:0};}
 function updateRetailChaseCatch(dt){
@@ -906,12 +908,15 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
     const keyboardSteering=(input.right?1:0)-(input.left?1:0),steering=keyboardSteering||input.gamepadX,targetVx=steering*STEER_SPEED;
     state.vx=THREE.MathUtils.damp(state.vx,targetVx,steering?14:9,dt);const roadEdge=retailCourse.setpiece?2.2:ROAD_EDGE_X;state.x=THREE.MathUtils.clamp(state.x+state.vx*dt,-roadEdge,roadEdge);if(Math.abs(state.x)===roadEdge&&Math.sign(state.vx)===Math.sign(state.x))state.vx=0;
     updateRetailCourse(state.distance);
-    scene.updateMatrixWorld(true);updateVerticalMotion(dt,runnerGroundHeight());state.slide=Math.max(0,state.slide-dt);
-    rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=state.slide>0?.0048:.008;
-    const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingContactTime=LANDING_CONTACT_FRAME/landingClip.fps,landingRecoveryDuration=(landingClip.frameCount-1-LANDING_CONTACT_FRAME)/landingClip.fps;
+    scene.updateMatrixWorld(true);updateVerticalMotion(dt,runnerGroundHeight());
+    if(state.grounded&&!playerControlLocked()&&((input.backward&&!input.square)||(gamepadState.backward&&!gamepadState.slide)))state.slide=Math.max(state.slide,.1);
+    state.slide=Math.max(0,state.slide-dt);state.slideTime=state.slide>0?state.slideTime+dt:0;
+    rig.position.x=state.x;rig.position.y=.02+state.y;rig.scale.y=.008;
+    const takeoffDuration=(jumpClip.frameCount-1)/jumpClip.fps,landingContactTime=LANDING_CONTACT_FRAME/landingClip.fps,landingRecoveryDuration=(landingClip.frameCount-1-LANDING_CONTACT_FRAME)/landingClip.fps,slideEntryDuration=(slideEntryClip.frameCount-1)/slideEntryClip.fps;
     if(!state.grounded&&state.jumpTime<=takeoffDuration)sampleAnimation(jumpClip,state.jumpTime,false,true);
     else if(!state.grounded&&state.vy>0)sampleAnimation(airborneClip,state.jumpTime-takeoffDuration,true,true);
     else if(!state.grounded){const descentProgress=THREE.MathUtils.clamp(-state.vy/JUMP_VELOCITY,0,1);sampleAnimation(landingClip,descentProgress*landingContactTime,false,true);}
+    else if(state.slide>0){if(state.slideTime<=slideEntryDuration)sampleAnimation(slideEntryClip,state.slideTime,false,true);else sampleAnimation(slideLoopClip,state.slideTime-slideEntryDuration,true,true);}
     else if(state.landingTime>0&&state.landingTime<=landingRecoveryDuration)sampleAnimation(landingClip,landingContactTime+state.landingTime,false,true);
     else{state.landingTime=0;sampleAnimation(runClip,now*1.15);}
     rig.visible=state.invulnerable<=0||Math.floor(state.invulnerable*14)%2===0;
@@ -931,9 +936,9 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
 }
 requestAnimationFrame(tick);
 
-addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key))event.preventDefault();if(event.key==="Enter"&&cutsceneCompletion){finishCutscene();return;}if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,true);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,true);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=true;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=true;if(!event.repeat&&(event.key===" "||event.key.toLowerCase()==="x"))jump();if(!event.repeat&&(event.key.toLowerCase()==="c"||event.key==="Shift"))squareAction();if(event.key==="Enter"&&!state.running)beginRetailOpening();});
-addEventListener("keyup",event=>{if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,false);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,false);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=false;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=false;});
-addEventListener("blur",()=>{input.left=false;input.right=false;input.forward=false;input.backward=false;input.gamepadX=0;});
+addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key))event.preventDefault();if(event.key==="Enter"&&cutsceneCompletion){finishCutscene();return;}if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,true);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,true);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=true;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s"){input.backward=true;if(!event.repeat){if(input.square)squareAction();else slide();}}if(!event.repeat&&(event.key===" "||event.key.toLowerCase()==="x"))jump();if(event.key.toLowerCase()==="c"||event.key==="Shift"){input.square=true;if(!event.repeat)squareAction();}if(event.key==="Enter"&&!state.running)beginRetailOpening();});
+addEventListener("keyup",event=>{if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,false);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,false);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=false;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=false;if(event.key.toLowerCase()==="c"||event.key==="Shift")input.square=false;});
+addEventListener("blur",()=>{input.left=false;input.right=false;input.forward=false;input.backward=false;input.square=false;input.gamepadX=0;});
 document.querySelectorAll("[data-control]").forEach(button=>{const control=button.dataset.control;if(control==="left"||control==="right"){const direction=control==="left"?-1:1;button.addEventListener("pointerdown",event=>{button.setPointerCapture(event.pointerId);setSteering(direction,true);});for(const type of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(type,()=>setSteering(direction,false));}else button.addEventListener("pointerdown",()=>({jump,slide}[control]()));});
 ui.button.disabled=true;ui.button.addEventListener("click",beginRetailOpening);ui.retry.addEventListener("click",startGame);ui.cutscene.addEventListener("ended",finishCutscene);ui.cutscene.addEventListener("error",finishCutscene);ui.skipCutscene.addEventListener("click",finishCutscene);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
