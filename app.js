@@ -21,6 +21,7 @@ const RETAIL_SEGMENTS = {
 const RETAIL_TEXTURE_ROOT = "./assets/ripped/textures/0/";
 const RETAIL_WORLD_SCALE = .008;
 const RETAIL_PICKUP_RADIUS = 50 * RETAIL_WORLD_SCALE;
+const RETAIL_PLAYER_PICKUP_RADIUS = 35 * RETAIL_WORLD_SCALE;
 const RETAIL_ENCOUNTER_PROXIMITY = 600 * RETAIL_WORLD_SCALE;
 const RETAIL_REACTION_FPS = 30;
 const RETAIL_REACTION_FRAMES = 15;
@@ -33,6 +34,7 @@ const GRAVITY = 20;
 const JUMP_VELOCITY = 8.3;
 const LANDING_CONTACT_FRAME = 14;
 const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(15);
+const GAMEPLAY_CAMERA = {position:[0,3.8,6.2],lookAt:[0,1.45,-5.5]};
 const ui = {
   start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
@@ -57,8 +59,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x64bce9);
 scene.fog = new THREE.Fog(0x7dbbd5, 24, 105);
 const camera = new THREE.PerspectiveCamera(53, innerWidth / innerHeight, .1, 180);
-camera.position.set(0, 4.2, 8.5);
-camera.lookAt(0, 1.5, -9);
+camera.position.fromArray(GAMEPLAY_CAMERA.position);
+camera.lookAt(...GAMEPLAY_CAMERA.lookAt);
 scene.add(new THREE.HemisphereLight(0xd9f4ff, 0x20334a, 2.3));
 const sun = new THREE.DirectionalLight(0xffffff, 2.1);
 sun.position.set(-8, 13, 5); sun.castShadow = true; scene.add(sun);
@@ -558,7 +560,7 @@ function updateStageOneEnding(dt){
 }
 function beginSegmentOneEndingCamera(ending){
   const flow=stageOneEndingFlow.cameraTarget,angleScale=Math.PI*2/flow.psxAngleUnitsPerTurn,eyeAngle=flow.eyeHeadingOffsetPsx*angleScale,lookAngle=flow.lookHeadingOffsetPsx*angleScale;
-  ending.cameraStartPosition=camera.position.clone();ending.cameraStartLookAt=new THREE.Vector3(0,1.5,-9);ending.cameraMix=0;
+  ending.cameraStartPosition=camera.position.clone();ending.cameraStartLookAt=new THREE.Vector3(...GAMEPLAY_CAMERA.lookAt);ending.cameraMix=0;
   ending.cameraEndPosition=new THREE.Vector3(rig.position.x+Math.sin(eyeAngle)*flow.eyeRadius*RETAIL_WORLD_SCALE,rig.position.y-flow.eyeVerticalOffset*RETAIL_WORLD_SCALE,rig.position.z-Math.cos(eyeAngle)*flow.eyeRadius*RETAIL_WORLD_SCALE);
   ending.cameraEndLookAt=new THREE.Vector3(rig.position.x+Math.sin(lookAngle)*flow.lookRadius*RETAIL_WORLD_SCALE,rig.position.y-flow.lookVerticalOffset*RETAIL_WORLD_SCALE,rig.position.z-Math.cos(lookAngle)*flow.lookRadius*RETAIL_WORLD_SCALE);
 }
@@ -787,15 +789,12 @@ function updateRetailDynamicEntities(dt){
 }
 function testRetailCollectibles(){
   if(!retailCourse.ready||!rig)return;
-  updatePlayerProbeCenters();
+  const combinedRadius=RETAIL_PICKUP_RADIUS+RETAIL_PLAYER_PICKUP_RADIUS;
   for(const collectible of retailCollectibles){
     if(retailCollectedIds.has(collectible.id))continue;
     collectible.sprite.getWorldPosition(collectibleCenter);
-    for(let probeIndex=0;probeIndex<playerProbeCenters.length;probeIndex++){
-      const combinedRadius=RETAIL_PICKUP_RADIUS+PLAYER_PROBE_RADII[probeIndex];
-      if(collectibleCenter.distanceToSquared(playerProbeCenters[probeIndex])>combinedRadius*combinedRadius)continue;
-      retailCollectedIds.add(collectible.id);collectible.sprite.visible=false;state.cans++;blip(900);callout("PEPSI!");break;
-    }
+    if(collectibleCenter.distanceToSquared(rig.position)>combinedRadius*combinedRadius)continue;
+    retailCollectedIds.add(collectible.id);collectible.sprite.visible=false;state.cans++;blip(900);callout("PEPSI!");
   }
 }
 function updateRetailEncounters(dt){
@@ -913,7 +912,7 @@ function tick(nowMs){requestAnimationFrame(tick);const now=nowMs/1000,dt=Math.mi
   const chaseView=retailSetpieceFlow?.chaseCamera;
   const endingShakeX=state.ending?.cameraShakeX||0,endingShakeY=state.ending?.cameraShakeY||0;
   if(state.ending?.cameraEndPosition){camera.position.lerpVectors(state.ending.cameraStartPosition,state.ending.cameraEndPosition,state.ending.cameraMix);camera.lookAt(new THREE.Vector3().lerpVectors(state.ending.cameraStartLookAt,state.ending.cameraEndLookAt,state.ending.cameraMix));}
-  else{camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2+endingShakeX,5,dt);camera.position.y=THREE.MathUtils.damp(camera.position.y,(chaseCamera?chaseView.browserPosition[1]:4.2)+endingShakeY,6,dt);camera.position.z=THREE.MathUtils.damp(camera.position.z,chaseCamera?chaseView.browserPosition[2]:8.5,6,dt);camera.lookAt(endingShakeX,(chaseCamera?chaseView.browserLookAt[1]:1.5)+endingShakeY,chaseCamera?chaseView.browserLookAt[2]:-9);}renderer.render(scene,camera);
+  else{camera.position.x=THREE.MathUtils.damp(camera.position.x,(rig?.position.x||0)*.2+endingShakeX,5,dt);camera.position.y=THREE.MathUtils.damp(camera.position.y,(chaseCamera?chaseView.browserPosition[1]:GAMEPLAY_CAMERA.position[1])+endingShakeY,6,dt);camera.position.z=THREE.MathUtils.damp(camera.position.z,chaseCamera?chaseView.browserPosition[2]:GAMEPLAY_CAMERA.position[2],6,dt);camera.lookAt(endingShakeX,(chaseCamera?chaseView.browserLookAt[1]:GAMEPLAY_CAMERA.lookAt[1])+endingShakeY,chaseCamera?chaseView.browserLookAt[2]:GAMEPLAY_CAMERA.lookAt[2]);}renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);
 
