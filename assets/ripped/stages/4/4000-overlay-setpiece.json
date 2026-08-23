@@ -207,6 +207,36 @@
   "visibilityBehind": 10000,
   "automaticReactionBehindScrollingOrigin": 120,
   "scrollingOriginBehindPlayer": 620,
+  "chaseCan": {
+    "spriteAssetId": 301,
+    "spriteTexture": "assets/ripped/textures/4/4001-106.png",
+    "spriteDrawHandlerAddress": "0x800f0790",
+    "initialForward": -2420,
+    "initialVertical": -140,
+    "initialLateral": 0,
+    "advanceUnitsPerFrame": 30,
+    "trailingOffsetFromPlayer": 620,
+    "browserVerticalCenter": 260,
+    "browserBillboardSize": 520,
+    "browserPresentationFieldsInferred": [
+      "browserVerticalCenter",
+      "browserBillboardSize"
+    ]
+  },
+  "chaseCamera": {
+    "presentation": "front-facing",
+    "browserPosition": [
+      0,
+      3.7,
+      -7.4
+    ],
+    "browserLookAt": [
+      0,
+      1.65,
+      5
+    ],
+    "browserFramingInferred": true
+  },
   "playerStartForward": -1800,
   "finishForward": 30001,
   "retailAdvanceUnitsPerFrame": 30,

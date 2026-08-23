@@ -198,9 +198,19 @@ and uses a 200-unit sine lift. Scene state 20 at `0x800f58b0` proves the chase
 spawn at source X -1,800, an advance of 30 source units per 30 Hz frame, and the
 ending threshold at X 30,001. The browser registers segment 2 on that straight
 course, loads all 109 active compact props and 103 authored pedestrian records,
-and uses the exact 7.2 browser-unit-per-second retail base speed. The larger
-chase-object, camera-facing presentation, and overlay ending states remain to be
-connected before this segment is considered visually complete.
+and uses the exact 7.2 browser-unit-per-second retail base speed.
+
+The missing pursuit graphic is now traced through state-20 draw handler
+`0x800f0790`, which submits retail sprite asset 301. The raw `4001` registration
+maps that identifier to image 106, the original crushed Pepsi-can graphic. The
+separate source transform begins at `(-2420, -140, 0)`, advances 30 units per
+retail frame, and is clamped to the player's forward coordinate minus 620. The
+browser uses those exact forward values and source timing, keys the TIM's STP
+black matte, and switches to the original front-facing chase presentation. The
+billboard's browser-space size/vertical center and current Three.js camera
+framing are explicitly marked inferred in the overlay export until the PS1
+projection matrices are converted directly. The overlay ending states remain to
+be connected before this segment is considered visually complete.
 
 The first retail moving-entity dispatch is also connected. Overlay behaviors 1 and
 2 route through `0x800f9190`/`0x800f9274`; their subtype supplies speeds in ten-unit
