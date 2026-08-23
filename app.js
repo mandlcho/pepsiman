@@ -5,7 +5,15 @@ const ASSET_ROOT = "./assets/ripped/pepsiman/";
 const RETAIL_SEGMENTS = {
   0:{root:"./assets/ripped/stages/2/",world:"2003",props:"2004",entities:"2006-entities",spriteRoot:"./assets/ripped/textures/2/",spritePack:"2005"},
   1:{root:"./assets/ripped/stages/3/",world:"3003",props:"3004",entities:"3006-entities",spriteRoot:"./assets/ripped/textures/3/",spritePack:"3005"},
-  2:{root:"./assets/ripped/stages/4/",world:"4002",props:"4004",entities:"4006-setpiece",overlayActors:"4000-overlay-setpiece",spriteRoot:"./assets/ripped/textures/4/",spritePack:"4005",chaseSprite:"4001-106.png",setpiece:true}
+  2:{root:"./assets/ripped/stages/4/",world:"4002",props:"4004",entities:"4006-setpiece",overlayActors:"4000-overlay-setpiece",spriteRoot:"./assets/ripped/textures/4/",spritePack:"4005",chaseSprite:"4001-106.png",setpiece:true},
+  3:{root:"./assets/ripped/stages/5/",world:"5003",props:"5004",entities:"5006-entities",spriteRoot:"./assets/ripped/textures/5/",spritePack:"5005"},
+  4:{root:"./assets/ripped/stages/6/",world:"6003",props:"6004",entities:"6006-entities",spriteRoot:"./assets/ripped/textures/6/",spritePack:"6005"},
+  6:{root:"./assets/ripped/stages/8/",world:"8003",props:"8004",entities:"8006-entities",spriteRoot:"./assets/ripped/textures/8/",spritePack:"8005"},
+  7:{root:"./assets/ripped/stages/9/",world:"9003",props:"9004",entities:"9006-entities",spriteRoot:"./assets/ripped/textures/9/",spritePack:"9005"},
+  9:{root:"./assets/ripped/stages/B/",world:"B003",props:"B004",entities:"B006-entities",spriteRoot:"./assets/ripped/textures/B/",spritePack:"B005"},
+  10:{root:"./assets/ripped/stages/C/",world:"C003",props:"C004",entities:"C006-entities",spriteRoot:"./assets/ripped/textures/C/",spritePack:"C005"},
+  12:{root:"./assets/ripped/stages/E/",world:"E003",props:"E004",entities:"E006-entities",spriteRoot:"./assets/ripped/textures/E/",spritePack:"E005"},
+  13:{root:"./assets/ripped/stages/F/",world:"F003",props:"F004",entities:"F006-entities",spriteRoot:"./assets/ripped/textures/F/",spritePack:"F005"}
 };
 const RETAIL_TEXTURE_ROOT = "./assets/ripped/textures/0/";
 const RETAIL_WORLD_SCALE = .008;

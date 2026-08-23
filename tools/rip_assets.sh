@@ -50,6 +50,23 @@ python3 "$ROOT/tools/extract_stage_setpiece.py" \
   "$WORK/disc/CDDATA/4/4006" "$ROOT/assets/ripped/stages/4/4006-setpiece.json"
 python3 "$ROOT/tools/extract_stage_overlay_setpiece.py" \
   "$WORK/disc/CDDATA/4/4000" "$ROOT/assets/ripped/stages/4/4000-overlay-setpiece.json"
+for FAMILY in 5 6 8 9 B C E F; do
+  STAGE="$ROOT/assets/ripped/stages/$FAMILY"
+  FRAMES=60
+  case "$FAMILY" in 6|9) FRAMES=100 ;; esac
+  python3 "$ROOT/tools/extract_stage_tmd.py" \
+    "$WORK/disc/CDDATA/$FAMILY/${FAMILY}003" "$STAGE" \
+    --tim "$WORK/disc/CDDATA/$FAMILY/${FAMILY}001"
+  python3 "$ROOT/tools/extract_stage_tmd.py" \
+    "$WORK/disc/CDDATA/$FAMILY/${FAMILY}004" "$STAGE" \
+    --tim "$WORK/disc/CDDATA/0/0001" \
+    --tim "$WORK/disc/CDDATA/$FAMILY/${FAMILY}001" \
+    --tim "$WORK/disc/CDDATA/$FAMILY/${FAMILY}002" \
+    --tim "$WORK/disc/CDDATA/$FAMILY/${FAMILY}005"
+  python3 "$ROOT/tools/extract_stage_entities.py" \
+    "$WORK/disc/CDDATA/$FAMILY/${FAMILY}006" "$STAGE/${FAMILY}006-entities.json" \
+    --encounter-sprite-frame-count "$FRAMES"
+done
 python3 "$ROOT/tools/extract_character.py" \
   "$WORK/disc/CDDATA/0/0000" \
   "$WORK/disc/CDDATA/0/0001" \

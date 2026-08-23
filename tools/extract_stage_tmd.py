@@ -178,8 +178,7 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
             _, input_words, flag, mode = data[cursor : cursor + 4]
             packet = cursor + 4
             vertex_total, textured, gouraud = packet_layout(mode)
-            if flag & 1 == 0:
-                raise ValueError(f"lit primitive {mode:#x} is not yet supported")
+            lit = flag & 1 == 0
 
             uv_values: list[tuple[int, int]] = []
             cba = tsb = 0
@@ -198,13 +197,21 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
                 material = "vertex-color"
                 color_cursor = packet
 
-            color_total = vertex_total if gouraud else 1
-            colors = []
-            for color_index in range(color_total):
-                red, green, blue = data[color_cursor + color_index * 4 : color_cursor + color_index * 4 + 3]
-                colors.append((red / 255, green / 255, blue / 255))
-            index_cursor = color_cursor + color_total * 4
-            indices = [u16(data, index_cursor + corner * 2) for corner in range(vertex_total)]
+            if lit:
+                colors = [(1, 1, 1)] * vertex_total
+                indices = (
+                    [u16(data, color_cursor + corner * 4 + 2) for corner in range(vertex_total)]
+                    if gouraud else
+                    [u16(data, color_cursor + 2)] + [u16(data, color_cursor + 4 + corner * 2) for corner in range(vertex_total - 1)]
+                )
+            else:
+                color_total = vertex_total if gouraud else 1
+                colors = []
+                for color_index in range(color_total):
+                    red, green, blue = data[color_cursor + color_index * 4 : color_cursor + color_index * 4 + 3]
+                    colors.append((red / 255, green / 255, blue / 255))
+                index_cursor = color_cursor + color_total * 4
+                indices = [u16(data, index_cursor + corner * 2) for corner in range(vertex_total)]
             triangles = ((0, 1, 2), (1, 3, 2)) if vertex_total == 4 else ((0, 1, 2),)
             group = groups[material]
             for triangle in triangles:

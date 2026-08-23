@@ -57,6 +57,8 @@ Those fourteen indices correspond sequentially to the fourteen numbered disc fam
 
 The first Stage 1 segment is therefore retail segment `0`, backed by `CDDATA/2`. Human-readable stage/area names will be added only after the corresponding retail transition logic is decoded.
 
+The ordinary-scene pipeline is now also validated and exported for families `5`, `6`, `8`, `9`, `B`, `C`, `E`, and `F`. Together they add 252 authored world chunks, 2,489 course points, 1,171 visible prop placements, 87 dynamic controllers, 346 encounter records, and 4,238 collision spheres. Each browser scene loads its original `x003` world, `x004` 80-object prop library, `x005` encounter sprites, and `x006` gameplay tables through the same Stage 1 loader; one headless pass renders all eight without missing resources or page errors. Families `E` and `F` additionally prove the standard lit TMD packet path. The converter discards source normal indices because Three.js already computes mesh normals, while preserving the authored vertex indices, UVs, and textures.
+
 ## Stage 1 overlay and resource loading
 
 `CDDATA/2/2000` is not an opaque placement blob. The executable loads it at `0x800f0000`; its internal pointers resolve against that address, and its body contains valid MIPS code plus scene-specific dispatch tables. It is the first retail segment's executable overlay.
