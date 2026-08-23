@@ -184,18 +184,19 @@ async function loadRetailCourse(segmentIndex=0){
   retailFinishFlow=retailFlow.finishController||null;
   const group=new THREE.Group();group.name=`retail-segment-${segmentIndex}-course`;group.scale.setScalar(RETAIL_WORLD_SCALE);world.add(group);
   const textureLoader=new THREE.TextureLoader(),materials=new Map();
-  const materialFor=name=>{
-    if(materials.has(name))return materials.get(name);
+  const materialFor=(name,semiTransparent=false)=>{
+    const key=`${name}:${semiTransparent}`;
+    if(materials.has(key))return materials.get(key);
     const pending=(async()=>{
-      if(name==="vertex-color")return new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
+      if(name==="vertex-color")return new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,transparent:semiTransparent,opacity:semiTransparent?.5:1,depthWrite:!semiTransparent});
       const texture=await textureLoader.loadAsync(`${resources.root}textures/${name.slice(4)}.png`);
       texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
-      return new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,transparent:true,alphaTest:.05});
+      return new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,transparent:semiTransparent,alphaTest:.05,depthWrite:!semiTransparent});
     })();
-    materials.set(name,pending);return pending;
+    materials.set(key,pending);return pending;
   };
-  const materialNames=new Set([...model.objects,...propModel.objects].flatMap(object=>object.groups.map(primitive=>primitive.material)));
-  await Promise.all([...materialNames].map(materialFor));
+  const materialDefinitions=new Map([...model.objects,...propModel.objects].flatMap(object=>object.groups.map(primitive=>[`${primitive.material}:${Boolean(primitive.semiTransparent)}`,primitive])));
+  await Promise.all([...materialDefinitions.values()].map(primitive=>materialFor(primitive.material,primitive.semiTransparent)));
   const makeObject=async(object,name)=>{
     const objectGroup=new THREE.Group();objectGroup.name=name;
     for(const primitive of object.groups){
@@ -203,7 +204,7 @@ async function loadRetailCourse(segmentIndex=0){
       geometry.setAttribute("position",new THREE.Float32BufferAttribute(primitive.positions,3));
       if(primitive.uvs.length)geometry.setAttribute("uv",new THREE.Float32BufferAttribute(primitive.uvs,2));
       if(primitive.colors.length)geometry.setAttribute("color",new THREE.Float32BufferAttribute(primitive.colors,3));
-      const mesh=new THREE.Mesh(geometry,await materialFor(primitive.material));mesh.frustumCulled=false;objectGroup.add(mesh);
+      const mesh=new THREE.Mesh(geometry,await materialFor(primitive.material,primitive.semiTransparent));mesh.frustumCulled=false;objectGroup.add(mesh);
     }
     return objectGroup;
   };

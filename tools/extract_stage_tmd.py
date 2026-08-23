@@ -169,7 +169,7 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
             "<7I", data, table
         )
         vertices = [struct.unpack_from("<3h", data, base + vertex_offset + index * 8) for index in range(vertex_count)]
-        groups: dict[str, dict[str, list]] = defaultdict(lambda: {"positions": [], "uvs": [], "colors": []})
+        groups: dict[tuple[str, bool], dict[str, list]] = defaultdict(lambda: {"positions": [], "uvs": [], "colors": []})
         object_min = [math.inf, math.inf, math.inf]
         object_max = [-math.inf, -math.inf, -math.inf]
         cursor = base + primitive_offset
@@ -216,7 +216,7 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
             if any(index >= vertex_count for index in indices):
                 raise ValueError(f"object {object_index} primitive {primitive_index} mode {mode:#x} has invalid vertex indices {indices}")
             triangles = ((0, 1, 2), (1, 3, 2)) if vertex_total == 4 else ((0, 1, 2),)
-            group = groups[material]
+            group = groups[(material, bool(mode & 2))]
             for triangle in triangles:
                 for corner in triangle:
                     x, y, z = vertices[indices[corner]]
@@ -239,11 +239,14 @@ def parse_tmd(data: bytes, source_name: str) -> tuple[dict, set[tuple[int, int]]
             "id": object_index,
             "scale": scale,
             "bounds": {"min": object_min, "max": object_max},
-            "groups": [{"material": key, **value} for key, value in sorted(groups.items())],
+            "groups": [
+                {"material": material, "semiTransparent": semi_transparent, **value}
+                for (material, semi_transparent), value in sorted(groups.items())
+            ],
         })
 
     result = {
-        "format": "Pepsiman stage TMD web mesh v2",
+        "format": "Pepsiman stage TMD web mesh v3",
         "source": source_name,
         "tmdOffset": tmd_offset,
         "objects": objects,

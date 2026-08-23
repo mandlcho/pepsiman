@@ -92,6 +92,16 @@ coordinates for `2003`; headless gameplay captures verify that the original road
 intersections, sidewalks, grass lots, lane markings, and moving traffic render
 together. The raw source images are also exported individually and reproducibly.
 
+The v3 mesh export also preserves each TMD primitive's semitransparency bit.
+Stage 1's world contains 2,936 opaque primitives and only 36 semitransparent
+primitives; treating every texture as blended made the opaque house, tree, and
+streetscape pages fade and sort incorrectly. The browser now depth-writes opaque
+primitives and restricts blending to the authored semitransparent groups. Prop
+conversion also reconstructs the cumulative runtime VRAM state—global, world,
+prop, and encounter TIM sources in load order—instead of decoding the prop pack
+in isolation. This restores the previously transparent `7d51`–`7d53` Stage 1
+pages and the matching segment-2 pages.
+
 The `2006` loader establishes a fixed-capacity layout used by the retail executable:
 
 - an 80-entry model/collision index followed by 400 records of 44 bytes;
