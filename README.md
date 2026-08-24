@@ -13,6 +13,7 @@ The player character uses data decoded from the supplied Japanese disc:
 - 2,170 TIM textures extracted as PNG for continued level reconstruction
 - original Stage 1 road geometry (21 retail TMD chunks), 211-point authored course path, exact retail spawn, and 80-object prop library
 - original global HUD/results PIC artwork exported as 30 provenance-preserving browser textures
+- original frontend offset-table archives rebuilt as 109 browser assets, including complete TIM upload banks and five TMD product models
 
 ## Play locally
 
@@ -41,6 +42,7 @@ Edit and inspect the original skeleton at <http://127.0.0.1:8080/skeleton.html>.
 | Sprint | Up/W + C/Shift | — |
 | Slow skid | Down/S + C/Shift | — |
 | Start | Enter | Run button |
+| Continue saved scene | Continue button | Continue button |
 
 Gamepads use the original-style layout directly: D-pad or left stick moves freely left/right, Cross jumps, D-pad Down or Square slides, Up+Square sprints, and Down+Square performs a slow skid.
 
@@ -77,7 +79,8 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
 - Rigging: recovered root + original 16-joint TOD hierarchy, rigid skin weights, corrected bind transforms, and validated absolute integer-degree motion packets
 - Gameplay: continuous lateral steering, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
-- Stage 1: original textured road chunks, exact retail spawn and 211-point course path, 170 original prop instances, all 100 course-indexed pickups, 67 original-frame encounters with authored activation/exit lifetimes, the retail finish trigger, and the verified opening movement/animation phases of its ending controller; broader event behavior and the original clear/results presentation remain in progress
+- Progression: all 14 extracted retail segments load in the executable-authored order, stage movies play at scene boundaries, records and unlocked scenes persist in browser storage, and lives carry between scenes. Stage 1 includes its traced scripted events and ending controllers; later route endings remain explicitly marked fallbacks until their overlay controllers are decoded.
+- UI: original HUD, pause, warning, result, record, perfect, particle, and menu-cursor artwork is used directly; the title presentation uses the original character/globe while the retail 3D title-logo source remains unidentified.
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 
 This fan project contains assets from the original game. Do not distribute it unless you have the necessary rights.

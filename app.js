@@ -18,6 +18,7 @@ const RETAIL_SEGMENTS = {
   12:{root:"./assets/ripped/stages/E/",world:"E003",props:"E004",entities:"E006-entities",spriteRoot:"./assets/ripped/textures/E/",spritePack:"E005"},
   13:{root:"./assets/ripped/stages/F/",world:"F003",props:"F004",entities:"F006-entities",spriteRoot:"./assets/ripped/textures/F/",spritePack:"F005"}
 };
+const RETAIL_SEGMENT_COUNT=Object.keys(RETAIL_SEGMENTS).length;
 const RETAIL_TEXTURE_ROOT = "./assets/ripped/textures/0/";
 const RETAIL_WORLD_SCALE = .008;
 const RETAIL_PICKUP_RADIUS = 50 * RETAIL_WORLD_SCALE;
@@ -37,7 +38,7 @@ const CHARACTER_FACING_YAW = Math.PI + THREE.MathUtils.degToRad(15);
 const GAMEPLAY_CAMERA = {position:[0,3.8,6.2],lookAt:[0,1.45,-5.5]};
 const RETAIL_STAGE_MOVIES = new Map([[3,2],[6,3],[9,4]]);
 const ui = {
-  start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"), openingButton: document.querySelector("#opening-button"),
+  start: document.querySelector("#start-screen"), button: document.querySelector("#start-button"), continueButton: document.querySelector("#continue-button"), openingButton: document.querySelector("#opening-button"),
   cinematic: document.querySelector("#cinematic"), cutscene: document.querySelector("#cutscene"), skipCutscene: document.querySelector("#skip-cutscene"),
   loading: document.querySelector("#loading"), hud: document.querySelector(".hud"),
   distance: document.querySelector("#distance"), cans: document.querySelector("#cans"),
@@ -486,6 +487,10 @@ function playCutscene(movie,completion){
 }
 function beginRetailOpening(){if(!ui.button.disabled)playCutscene(1,startGame);}
 function playOriginalOpening(){if(!ui.button.disabled)playCutscene(0,()=>ui.start.classList.remove("hidden"));}
+function readRetailProgress(){try{return JSON.parse(localStorage.getItem("pepsiman-progress-v1")||"null");}catch{return null;}}
+function updateContinueButton(){const progress=readRetailProgress(),segment=Number(progress?.currentSegment);ui.continueButton.hidden=!(segment>0&&segment<RETAIL_SEGMENT_COUNT);if(!ui.continueButton.hidden)ui.continueButton.querySelector("span").textContent=String(segment+1);}
+function saveRetailProgress(segment){const previous=readRetailProgress()||{};try{localStorage.setItem("pepsiman-progress-v1",JSON.stringify({currentSegment:segment,unlockedSegment:Math.max(previous.unlockedSegment||0,segment)}));}catch{}updateContinueButton();}
+async function continueRetailGame(){const segment=Number(readRetailProgress()?.currentSegment);if(!(segment>0&&segment<RETAIL_SEGMENT_COUNT)||ui.button.disabled)return;ui.button.disabled=true;ui.continueButton.disabled=true;try{await loadRetailCourse(segment);startGame();}catch(error){console.error(error);ui.loading.textContent="CONTINUE LOAD FAILED";}finally{ui.button.disabled=false;ui.continueButton.disabled=false;}}
 
 function startGame(){if(!rig)return;retailCollidedEntities.clear();retailCollectedIds.clear();retailCollidedEncounterIds.clear();for(const particle of retailScriptParticles)particle.object.removeFromParent();retailScriptParticles.length=0;for(const collectible of retailCollectibles)collectible.sprite.visible=true;for(const event of retailEvents.values())event.state=event.initialState;for(const encounter of retailEncounters){encounter.sprite.visible=false;encounter.sprite.position.copy(encounter.basePosition);encounter.sprite.material=encounter.baseMaterial;encounter.reaction=null;encounter.removed=false;}for(const actor of retailSetpieceActors){actor.sprite.position.copy(actor.basePosition);actor.sprite.material.rotation=0;actor.sprite.visible=false;actor.state=0;actor.frame=0;}if(retailSetpieceCan){retailSetpieceCan.sourceForward=retailSetpieceCan.initialForward;retailSetpieceCan.sprite.position.set(retailSetpieceCan.sourceForward,retailSetpieceCan.vertical,retailSetpieceCan.lateral);retailSetpieceCan.sprite.visible=true;}for(const dynamic of retailDynamicEntities){setRetailDynamicModel(dynamic,dynamic.baseModel);dynamic.object.position.copy(dynamic.basePosition);dynamic.object.rotation.y=dynamic.baseRotationY;dynamic.object.visible=[20,44,45].includes(dynamic.behavior);if(dynamic.secondary){dynamic.secondary.position.copy(dynamic.basePosition);dynamic.secondary.rotation.y=dynamic.baseRotationY;dynamic.secondary.visible=false;}dynamic.heading=dynamic.initialHeading;dynamic.ageFrames=0;dynamic.phase=0;dynamic.phaseFrames=0;dynamic.phaseDistance=0;dynamic.phaseStart=null;dynamic.turnStart=0;dynamic.active=false;}state.running=true;state.paused=false;state.completed=false;state.ending=null;state.scripted=null;state.results=null;state.distance=0;state.elapsed=0;state.cans=0;state.lives=3;state.speed=12;state.x=0;state.vx=0;state.y=GROUND_Y;state.vy=0;state.grounded=true;state.jumpTime=0;state.landingTime=0;state.slide=0;state.slideTime=0;state.sprint=0;state.brake=0;state.invulnerable=0;state.hurryShown=false;input.left=false;input.right=false;input.forward=false;input.backward=false;input.square=false;input.gamepadX=0;rig.position.x=0;rig.position.z=1.3;ui.pause.hidden=true;ui.over.className="game-over";ui.overKicker.textContent="REFRESHMENT INTERRUPTED";ui.overTitle.innerHTML="GAME<br>OVER";ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";ui.start.classList.add("hidden");ui.over.hidden=true;ui.hud.hidden=false;ui.music.currentTime=0;ui.music.volume=.5;ui.music.play().catch(()=>{});updateRetailCourse(0);updateHud();}
 function hit(){if(state.invulnerable>0)return;state.invulnerable=1.25;state.lives--;blip(110);callout("danger");updateHud();if(state.lives<=0){state.running=false;ui.music.pause();ui.retry.hidden=false;ui.retry.textContent="CONTINUE";ui.final.textContent=`${Math.floor(state.distance)} m`;ui.over.hidden=false;}}
@@ -614,6 +619,7 @@ function clearStageOne(){
   const newRecord=!previous||state.cans>previous.cans||state.elapsed<previous.time;
   records[recordKey]={cans:recordCans,time:recordTime};
   try{localStorage.setItem("pepsiman-records-v1",JSON.stringify(records));}catch{}
+  if(state.segmentIndex<RETAIL_SEGMENT_COUNT-1)saveRetailProgress(state.segmentIndex+1);
   state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0,transitioning:false,newRecord,perfect:retailCourse.collectibleCount>0&&state.cans>=retailCourse.collectibleCount};
   ui.music.pause();ui.over.className=`game-over retail-clear${newRecord?" new-record":""}${state.results.perfect?" perfect":""}`;ui.overKicker.textContent=`SCENE ${state.segmentIndex+1}`;ui.overTitle.innerHTML="SCENE<br>CLEAR";ui.retry.hidden=true;ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;
   const sceneSlot=state.segmentIndex%3,stageNumber=Math.floor(state.segmentIndex/3)+1,headingLine=ui.resultHeading.parentElement;
@@ -621,8 +627,9 @@ function clearStageOne(){
   setRetailDigits(ui.resultCans,"000");setRetailDigits(document.querySelector("#record-cans"),String(recordCans).padStart(3,"0"));setRetailDigits(ui.resultTime,formatRetailTime(state.elapsed));setRetailDigits(document.querySelector("#record-time"),formatRetailTime(recordTime));ui.over.hidden=false;
 }
 async function advanceRetailSegment(){
-  const nextSegment=state.segmentIndex+1;
-  try{await loadRetailCourse(nextSegment);const movie=RETAIL_STAGE_MOVIES.get(nextSegment);if(movie)playCutscene(movie,startGame);else startGame();}
+  const nextSegment=state.segmentIndex+1,lives=state.lives;
+  const resume=()=>{startGame();state.lives=lives;updateHud();};
+  try{await loadRetailCourse(nextSegment);const movie=RETAIL_STAGE_MOVIES.get(nextSegment);if(movie)playCutscene(movie,resume);else resume();}
   catch(error){console.error(error);ui.retry.hidden=false;ui.retry.textContent="RUN AGAIN";}
 }
 function updateRetailResults(dt){
@@ -965,7 +972,7 @@ addEventListener("keydown",event=>{if(["ArrowLeft","ArrowRight","ArrowUp","Arrow
 addEventListener("keyup",event=>{if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a")setSteering(-1,false);if(event.key==="ArrowRight"||event.key.toLowerCase()==="d")setSteering(1,false);if(event.key==="ArrowUp"||event.key.toLowerCase()==="w")input.forward=false;if(event.key==="ArrowDown"||event.key.toLowerCase()==="s")input.backward=false;if(event.key.toLowerCase()==="c"||event.key==="Shift")input.square=false;});
 addEventListener("blur",()=>{input.left=false;input.right=false;input.forward=false;input.backward=false;input.square=false;input.gamepadX=0;});
 document.querySelectorAll("[data-control]").forEach(button=>{const control=button.dataset.control;if(control==="left"||control==="right"){const direction=control==="left"?-1:1;button.addEventListener("pointerdown",event=>{button.setPointerCapture(event.pointerId);setSteering(direction,true);});for(const type of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(type,()=>setSteering(direction,false));}else button.addEventListener("pointerdown",()=>({jump,slide}[control]()));});
-ui.button.disabled=true;ui.button.addEventListener("click",beginRetailOpening);ui.openingButton.addEventListener("click",playOriginalOpening);ui.retry.addEventListener("click",startGame);ui.cutscene.addEventListener("ended",finishCutscene);ui.cutscene.addEventListener("error",finishCutscene);ui.skipCutscene.addEventListener("click",finishCutscene);
+ui.button.disabled=true;ui.button.addEventListener("click",beginRetailOpening);ui.continueButton.addEventListener("click",continueRetailGame);ui.openingButton.addEventListener("click",playOriginalOpening);ui.retry.addEventListener("click",startGame);ui.cutscene.addEventListener("ended",finishCutscene);ui.cutscene.addEventListener("error",finishCutscene);ui.skipCutscene.addEventListener("click",finishCutscene);
 ui.sound.addEventListener("click",()=>{state.muted=!state.muted;ui.music.muted=state.muted;ui.sound.textContent=state.muted?"×":"♪";});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-Promise.all([loadCharacter(),loadRetailCourse(0)]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.chunkCount} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.collectibleCount} RETAIL CANS · ${retailCourse.encounterCount} TRIGGERED ENCOUNTERS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
+Promise.all([loadCharacter(),loadRetailCourse(0)]).then(()=>{ui.loading.textContent=`ORIGINAL RIG + RETAIL STAGE 1 READY · ${retailCourse.chunkCount} COURSE CHUNKS · ${retailCourse.visiblePropCount} ACTIVE PROPS · ${retailCourse.collectibleCount} RETAIL CANS · ${retailCourse.encounterCount} TRIGGERED ENCOUNTERS · ${retailColliders.length} SPHERES · ${retailCollisionSurfaces.length} LANDING SURFACES`;ui.button.disabled=false;updateContinueButton();}).catch(error=>{console.error(error);ui.loading.textContent="ASSET LOAD FAILED — USE A LOCAL WEB SERVER";});
