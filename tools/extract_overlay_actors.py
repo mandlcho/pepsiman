@@ -44,7 +44,7 @@ def find_footer(data: bytes) -> tuple[int, int]:
     return matches[0]
 
 
-def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, finish_forward: int) -> dict:
+def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, finish_forward: int, automatic_reaction_behind: int) -> dict:
     table, footer = find_footer(data)
     count = u32(data, footer)
     handlers = []
@@ -85,7 +85,7 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
             "displayBrowserVerticalOffset": 60 if actor_type in (5, 7) else 0,
             "collisionResponse": response,
             "blockForwardOffset": 60 if response == "block-forward" else None,
-            "browserCollisionProfileInferredFromSharedRetailControllerSlot": True,
+            "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot",
         })
     return {
         "format": "Pepsiman shared retail overlay actor table v1",
@@ -103,7 +103,7 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
         "activeControllerTypeCounts": {str(key): value for key, value in sorted(counts.items())},
         "visibilityAhead": 2000,
         "visibilityBehind": 10000,
-        "automaticReactionBehindScrollingOrigin": 120,
+        "automaticReactionBehindScrollingOrigin": automatic_reaction_behind,
         "scrollingOriginBehindPlayer": 620,
         "playerStartForward": player_start,
         "finishForward": finish_forward,
@@ -118,7 +118,8 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
             "browserLookAt": [0, 1.45, -5.5],
             "browserFramingInferred": True,
         },
-        "inferredFlowFields": ["playerStartForward", "finishForward", "retailAdvanceUnitsPerFrame", "collisionProfiles", "chaseCamera"],
+        "controllerComparison": "slots 0-7 match CDDATA/4/4000 except overlay-global addresses and the authored automatic-reaction threshold",
+        "inferredFlowFields": ["playerStartForward", "finishForward", "retailAdvanceUnitsPerFrame", "chaseCamera"],
         "actors": actors,
     }
 
@@ -131,8 +132,9 @@ def main() -> None:
     parser.add_argument("--sprite-root", required=True)
     parser.add_argument("--player-start", type=int, default=0)
     parser.add_argument("--finish-forward", type=int, required=True)
+    parser.add_argument("--automatic-reaction-behind", type=int, default=120)
     args = parser.parse_args()
-    result = extract(args.source.read_bytes(), args.source_name, args.sprite_root, args.player_start, args.finish_forward)
+    result = extract(args.source.read_bytes(), args.source_name, args.sprite_root, args.player_start, args.finish_forward, args.automatic_reaction_behind)
     args.destination.parent.mkdir(parents=True, exist_ok=True)
     args.destination.write_text(json.dumps(result, indent=2) + "\n")
 

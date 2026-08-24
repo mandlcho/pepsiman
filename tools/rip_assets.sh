@@ -68,7 +68,7 @@ python3 "$ROOT/tools/extract_stage_setpiece.py" \
 python3 "$ROOT/tools/extract_overlay_actors.py" \
   "$WORK/disc/CDDATA/7/7000" "$ROOT/assets/ripped/stages/7/7000-overlay-actors.json" \
   --source-name "CDDATA/7/7000" --sprite-root "assets/ripped/textures/7/7005" \
-  --player-start 0 --finish-forward 40000
+  --player-start 0 --finish-forward 40000 --automatic-reaction-behind 550
 for FAMILY in A D; do
   python3 "$ROOT/tools/extract_stage_tmd.py" \
     "$WORK/disc/CDDATA/$FAMILY/${FAMILY}002" "$ROOT/assets/ripped/stages/$FAMILY" \

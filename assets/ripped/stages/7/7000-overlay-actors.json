@@ -36,7 +36,7 @@
       "displayBrowserVerticalOffset": 0,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 1,
@@ -49,7 +49,7 @@
       "displayBrowserVerticalOffset": 0,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 2,
@@ -62,7 +62,7 @@
       "displayBrowserVerticalOffset": 0,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 3,
@@ -75,7 +75,7 @@
       "displayBrowserVerticalOffset": 0,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 4,
@@ -88,7 +88,7 @@
       "displayBrowserVerticalOffset": 0,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 5,
@@ -101,7 +101,7 @@
       "displayBrowserVerticalOffset": 60,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 6,
@@ -114,7 +114,7 @@
       "displayBrowserVerticalOffset": 0,
       "collisionResponse": "damage",
       "blockForwardOffset": null,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     },
     {
       "controllerType": 7,
@@ -127,7 +127,7 @@
       "displayBrowserVerticalOffset": 60,
       "collisionResponse": "block-forward",
       "blockForwardOffset": 60,
-      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+      "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot"
     }
   ],
   "activeControllerTypeCounts": {
@@ -144,7 +144,7 @@
   },
   "visibilityAhead": 2000,
   "visibilityBehind": 10000,
-  "automaticReactionBehindScrollingOrigin": 120,
+  "automaticReactionBehindScrollingOrigin": 550,
   "scrollingOriginBehindPlayer": 620,
   "playerStartForward": 0,
   "finishForward": 40000,
@@ -167,11 +167,11 @@
     ],
     "browserFramingInferred": true
   },
+  "controllerComparison": "slots 0-7 match CDDATA/4/4000 except overlay-global addresses and the authored automatic-reaction threshold",
   "inferredFlowFields": [
     "playerStartForward",
     "finishForward",
     "retailAdvanceUnitsPerFrame",
-    "collisionProfiles",
     "chaseCamera"
   ],
   "actors": [
