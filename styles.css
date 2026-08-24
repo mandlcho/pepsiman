@@ -38,27 +38,26 @@ button { font:inherit; }
 .pause-screen i { display:block;width:128px;height:32px;background:url("assets/ripped/ui/global-029.png") no-repeat;transform:scale(2.5); }
 .pause-screen small { margin-top:16px;color:#ddd;font:700 9px/1 monospace;letter-spacing:.08em;text-shadow:1px 1px #000; }
 
-.start-screen, .game-over { position:fixed; z-index:8; inset:0; display:grid; place-content:center; justify-items:center; text-align:center; overflow:hidden; background:radial-gradient(circle at 50% 48%,rgba(12,106,218,.28),rgba(0,9,31,.94) 68%); transition:opacity .55s,visibility .55s; }
-.start-screen::before { content:""; position:absolute; inset:-40%; background:repeating-conic-gradient(from 10deg,rgba(50,144,255,.12) 0 2deg,transparent 2deg 9deg); animation:spin 45s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
+.start-screen, .game-over { position:fixed; z-index:8; inset:0; display:grid; place-content:center; justify-items:center; text-align:center; overflow:hidden; background:radial-gradient(ellipse at 50% 68%,rgba(14,66,132,.12),rgba(0,0,0,.76) 54%,#000 88%); transition:opacity .55s,visibility .55s; }
+.start-screen::before { content:"";position:absolute;left:50%;bottom:-16vh;width:min(820px,110vw);height:37vh;transform:translateX(-50%) perspective(500px) rotateX(68deg);background:linear-gradient(90deg,transparent,rgba(230,237,246,.26),transparent),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 2px,transparent 2px 42px);border-top:2px solid rgba(205,224,244,.28);clip-path:polygon(15% 0,85% 0,100% 100%,0 100%); }
 .start-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-.title-lockup,.start-button,.controls-copy,.loading,.rig-lab-link { position:relative; z-index:1; }
-.kicker { margin:0 0 8px; color:#83c3ff; font:800 10px/1 Inter; letter-spacing:.42em; }
-h1 { margin:0; font:italic 900 clamp(86px,15vw,190px)/.68 "Barlow Condensed"; letter-spacing:-.07em; text-shadow:0 7px 0 #063979,0 18px 55px rgba(0,0,0,.5); transform:skew(-4deg); }
-h1 span { color:var(--red); }
-.rule { width:78%; height:5px; margin:26px auto 14px; transform:skew(-25deg); background:linear-gradient(90deg,var(--red) 0 48%,white 48% 53%,#1276df 53%); }
-.edition { margin:0; color:#c3d7ef; font:700 10px/1 Inter; letter-spacing:.24em; }
-.edition b { color:var(--red); }
-.start-button { width:130px; height:130px; margin:38px 0 24px; border:0; border-radius:50%; cursor:pointer; color:white; background:var(--red); box-shadow:0 0 0 8px rgba(239,34,56,.15),0 18px 50px rgba(0,0,0,.4); transition:transform .2s; clip-path:polygon(50% 0,92% 18%,100% 64%,70% 100%,23% 92%,0 52%,13% 13%); }
-.start-button:hover { transform:scale(1.07) rotate(4deg); }
+.title-lockup,.start-button,.opening-button,.title-legal,.loading,.rig-lab-link { position:relative; z-index:1; }
+.title-lockup { position:absolute;top:10vh;left:50%;transform:translateX(-50%) skew(-8deg);white-space:nowrap; }
+h1 { margin:0; color:#edf2f7; font:italic 900 clamp(76px,13vw,170px)/.68 "Barlow Condensed"; letter-spacing:-.065em; -webkit-text-stroke:clamp(1px,.18vw,3px) #0b315e; text-shadow:0 5px 0 #88a0b8,0 10px 0 #123e78,0 15px 0 #06162f,0 24px 28px #000; }
+h1 span { color:#edf2f7; }
+.title-globe { position:absolute;z-index:-1;left:50%;top:45%;width:clamp(66px,10vw,132px);aspect-ratio:1;transform:translate(-50%,-50%) skew(8deg);border-radius:50%;overflow:hidden;box-shadow:0 7px 0 #091c41,0 12px 22px #000; }
+.title-globe i { display:block;width:100%;height:100%;background:url("assets/ripped/ui/global-003.png") 0 0/600% 200% no-repeat; }
+.start-button { margin-top:31vh;padding:12px 34px;border:0;cursor:pointer;color:#fff;background:transparent;text-shadow:2px 2px 0 #000;font:italic 900 clamp(18px,2.4vw,30px)/1 "Barlow Condensed";letter-spacing:.08em;animation:press-start-blink 1s steps(2) infinite; }
+.start-button:hover { color:#8dc9ff; }
 .start-button:disabled { filter:grayscale(1); cursor:wait; }
 .start-button span,.start-button small { display:block; }
-.start-button span { font:italic 900 35px/1 "Barlow Condensed"; }
-.start-button small { margin-top:4px; font-size:7px; font-weight:800; letter-spacing:.13em; }
-.controls-copy { display:flex; gap:24px; color:#8eafd4; font-size:9px; font-weight:800; letter-spacing:.12em; }
-kbd { display:inline-grid; place-items:center; min-width:24px; height:24px; margin-right:3px; border:1px solid #6689b4; border-bottom-width:3px; border-radius:4px; color:white; background:#0d2b58; font:700 11px Inter; }
-.loading { min-height:13px; margin:26px 0 0; color:#4e719c; font-size:8px; letter-spacing:.18em; }
-.rig-lab-link { margin-top:12px; color:#78b9f8; font:800 8px/1 Inter; letter-spacing:.16em; text-decoration:none; border-bottom:1px solid rgba(120,185,248,.4); padding-bottom:4px; }
+.start-button small { margin-top:7px;font:700 8px/1 Inter;letter-spacing:.25em; }
+@keyframes press-start-blink { 50% { opacity:.28; } }
+.opening-button { margin-top:8px;padding:7px 10px;border:1px solid rgba(255,255,255,.28);color:#aebaca;background:rgba(0,0,0,.34);font:700 7px/1 Inter;letter-spacing:.16em;cursor:pointer; }
+.opening-button:hover { color:#fff;border-color:#fff; }
+.title-legal { position:absolute;bottom:16px;left:50%;transform:translateX(-50%);margin:0;color:#a7a7a7;font:600 7px/1 monospace;letter-spacing:.04em; }
+.loading { position:absolute;left:12px;bottom:12px;min-height:10px;margin:0;max-width:32vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#555;font-size:6px;letter-spacing:.08em;text-align:left; }
+.rig-lab-link { position:absolute;right:12px;bottom:12px;color:#777;font:700 6px/1 Inter;letter-spacing:.12em;text-decoration:none; }
 .rig-lab-link:hover { color:white; }
 
 .game-over[hidden] { display:none; }
@@ -107,6 +106,7 @@ kbd { display:inline-grid; place-items:center; min-width:24px; height:24px; marg
 .callout.show { opacity:1;transform:translate(-50%,-50%) scale(2.5); }
 
 .mobile-controls { position:fixed; z-index:12; bottom:max(18px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:none; gap:8px; }
+.start-screen:not(.hidden) ~ .mobile-controls { display:none; }
 .mobile-controls button { width:58px; height:58px; border:1px solid rgba(255,255,255,.5); border-radius:50%; color:white; background:rgba(3,20,51,.7); backdrop-filter:blur(8px); font-size:24px; }
 footer { position:fixed; z-index:7; left:24px; right:24px; bottom:14px; display:flex; justify-content:space-between; color:rgba(255,255,255,.48); font-size:7px; font-weight:700; letter-spacing:.15em; pointer-events:none; }
 body:has(.start-screen.hidden) footer { display:none; }
@@ -118,8 +118,8 @@ body:has(.start-screen.hidden) footer { display:none; }
   .retail-progress { right:6px;top:6px;transform:scale(1.15);transform-origin:right top; }
   .retail-lives { right:8px;bottom:84px;transform:scale(.9);transform-origin:right bottom; }
   .sound { width:30px; height:30px; }
-  .controls-copy { gap:10px; }
-  .controls-copy kbd { display:none; }
-  .start-button { width:110px; height:110px; margin:32px 0 20px; }
+  .title-lockup { top:12vh; }
+  .start-button { width:auto;height:auto;margin:31vh 0 0; }
+  .opening-button { margin-top:4px; }
   footer { display:none; }
 }
