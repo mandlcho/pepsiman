@@ -603,7 +603,20 @@ function updateSegmentOneEnding(dt){
   }
 }
 function setRetailDigits(element,text){const glyphs={":":10,"/":11};element.replaceChildren(...[...text].map(character=>{const glyph=document.createElement("i");glyph.style.setProperty("--glyph",glyphs[character]??Number(character));return glyph;}));}
-function clearStageOne(){if(!state.running)return;state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0,transitioning:false};ui.music.pause();ui.over.className="game-over retail-clear";ui.overKicker.textContent="STAGE 1";ui.overTitle.innerHTML="STAGE<br>CLEAR";ui.retry.hidden=true;ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;setRetailDigits(ui.resultCans,"000");const minutes=Math.floor(state.elapsed/60),seconds=Math.floor(state.elapsed%60);setRetailDigits(ui.resultTime,`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`);ui.over.hidden=false;}
+function formatRetailTime(seconds){const minutes=Math.floor(seconds/60);return `${String(minutes).padStart(2,"0")}:${String(Math.floor(seconds%60)).padStart(2,"0")}`;}
+function clearStageOne(){
+  if(!state.running)return;
+  const recordKey=`scene-${state.segmentIndex+1}`;let records={};
+  try{records=JSON.parse(localStorage.getItem("pepsiman-records-v1")||"{}");}catch{}
+  const previous=records[recordKey]||null;
+  const recordCans=Math.max(previous?.cans||0,state.cans),recordTime=previous?.time?Math.min(previous.time,state.elapsed):state.elapsed;
+  const newRecord=!previous||state.cans>previous.cans||state.elapsed<previous.time;
+  records[recordKey]={cans:recordCans,time:recordTime};
+  try{localStorage.setItem("pepsiman-records-v1",JSON.stringify(records));}catch{}
+  state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0,transitioning:false,newRecord,perfect:retailCourse.collectibleCount>0&&state.cans>=retailCourse.collectibleCount};
+  ui.music.pause();ui.over.className=`game-over retail-clear${newRecord?" new-record":""}${state.results.perfect?" perfect":""}`;ui.overKicker.textContent=`SCENE ${state.segmentIndex+1}`;ui.overTitle.innerHTML="SCENE<br>CLEAR";ui.retry.hidden=true;ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;
+  setRetailDigits(ui.resultCans,"000");setRetailDigits(document.querySelector("#record-cans"),String(recordCans).padStart(3,"0"));setRetailDigits(ui.resultTime,formatRetailTime(state.elapsed));setRetailDigits(document.querySelector("#record-time"),formatRetailTime(recordTime));ui.over.hidden=false;
+}
 async function advanceRetailSegment(){
   const nextSegment=state.segmentIndex+1;
   try{await loadRetailCourse(nextSegment);const movie=RETAIL_STAGE_MOVIES.get(nextSegment);if(movie)playCutscene(movie,startGame);else startGame();}
