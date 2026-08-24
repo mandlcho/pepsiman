@@ -44,7 +44,7 @@ const ui = {
   timeLeft: document.querySelector("#time-left"), totalTime: document.querySelector("#total-time"), progressFill: document.querySelector("#progress-fill"), lifeCount: document.querySelector("#life-count"), pause: document.querySelector("#pause-screen"), over: document.querySelector("#game-over"),
   overKicker: document.querySelector("#game-over > p"), overTitle: document.querySelector("#game-over h2"),
   final: document.querySelector("#final-distance"), retry: document.querySelector("#retry"),
-  resultCans: document.querySelector("#result-cans"), resultTime: document.querySelector("#result-time"),
+  resultCans: document.querySelector("#result-cans"), resultTime: document.querySelector("#result-time"), resultHeading: document.querySelector("#result-heading"), resultStageNumber: document.querySelector("#result-stage-number"),
   callout: document.querySelector("#callout"), sound: document.querySelector("#sound"),
   music: document.querySelector("#music"), endingFlash: document.querySelector("#retail-ending-flash")
 };
@@ -616,6 +616,8 @@ function clearStageOne(){
   try{localStorage.setItem("pepsiman-records-v1",JSON.stringify(records));}catch{}
   state.running=false;state.completed=true;state.results={elapsed:0,displayCans:0,transitioning:false,newRecord,perfect:retailCourse.collectibleCount>0&&state.cans>=retailCourse.collectibleCount};
   ui.music.pause();ui.over.className=`game-over retail-clear${newRecord?" new-record":""}${state.results.perfect?" perfect":""}`;ui.overKicker.textContent=`SCENE ${state.segmentIndex+1}`;ui.overTitle.innerHTML="SCENE<br>CLEAR";ui.retry.hidden=true;ui.retry.textContent="RUN AGAIN";ui.final.textContent=`${Math.floor(state.distance)} m`;
+  const sceneSlot=state.segmentIndex%3,stageNumber=Math.floor(state.segmentIndex/3)+1,headingLine=ui.resultHeading.parentElement;
+  headingLine.classList.toggle("stage",sceneSlot===2);ui.resultHeading.className=sceneSlot===0?"retail-scene-one":sceneSlot===1?"retail-scene-two":"retail-stage-heading";ui.resultStageNumber.style.setProperty("--stage-x",`${-264-(Math.min(stageNumber,4)-1)*32}px`);ui.over.querySelector(".retail-clear-title").setAttribute("aria-label",sceneSlot===2?`Stage ${stageNumber} clear`:`Scene ${sceneSlot+1} clear`);
   setRetailDigits(ui.resultCans,"000");setRetailDigits(document.querySelector("#record-cans"),String(recordCans).padStart(3,"0"));setRetailDigits(ui.resultTime,formatRetailTime(state.elapsed));setRetailDigits(document.querySelector("#record-time"),formatRetailTime(recordTime));ui.over.hidden=false;
 }
 async function advanceRetailSegment(){

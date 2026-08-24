@@ -67,9 +67,14 @@ h1 span { color:#edf2f7; }
 .game-over.retail-clear .retail-results-bg { position:absolute;z-index:-1;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);filter:brightness(.72) saturate(.92);opacity:0; }
 .game-over.retail-clear .retail-results-bg img { width:100%;height:100%;object-fit:fill;image-rendering:pixelated; }
 .game-over.retail-clear .retail-clear-title { display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:24px;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.65));opacity:0;transform:translateY(-24px); }
-.retail-clear-title i { display:block;background-image:url("assets/ripped/ui/global-021.png");background-repeat:no-repeat;image-rendering:pixelated;transform:scale(2.4);transform-origin:center; }
+.retail-clear-title i { display:block;background-image:url("assets/ripped/ui/global-021.png");background-repeat:no-repeat;image-rendering:pixelated; }
+.retail-heading-line { display:flex;align-items:center;gap:4px;transform:scale(2.4);transform-origin:center; }
 .retail-scene-one { width:76px;height:16px;background-position:0 0; }
-.retail-clear-word { width:112px;height:32px;background-position:0 -32px; }
+.retail-scene-two { width:76px;height:16px;background-position:0 -16px; }
+.retail-stage-heading { width:104px;height:16px;background-position:-264px 0; }
+.retail-stage-number { display:none!important;width:16px;height:16px;background-position:var(--stage-x) -32px; }
+.retail-heading-line.stage .retail-stage-number { display:block!important; }
+.retail-clear-word { width:112px;height:32px;background-position:0 -32px;transform:scale(2.4);transform-origin:center; }
 .game-over.retail-clear .retail-scorecards { display:grid;gap:12px;margin:6px 0 4px; }
 .retail-scorecards > div { display:flex;align-items:center;justify-content:space-between;gap:34px;width:min(360px,78vw);opacity:0;transform:translateX(-48px); }
 .retail-result-label { display:block;height:16px;background-image:url("assets/ripped/ui/global-021.png");background-repeat:no-repeat;image-rendering:pixelated;transform:scale(2);transform-origin:left center; }
