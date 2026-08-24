@@ -8,7 +8,7 @@ const RETAIL_SEGMENTS = {
   2:{root:"./assets/ripped/stages/4/",world:"4002",props:"4004",entities:"4006-setpiece",overlayActors:"4000-overlay-setpiece",spriteRoot:"./assets/ripped/textures/4/",spritePack:"4005",chaseSprite:"4001-106.png",setpiece:true},
   3:{root:"./assets/ripped/stages/5/",world:"5003",props:"5004",entities:"5006-entities",spriteRoot:"./assets/ripped/textures/5/",spritePack:"5005"},
   4:{root:"./assets/ripped/stages/6/",world:"6003",props:"6004",entities:"6006-entities",spriteRoot:"./assets/ripped/textures/6/",spritePack:"6005"},
-  5:{root:"./assets/ripped/stages/7/",world:"7002",props:"7004",entities:"7006-setpiece",spriteRoot:"./assets/ripped/textures/7/",spritePack:"7005",inferredRouteEnd:true},
+  5:{root:"./assets/ripped/stages/7/",world:"7002",props:"7004",entities:"7006-setpiece",overlayActors:"7000-overlay-actors",spriteRoot:"./assets/ripped/textures/7/",spritePack:"7005",setpiece:true,inferredRouteEnd:true},
   6:{root:"./assets/ripped/stages/8/",world:"8003",props:"8004",entities:"8006-entities",spriteRoot:"./assets/ripped/textures/8/",spritePack:"8005"},
   7:{root:"./assets/ripped/stages/9/",world:"9003",props:"9004",entities:"9006-entities",spriteRoot:"./assets/ripped/textures/9/",spritePack:"9005"},
   8:{root:"./assets/ripped/stages/A/",world:"A002",inferredRouteEnd:true},

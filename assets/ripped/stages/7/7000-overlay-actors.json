@@ -1,0 +1,1943 @@
+{
+  "format": "Pepsiman shared retail overlay actor table v1",
+  "source": "CDDATA/7/7000",
+  "sourceSize": 32840,
+  "sourceSha256": "aae245783d8da329d7cf74cba8e36d9e274836af45990736322839ba1e07db17",
+  "overlayLoadAddress": "0x800f0000",
+  "actorTableOffset": 29300,
+  "actorRecordSize": 16,
+  "actorCountOffset": 31316,
+  "actorCount": 126,
+  "actorHandlerCount": 13,
+  "actorHandlers": [
+    "0x800f0b7c",
+    "0x800f1000",
+    "0x800f1484",
+    "0x800f1908",
+    "0x800f1dc0",
+    "0x800f2244",
+    "0x800f26fc",
+    "0x800f2b80",
+    "0x800f2f8c",
+    "0x800f3444",
+    "0x800f38fc",
+    "0x800f3db4",
+    "0x800f426c"
+  ],
+  "activeControllerMetadata": [
+    {
+      "controllerType": 0,
+      "handlerAddress": "0x800f0b7c",
+      "spriteFrameId": 1,
+      "spriteTexture": "assets/ripped/textures/7/7005-001.png",
+      "collisionForwardRadius": 20,
+      "collisionLateralRadius": 80,
+      "collisionVerticalLowerExtent": 80,
+      "displayBrowserVerticalOffset": 0,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "spriteFrameId": 2,
+      "spriteTexture": "assets/ripped/textures/7/7005-002.png",
+      "collisionForwardRadius": 20,
+      "collisionLateralRadius": 60,
+      "collisionVerticalLowerExtent": 120,
+      "displayBrowserVerticalOffset": 0,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 2,
+      "handlerAddress": "0x800f1484",
+      "spriteFrameId": 3,
+      "spriteTexture": "assets/ripped/textures/7/7005-003.png",
+      "collisionForwardRadius": 20,
+      "collisionLateralRadius": 70,
+      "collisionVerticalLowerExtent": 200,
+      "displayBrowserVerticalOffset": 0,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "spriteFrameId": 4,
+      "spriteTexture": "assets/ripped/textures/7/7005-004.png",
+      "collisionForwardRadius": 50,
+      "collisionLateralRadius": 60,
+      "collisionVerticalLowerExtent": 80,
+      "displayBrowserVerticalOffset": 0,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "spriteFrameId": 5,
+      "spriteTexture": "assets/ripped/textures/7/7005-005.png",
+      "collisionForwardRadius": 20,
+      "collisionLateralRadius": 95,
+      "collisionVerticalLowerExtent": 100,
+      "displayBrowserVerticalOffset": 0,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "spriteFrameId": 6,
+      "spriteTexture": "assets/ripped/textures/7/7005-006.png",
+      "collisionForwardRadius": 35,
+      "collisionLateralRadius": 45,
+      "collisionVerticalLowerExtent": 80,
+      "displayBrowserVerticalOffset": 60,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 6,
+      "handlerAddress": "0x800f26fc",
+      "spriteFrameId": 7,
+      "spriteTexture": "assets/ripped/textures/7/7005-007.png",
+      "collisionForwardRadius": 20,
+      "collisionLateralRadius": 105,
+      "collisionVerticalLowerExtent": 90,
+      "displayBrowserVerticalOffset": 0,
+      "collisionResponse": "damage",
+      "blockForwardOffset": null,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    },
+    {
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "spriteFrameId": 8,
+      "spriteTexture": "assets/ripped/textures/7/7005-008.png",
+      "collisionForwardRadius": 60,
+      "collisionLateralRadius": 70,
+      "collisionVerticalLowerExtent": 150,
+      "displayBrowserVerticalOffset": 60,
+      "collisionResponse": "block-forward",
+      "blockForwardOffset": 60,
+      "browserCollisionProfileInferredFromSharedRetailControllerSlot": true
+    }
+  ],
+  "activeControllerTypeCounts": {
+    "0": 5,
+    "1": 20,
+    "3": 21,
+    "4": 18,
+    "5": 29,
+    "7": 25,
+    "8": 2,
+    "9": 3,
+    "10": 2,
+    "11": 1
+  },
+  "visibilityAhead": 2000,
+  "visibilityBehind": 10000,
+  "automaticReactionBehindScrollingOrigin": 120,
+  "scrollingOriginBehindPlayer": 620,
+  "playerStartForward": 0,
+  "finishForward": 40000,
+  "retailAdvanceUnitsPerFrame": 30,
+  "reactionFrames": 16,
+  "reactionForwardUnitsPerFrame": 45,
+  "reactionLateralUnitsPerFrame": 25,
+  "reactionVerticalAmplitude": 200,
+  "chaseCamera": {
+    "presentation": "behind-facing",
+    "browserPosition": [
+      0,
+      3.8,
+      6.2
+    ],
+    "browserLookAt": [
+      0,
+      1.45,
+      -5.5
+    ],
+    "browserFramingInferred": true
+  },
+  "inferredFlowFields": [
+    "playerStartForward",
+    "finishForward",
+    "retailAdvanceUnitsPerFrame",
+    "collisionProfiles",
+    "chaseCamera"
+  ],
+  "actors": [
+    {
+      "id": 0,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        1500,
+        0,
+        -250
+      ],
+      "forward": 1500,
+      "vertical": 0,
+      "lateral": -250,
+      "raw": "05000000dc0500000000000006ffffff"
+    },
+    {
+      "id": 1,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        1550,
+        0,
+        -150
+      ],
+      "forward": 1550,
+      "vertical": 0,
+      "lateral": -150,
+      "raw": "050000000e060000000000006affffff"
+    },
+    {
+      "id": 2,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        1700,
+        0,
+        180
+      ],
+      "forward": 1700,
+      "vertical": 0,
+      "lateral": 180,
+      "raw": "01000000a406000000000000b4000000"
+    },
+    {
+      "id": 3,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        1780,
+        0,
+        80
+      ],
+      "forward": 1780,
+      "vertical": 0,
+      "lateral": 80,
+      "raw": "03000000f40600000000000050000000"
+    },
+    {
+      "id": 4,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        1820,
+        0,
+        190
+      ],
+      "forward": 1820,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "050000001c07000000000000be000000"
+    },
+    {
+      "id": 5,
+      "controllerType": 0,
+      "handlerAddress": "0x800f0b7c",
+      "sourcePosition": [
+        2350,
+        0,
+        -190
+      ],
+      "forward": 2350,
+      "vertical": 0,
+      "lateral": -190,
+      "raw": "000000002e0900000000000042ffffff"
+    },
+    {
+      "id": 6,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        2450,
+        0,
+        -60
+      ],
+      "forward": 2450,
+      "vertical": 0,
+      "lateral": -60,
+      "raw": "050000009209000000000000c4ffffff"
+    },
+    {
+      "id": 7,
+      "controllerType": 8,
+      "handlerAddress": "0x800f2f8c",
+      "sourcePosition": [
+        2500,
+        -250,
+        -280
+      ],
+      "forward": 2500,
+      "vertical": -250,
+      "lateral": -280,
+      "raw": "08000000c409000006ffffffe8feffff"
+    },
+    {
+      "id": 8,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        2550,
+        0,
+        -150
+      ],
+      "forward": 2550,
+      "vertical": 0,
+      "lateral": -150,
+      "raw": "05000000f6090000000000006affffff"
+    },
+    {
+      "id": 9,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        3150,
+        0,
+        -100
+      ],
+      "forward": 3150,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "010000004e0c0000000000009cffffff"
+    },
+    {
+      "id": 10,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        3250,
+        0,
+        -180
+      ],
+      "forward": 3250,
+      "vertical": 0,
+      "lateral": -180,
+      "raw": "04000000b20c0000000000004cffffff"
+    },
+    {
+      "id": 11,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        3600,
+        0,
+        150
+      ],
+      "forward": 3600,
+      "vertical": 0,
+      "lateral": 150,
+      "raw": "05000000100e00000000000096000000"
+    },
+    {
+      "id": 12,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        3650,
+        0,
+        40
+      ],
+      "forward": 3650,
+      "vertical": 0,
+      "lateral": 40,
+      "raw": "05000000420e00000000000028000000"
+    },
+    {
+      "id": 13,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        3750,
+        0,
+        200
+      ],
+      "forward": 3750,
+      "vertical": 0,
+      "lateral": 200,
+      "raw": "07000000a60e000000000000c8000000"
+    },
+    {
+      "id": 14,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        4400,
+        0,
+        -150
+      ],
+      "forward": 4400,
+      "vertical": 0,
+      "lateral": -150,
+      "raw": "0500000030110000000000006affffff"
+    },
+    {
+      "id": 15,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        4450,
+        0,
+        -50
+      ],
+      "forward": 4450,
+      "vertical": 0,
+      "lateral": -50,
+      "raw": "050000006211000000000000ceffffff"
+    },
+    {
+      "id": 16,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        4600,
+        0,
+        -205
+      ],
+      "forward": 4600,
+      "vertical": 0,
+      "lateral": -205,
+      "raw": "07000000f81100000000000033ffffff"
+    },
+    {
+      "id": 17,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        5450,
+        0,
+        70
+      ],
+      "forward": 5450,
+      "vertical": 0,
+      "lateral": 70,
+      "raw": "050000004a1500000000000046000000"
+    },
+    {
+      "id": 18,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        5550,
+        0,
+        150
+      ],
+      "forward": 5550,
+      "vertical": 0,
+      "lateral": 150,
+      "raw": "05000000ae1500000000000096000000"
+    },
+    {
+      "id": 19,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        6500,
+        0,
+        -150
+      ],
+      "forward": 6500,
+      "vertical": 0,
+      "lateral": -150,
+      "raw": "0400000064190000000000006affffff"
+    },
+    {
+      "id": 20,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        6800,
+        0,
+        160
+      ],
+      "forward": 6800,
+      "vertical": 0,
+      "lateral": 160,
+      "raw": "01000000901a000000000000a0000000"
+    },
+    {
+      "id": 21,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        7100,
+        0,
+        -5
+      ],
+      "forward": 7100,
+      "vertical": 0,
+      "lateral": -5,
+      "raw": "04000000bc1b000000000000fbffffff"
+    },
+    {
+      "id": 22,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        7500,
+        0,
+        190
+      ],
+      "forward": 7500,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "030000004c1d000000000000be000000"
+    },
+    {
+      "id": 23,
+      "controllerType": 9,
+      "handlerAddress": "0x800f3444",
+      "sourcePosition": [
+        7500,
+        -250,
+        280
+      ],
+      "forward": 7500,
+      "vertical": -250,
+      "lateral": 280,
+      "raw": "090000004c1d000006ffffff18010000"
+    },
+    {
+      "id": 24,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        7550,
+        0,
+        100
+      ],
+      "forward": 7550,
+      "vertical": 0,
+      "lateral": 100,
+      "raw": "030000007e1d00000000000064000000"
+    },
+    {
+      "id": 25,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        8150,
+        0,
+        180
+      ],
+      "forward": 8150,
+      "vertical": 0,
+      "lateral": 180,
+      "raw": "01000000d61f000000000000b4000000"
+    },
+    {
+      "id": 26,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        8400,
+        0,
+        -50
+      ],
+      "forward": 8400,
+      "vertical": 0,
+      "lateral": -50,
+      "raw": "05000000d020000000000000ceffffff"
+    },
+    {
+      "id": 27,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        8500,
+        0,
+        -190
+      ],
+      "forward": 8500,
+      "vertical": 0,
+      "lateral": -190,
+      "raw": "05000000342100000000000042ffffff"
+    },
+    {
+      "id": 28,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        8550,
+        0,
+        -110
+      ],
+      "forward": 8550,
+      "vertical": 0,
+      "lateral": -110,
+      "raw": "07000000662100000000000092ffffff"
+    },
+    {
+      "id": 29,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        9100,
+        0,
+        200
+      ],
+      "forward": 9100,
+      "vertical": 0,
+      "lateral": 200,
+      "raw": "010000008c23000000000000c8000000"
+    },
+    {
+      "id": 30,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        9300,
+        0,
+        -160
+      ],
+      "forward": 9300,
+      "vertical": 0,
+      "lateral": -160,
+      "raw": "04000000542400000000000060ffffff"
+    },
+    {
+      "id": 31,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        9750,
+        0,
+        190
+      ],
+      "forward": 9750,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "070000001626000000000000be000000"
+    },
+    {
+      "id": 32,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        10050,
+        0,
+        50
+      ],
+      "forward": 10050,
+      "vertical": 0,
+      "lateral": 50,
+      "raw": "05000000422700000000000032000000"
+    },
+    {
+      "id": 33,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        10750,
+        0,
+        175
+      ],
+      "forward": 10750,
+      "vertical": 0,
+      "lateral": 175,
+      "raw": "01000000fe29000000000000af000000"
+    },
+    {
+      "id": 34,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        11200,
+        0,
+        85
+      ],
+      "forward": 11200,
+      "vertical": 0,
+      "lateral": 85,
+      "raw": "04000000c02b00000000000055000000"
+    },
+    {
+      "id": 35,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        11750,
+        0,
+        125
+      ],
+      "forward": 11750,
+      "vertical": 0,
+      "lateral": 125,
+      "raw": "07000000e62d0000000000007d000000"
+    },
+    {
+      "id": 36,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        11850,
+        0,
+        20
+      ],
+      "forward": 11850,
+      "vertical": 0,
+      "lateral": 20,
+      "raw": "050000004a2e00000000000014000000"
+    },
+    {
+      "id": 37,
+      "controllerType": 0,
+      "handlerAddress": "0x800f0b7c",
+      "sourcePosition": [
+        12350,
+        0,
+        45
+      ],
+      "forward": 12350,
+      "vertical": 0,
+      "lateral": 45,
+      "raw": "000000003e300000000000002d000000"
+    },
+    {
+      "id": 38,
+      "controllerType": 10,
+      "handlerAddress": "0x800f38fc",
+      "sourcePosition": [
+        12500,
+        -350,
+        -280
+      ],
+      "forward": 12500,
+      "vertical": -350,
+      "lateral": -280,
+      "raw": "0a000000d4300000a2feffffe8feffff"
+    },
+    {
+      "id": 39,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        12550,
+        0,
+        190
+      ],
+      "forward": 12550,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "030000000631000000000000be000000"
+    },
+    {
+      "id": 40,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        12800,
+        0,
+        100
+      ],
+      "forward": 12800,
+      "vertical": 0,
+      "lateral": 100,
+      "raw": "04000000003200000000000064000000"
+    },
+    {
+      "id": 41,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        13050,
+        0,
+        105
+      ],
+      "forward": 13050,
+      "vertical": 0,
+      "lateral": 105,
+      "raw": "05000000fa3200000000000069000000"
+    },
+    {
+      "id": 42,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        13150,
+        0,
+        190
+      ],
+      "forward": 13150,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "050000005e33000000000000be000000"
+    },
+    {
+      "id": 43,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        13350,
+        0,
+        -110
+      ],
+      "forward": 13350,
+      "vertical": 0,
+      "lateral": -110,
+      "raw": "04000000263400000000000092ffffff"
+    },
+    {
+      "id": 44,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        13500,
+        0,
+        -5
+      ],
+      "forward": 13500,
+      "vertical": 0,
+      "lateral": -5,
+      "raw": "03000000bc34000000000000fbffffff"
+    },
+    {
+      "id": 45,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        13530,
+        0,
+        95
+      ],
+      "forward": 13530,
+      "vertical": 0,
+      "lateral": 95,
+      "raw": "03000000da340000000000005f000000"
+    },
+    {
+      "id": 46,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        14000,
+        0,
+        105
+      ],
+      "forward": 14000,
+      "vertical": 0,
+      "lateral": 105,
+      "raw": "04000000b03600000000000069000000"
+    },
+    {
+      "id": 47,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        14600,
+        0,
+        -175
+      ],
+      "forward": 14600,
+      "vertical": 0,
+      "lateral": -175,
+      "raw": "01000000083900000000000051ffffff"
+    },
+    {
+      "id": 48,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        14790,
+        0,
+        10
+      ],
+      "forward": 14790,
+      "vertical": 0,
+      "lateral": 10,
+      "raw": "04000000c6390000000000000a000000"
+    },
+    {
+      "id": 49,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        14760,
+        0,
+        150
+      ],
+      "forward": 14760,
+      "vertical": 0,
+      "lateral": 150,
+      "raw": "07000000a83900000000000096000000"
+    },
+    {
+      "id": 50,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        14900,
+        0,
+        50
+      ],
+      "forward": 14900,
+      "vertical": 0,
+      "lateral": 50,
+      "raw": "07000000343a00000000000032000000"
+    },
+    {
+      "id": 51,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        15750,
+        0,
+        175
+      ],
+      "forward": 15750,
+      "vertical": 0,
+      "lateral": 175,
+      "raw": "07000000863d000000000000af000000"
+    },
+    {
+      "id": 52,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        15850,
+        0,
+        75
+      ],
+      "forward": 15850,
+      "vertical": 0,
+      "lateral": 75,
+      "raw": "07000000ea3d0000000000004b000000"
+    },
+    {
+      "id": 53,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        16450,
+        0,
+        96
+      ],
+      "forward": 16450,
+      "vertical": 0,
+      "lateral": 96,
+      "raw": "07000000424000000000000060000000"
+    },
+    {
+      "id": 54,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        16500,
+        0,
+        120
+      ],
+      "forward": 16500,
+      "vertical": 0,
+      "lateral": 120,
+      "raw": "07000000744000000000000078000000"
+    },
+    {
+      "id": 55,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        17300,
+        0,
+        -190
+      ],
+      "forward": 17300,
+      "vertical": 0,
+      "lateral": -190,
+      "raw": "01000000944300000000000042ffffff"
+    },
+    {
+      "id": 56,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        17500,
+        0,
+        190
+      ],
+      "forward": 17500,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "010000005c44000000000000be000000"
+    },
+    {
+      "id": 57,
+      "controllerType": 0,
+      "handlerAddress": "0x800f0b7c",
+      "sourcePosition": [
+        17550,
+        0,
+        65
+      ],
+      "forward": 17550,
+      "vertical": 0,
+      "lateral": 65,
+      "raw": "000000008e4400000000000041000000"
+    },
+    {
+      "id": 58,
+      "controllerType": 9,
+      "handlerAddress": "0x800f3444",
+      "sourcePosition": [
+        17500,
+        -250,
+        280
+      ],
+      "forward": 17500,
+      "vertical": -250,
+      "lateral": 280,
+      "raw": "090000005c44000006ffffff18010000"
+    },
+    {
+      "id": 59,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        18000,
+        0,
+        200
+      ],
+      "forward": 18000,
+      "vertical": 0,
+      "lateral": 200,
+      "raw": "010000005046000000000000c8000000"
+    },
+    {
+      "id": 60,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        18050,
+        0,
+        75
+      ],
+      "forward": 18050,
+      "vertical": 0,
+      "lateral": 75,
+      "raw": "0400000082460000000000004b000000"
+    },
+    {
+      "id": 61,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        18880,
+        0,
+        -5
+      ],
+      "forward": 18880,
+      "vertical": 0,
+      "lateral": -5,
+      "raw": "03000000c049000000000000fbffffff"
+    },
+    {
+      "id": 62,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        18920,
+        0,
+        -100
+      ],
+      "forward": 18920,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "03000000e8490000000000009cffffff"
+    },
+    {
+      "id": 63,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        18980,
+        0,
+        -200
+      ],
+      "forward": 18980,
+      "vertical": 0,
+      "lateral": -200,
+      "raw": "07000000244a00000000000038ffffff"
+    },
+    {
+      "id": 64,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        19900,
+        0,
+        150
+      ],
+      "forward": 19900,
+      "vertical": 0,
+      "lateral": 150,
+      "raw": "04000000bc4d00000000000096000000"
+    },
+    {
+      "id": 65,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        21050,
+        0,
+        0
+      ],
+      "forward": 21050,
+      "vertical": 0,
+      "lateral": 0,
+      "raw": "050000003a5200000000000000000000"
+    },
+    {
+      "id": 66,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        21150,
+        0,
+        -100
+      ],
+      "forward": 21150,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "050000009e520000000000009cffffff"
+    },
+    {
+      "id": 67,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        21450,
+        0,
+        -190
+      ],
+      "forward": 21450,
+      "vertical": 0,
+      "lateral": -190,
+      "raw": "04000000ca5300000000000042ffffff"
+    },
+    {
+      "id": 68,
+      "controllerType": 10,
+      "handlerAddress": "0x800f38fc",
+      "sourcePosition": [
+        22500,
+        -350,
+        -280
+      ],
+      "forward": 22500,
+      "vertical": -350,
+      "lateral": -280,
+      "raw": "0a000000e4570000a2feffffe8feffff"
+    },
+    {
+      "id": 69,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        22500,
+        0,
+        -195
+      ],
+      "forward": 22500,
+      "vertical": 0,
+      "lateral": -195,
+      "raw": "07000000e4570000000000003dffffff"
+    },
+    {
+      "id": 70,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        22550,
+        0,
+        -100
+      ],
+      "forward": 22550,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "0700000016580000000000009cffffff"
+    },
+    {
+      "id": 71,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        22800,
+        0,
+        -50
+      ],
+      "forward": 22800,
+      "vertical": 0,
+      "lateral": -50,
+      "raw": "030000001059000000000000ceffffff"
+    },
+    {
+      "id": 72,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        22850,
+        0,
+        210
+      ],
+      "forward": 22850,
+      "vertical": 0,
+      "lateral": 210,
+      "raw": "030000004259000000000000d2000000"
+    },
+    {
+      "id": 73,
+      "controllerType": 0,
+      "handlerAddress": "0x800f0b7c",
+      "sourcePosition": [
+        23000,
+        0,
+        -45
+      ],
+      "forward": 23000,
+      "vertical": 0,
+      "lateral": -45,
+      "raw": "00000000d859000000000000d3ffffff"
+    },
+    {
+      "id": 74,
+      "controllerType": 0,
+      "handlerAddress": "0x800f0b7c",
+      "sourcePosition": [
+        23200,
+        0,
+        -100
+      ],
+      "forward": 23200,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "00000000a05a0000000000009cffffff"
+    },
+    {
+      "id": 75,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        23850,
+        0,
+        -180
+      ],
+      "forward": 23850,
+      "vertical": 0,
+      "lateral": -180,
+      "raw": "070000002a5d0000000000004cffffff"
+    },
+    {
+      "id": 76,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        24100,
+        0,
+        -35
+      ],
+      "forward": 24100,
+      "vertical": 0,
+      "lateral": -35,
+      "raw": "07000000245e000000000000ddffffff"
+    },
+    {
+      "id": 77,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        24500,
+        0,
+        -150
+      ],
+      "forward": 24500,
+      "vertical": 0,
+      "lateral": -150,
+      "raw": "01000000b45f0000000000006affffff"
+    },
+    {
+      "id": 78,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        24800,
+        0,
+        -50
+      ],
+      "forward": 24800,
+      "vertical": 0,
+      "lateral": -50,
+      "raw": "04000000e060000000000000ceffffff"
+    },
+    {
+      "id": 79,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        25480,
+        0,
+        200
+      ],
+      "forward": 25480,
+      "vertical": 0,
+      "lateral": 200,
+      "raw": "030000008863000000000000c8000000"
+    },
+    {
+      "id": 80,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        25550,
+        0,
+        -130
+      ],
+      "forward": 25550,
+      "vertical": 0,
+      "lateral": -130,
+      "raw": "05000000ce630000000000007effffff"
+    },
+    {
+      "id": 81,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        25650,
+        0,
+        -10
+      ],
+      "forward": 25650,
+      "vertical": 0,
+      "lateral": -10,
+      "raw": "050000003264000000000000f6ffffff"
+    },
+    {
+      "id": 82,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        25800,
+        0,
+        -155
+      ],
+      "forward": 25800,
+      "vertical": 0,
+      "lateral": -155,
+      "raw": "05000000c86400000000000065ffffff"
+    },
+    {
+      "id": 83,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        25900,
+        0,
+        -95
+      ],
+      "forward": 25900,
+      "vertical": 0,
+      "lateral": -95,
+      "raw": "050000002c65000000000000a1ffffff"
+    },
+    {
+      "id": 84,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        26050,
+        0,
+        -5
+      ],
+      "forward": 26050,
+      "vertical": 0,
+      "lateral": -5,
+      "raw": "05000000c265000000000000fbffffff"
+    },
+    {
+      "id": 85,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        26550,
+        0,
+        -180
+      ],
+      "forward": 26550,
+      "vertical": 0,
+      "lateral": -180,
+      "raw": "07000000b6670000000000004cffffff"
+    },
+    {
+      "id": 86,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        27160,
+        0,
+        -30
+      ],
+      "forward": 27160,
+      "vertical": 0,
+      "lateral": -30,
+      "raw": "07000000186a000000000000e2ffffff"
+    },
+    {
+      "id": 87,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        27350,
+        0,
+        180
+      ],
+      "forward": 27350,
+      "vertical": 0,
+      "lateral": 180,
+      "raw": "05000000d66a000000000000b4000000"
+    },
+    {
+      "id": 88,
+      "controllerType": 9,
+      "handlerAddress": "0x800f3444",
+      "sourcePosition": [
+        27500,
+        -250,
+        280
+      ],
+      "forward": 27500,
+      "vertical": -250,
+      "lateral": 280,
+      "raw": "090000006c6b000006ffffff18010000"
+    },
+    {
+      "id": 89,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        28550,
+        0,
+        -190
+      ],
+      "forward": 28550,
+      "vertical": 0,
+      "lateral": -190,
+      "raw": "01000000866f00000000000042ffffff"
+    },
+    {
+      "id": 90,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        28850,
+        0,
+        5
+      ],
+      "forward": 28850,
+      "vertical": 0,
+      "lateral": 5,
+      "raw": "03000000b27000000000000005000000"
+    },
+    {
+      "id": 91,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        29350,
+        0,
+        195
+      ],
+      "forward": 29350,
+      "vertical": 0,
+      "lateral": 195,
+      "raw": "01000000a672000000000000c3000000"
+    },
+    {
+      "id": 92,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        29500,
+        0,
+        -150
+      ],
+      "forward": 29500,
+      "vertical": 0,
+      "lateral": -150,
+      "raw": "040000003c730000000000006affffff"
+    },
+    {
+      "id": 93,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        30450,
+        0,
+        -195
+      ],
+      "forward": 30450,
+      "vertical": 0,
+      "lateral": -195,
+      "raw": "03000000f2760000000000003dffffff"
+    },
+    {
+      "id": 94,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        30550,
+        0,
+        -110
+      ],
+      "forward": 30550,
+      "vertical": 0,
+      "lateral": -110,
+      "raw": "03000000567700000000000092ffffff"
+    },
+    {
+      "id": 95,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        31200,
+        0,
+        195
+      ],
+      "forward": 31200,
+      "vertical": 0,
+      "lateral": 195,
+      "raw": "01000000e079000000000000c3000000"
+    },
+    {
+      "id": 96,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        31350,
+        0,
+        80
+      ],
+      "forward": 31350,
+      "vertical": 0,
+      "lateral": 80,
+      "raw": "04000000767a00000000000050000000"
+    },
+    {
+      "id": 97,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        31900,
+        0,
+        25
+      ],
+      "forward": 31900,
+      "vertical": 0,
+      "lateral": 25,
+      "raw": "050000009c7c00000000000019000000"
+    },
+    {
+      "id": 98,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        31980,
+        0,
+        175
+      ],
+      "forward": 31980,
+      "vertical": 0,
+      "lateral": 175,
+      "raw": "07000000ec7c000000000000af000000"
+    },
+    {
+      "id": 99,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        32450,
+        0,
+        -180
+      ],
+      "forward": 32450,
+      "vertical": 0,
+      "lateral": -180,
+      "raw": "01000000c27e0000000000004cffffff"
+    },
+    {
+      "id": 100,
+      "controllerType": 8,
+      "handlerAddress": "0x800f2f8c",
+      "sourcePosition": [
+        32500,
+        -250,
+        -280
+      ],
+      "forward": 32500,
+      "vertical": -250,
+      "lateral": -280,
+      "raw": "08000000f47e000006ffffffe8feffff"
+    },
+    {
+      "id": 101,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        33050,
+        0,
+        -200
+      ],
+      "forward": 33050,
+      "vertical": 0,
+      "lateral": -200,
+      "raw": "070000001a8100000000000038ffffff"
+    },
+    {
+      "id": 102,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        33125,
+        0,
+        -100
+      ],
+      "forward": 33125,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "0700000065810000000000009cffffff"
+    },
+    {
+      "id": 103,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        33650,
+        0,
+        190
+      ],
+      "forward": 33650,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "010000007283000000000000be000000"
+    },
+    {
+      "id": 104,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        33750,
+        0,
+        55
+      ],
+      "forward": 33750,
+      "vertical": 0,
+      "lateral": 55,
+      "raw": "04000000d68300000000000037000000"
+    },
+    {
+      "id": 105,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        34550,
+        0,
+        -100
+      ],
+      "forward": 34550,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "03000000f6860000000000009cffffff"
+    },
+    {
+      "id": 106,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        34650,
+        0,
+        10
+      ],
+      "forward": 34650,
+      "vertical": 0,
+      "lateral": 10,
+      "raw": "030000005a870000000000000a000000"
+    },
+    {
+      "id": 107,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        35750,
+        0,
+        -200
+      ],
+      "forward": 35750,
+      "vertical": 0,
+      "lateral": -200,
+      "raw": "07000000a68b00000000000038ffffff"
+    },
+    {
+      "id": 108,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        35900,
+        0,
+        -125
+      ],
+      "forward": 35900,
+      "vertical": 0,
+      "lateral": -125,
+      "raw": "070000003c8c00000000000083ffffff"
+    },
+    {
+      "id": 109,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        36150,
+        0,
+        0
+      ],
+      "forward": 36150,
+      "vertical": 0,
+      "lateral": 0,
+      "raw": "07000000368d00000000000000000000"
+    },
+    {
+      "id": 110,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        36650,
+        0,
+        210
+      ],
+      "forward": 36650,
+      "vertical": 0,
+      "lateral": 210,
+      "raw": "030000002a8f000000000000d2000000"
+    },
+    {
+      "id": 111,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        36700,
+        0,
+        25
+      ],
+      "forward": 36700,
+      "vertical": 0,
+      "lateral": 25,
+      "raw": "030000005c8f00000000000019000000"
+    },
+    {
+      "id": 112,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        36750,
+        0,
+        125
+      ],
+      "forward": 36750,
+      "vertical": 0,
+      "lateral": 125,
+      "raw": "030000008e8f0000000000007d000000"
+    },
+    {
+      "id": 113,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        37400,
+        0,
+        200
+      ],
+      "forward": 37400,
+      "vertical": 0,
+      "lateral": 200,
+      "raw": "010000001892000000000000c8000000"
+    },
+    {
+      "id": 114,
+      "controllerType": 11,
+      "handlerAddress": "0x800f3db4",
+      "sourcePosition": [
+        37500,
+        -350,
+        280
+      ],
+      "forward": 37500,
+      "vertical": -350,
+      "lateral": 280,
+      "raw": "0b0000007c920000a2feffff18010000"
+    },
+    {
+      "id": 115,
+      "controllerType": 7,
+      "handlerAddress": "0x800f2b80",
+      "sourcePosition": [
+        37850,
+        0,
+        -10
+      ],
+      "forward": 37850,
+      "vertical": 0,
+      "lateral": -10,
+      "raw": "07000000da93000000000000f6ffffff"
+    },
+    {
+      "id": 116,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        37950,
+        0,
+        -210
+      ],
+      "forward": 37950,
+      "vertical": 0,
+      "lateral": -210,
+      "raw": "040000003e940000000000002effffff"
+    },
+    {
+      "id": 117,
+      "controllerType": 4,
+      "handlerAddress": "0x800f1dc0",
+      "sourcePosition": [
+        38050,
+        0,
+        -125
+      ],
+      "forward": 38050,
+      "vertical": 0,
+      "lateral": -125,
+      "raw": "04000000a29400000000000083ffffff"
+    },
+    {
+      "id": 118,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        38650,
+        0,
+        -100
+      ],
+      "forward": 38650,
+      "vertical": 0,
+      "lateral": -100,
+      "raw": "01000000fa960000000000009cffffff"
+    },
+    {
+      "id": 119,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        38750,
+        0,
+        150
+      ],
+      "forward": 38750,
+      "vertical": 0,
+      "lateral": 150,
+      "raw": "030000005e9700000000000096000000"
+    },
+    {
+      "id": 120,
+      "controllerType": 3,
+      "handlerAddress": "0x800f1908",
+      "sourcePosition": [
+        38850,
+        0,
+        190
+      ],
+      "forward": 38850,
+      "vertical": 0,
+      "lateral": 190,
+      "raw": "03000000c297000000000000be000000"
+    },
+    {
+      "id": 121,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        38950,
+        0,
+        -125
+      ],
+      "forward": 38950,
+      "vertical": 0,
+      "lateral": -125,
+      "raw": "05000000269800000000000083ffffff"
+    },
+    {
+      "id": 122,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        39250,
+        0,
+        195
+      ],
+      "forward": 39250,
+      "vertical": 0,
+      "lateral": 195,
+      "raw": "010000005299000000000000c3000000"
+    },
+    {
+      "id": 123,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        39250,
+        0,
+        90
+      ],
+      "forward": 39250,
+      "vertical": 0,
+      "lateral": 90,
+      "raw": "0500000052990000000000005a000000"
+    },
+    {
+      "id": 124,
+      "controllerType": 5,
+      "handlerAddress": "0x800f2244",
+      "sourcePosition": [
+        39350,
+        0,
+        125
+      ],
+      "forward": 39350,
+      "vertical": 0,
+      "lateral": 125,
+      "raw": "05000000b6990000000000007d000000"
+    },
+    {
+      "id": 125,
+      "controllerType": 1,
+      "handlerAddress": "0x800f1000",
+      "sourcePosition": [
+        39350,
+        0,
+        -195
+      ],
+      "forward": 39350,
+      "vertical": 0,
+      "lateral": -195,
+      "raw": "01000000b6990000000000003dffffff"
+    }
+  ]
+}

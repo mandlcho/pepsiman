@@ -79,7 +79,7 @@ No build step, backend, ROM, BIOS, or emulator core is required.
 - Rendering: Three.js/WebGL with pixelated nearest-neighbor PS1 textures
 - Rigging: recovered root + original 16-joint TOD hierarchy, rigid skin weights, corrected bind transforms, and validated absolute integer-degree motion packets
 - Gameplay: continuous lateral steering, jumping, sliding, pickups, obstacles, health, scaling speed, keyboard and touch controls
-- Progression: all 14 extracted retail segments load in the executable-authored order, stage movies play at scene boundaries, records and unlocked scenes persist in browser storage, and lives carry between scenes. Stage 1 includes its traced scripted events and ending controllers; later route endings remain explicitly marked fallbacks until their overlay controllers are decoded.
+- Progression: all 14 extracted retail segments load in the executable-authored order, stage movies play at scene boundaries, records and unlocked scenes persist in browser storage, and lives carry between scenes. Stage 1 includes its traced scripted events and ending controllers. The Stage 2 ending now uses all 126 authored overlay actor placements and the eight renderable obstacle slots; its final handoff and later route endings remain explicitly marked fallbacks until those overlay controllers are decoded.
 - UI: original HUD, pause, warning, result, record, perfect, particle, and menu-cursor artwork is used directly; the title presentation uses the original character/globe while the retail 3D title-logo source remains unidentified.
 - Hosting: static and subpath-safe for `https://mandlcho.github.io/pepsiman/`
 
