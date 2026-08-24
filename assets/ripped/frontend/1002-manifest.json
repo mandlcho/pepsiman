@@ -1,0 +1,115 @@
+{
+  "format": "Pepsiman frontend offset-table assets v1",
+  "source": "1002",
+  "entries": [
+    {
+      "index": 0,
+      "offset": 36,
+      "size": 214244,
+      "kind": "TIM",
+      "textureUploads": 26
+    },
+    {
+      "index": 1,
+      "offset": 214280,
+      "size": 30424,
+      "kind": "TIM",
+      "textureUploads": 23
+    },
+    {
+      "index": 2,
+      "offset": 244704,
+      "size": 30424,
+      "kind": "TIM",
+      "textureUploads": 23
+    },
+    {
+      "index": 3,
+      "offset": 275128,
+      "size": 35680,
+      "kind": "TMD",
+      "objects": 1,
+      "bounds": {
+        "min": [
+          -10000,
+          0,
+          -250
+        ],
+        "max": [
+          30500,
+          0,
+          250
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "offset": 310808,
+      "size": 4672,
+      "kind": "0x00020050"
+    },
+    {
+      "index": 5,
+      "offset": 315480,
+      "size": 4616,
+      "kind": "0x00020050"
+    },
+    {
+      "index": 6,
+      "offset": 320096,
+      "size": 21320,
+      "kind": "TMD",
+      "objects": 1,
+      "bounds": {
+        "min": [
+          -54,
+          -9,
+          -30
+        ],
+        "max": [
+          50,
+          207,
+          30
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "offset": 341416,
+      "size": 7760,
+      "kind": "TMD",
+      "objects": 1,
+      "bounds": {
+        "min": [
+          -59,
+          -10,
+          -60
+        ],
+        "max": [
+          86,
+          198,
+          60
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "offset": 349176,
+      "size": 6316,
+      "kind": "TMD",
+      "objects": 1,
+      "bounds": {
+        "min": [
+          -69,
+          -7,
+          -52
+        ],
+        "max": [
+          72,
+          187,
+          52
+        ]
+      }
+    }
+  ]
+}

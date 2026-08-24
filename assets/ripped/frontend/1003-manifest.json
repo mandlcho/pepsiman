@@ -1,0 +1,46 @@
+{
+  "format": "Pepsiman frontend offset-table assets v1",
+  "source": "1003",
+  "entries": [
+    {
+      "index": 0,
+      "offset": 16,
+      "size": 21156,
+      "kind": "TIM",
+      "textureUploads": 3
+    },
+    {
+      "index": 1,
+      "offset": 21172,
+      "size": 10528,
+      "kind": "TMD",
+      "objects": 1,
+      "bounds": {
+        "min": [
+          -140,
+          -10,
+          -150
+        ],
+        "max": [
+          151,
+          477,
+          150
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "offset": 31700,
+      "size": 18244,
+      "kind": "TIM",
+      "textureUploads": 1
+    },
+    {
+      "index": 3,
+      "offset": 49944,
+      "size": 18244,
+      "kind": "TIM",
+      "textureUploads": 1
+    }
+  ]
+}

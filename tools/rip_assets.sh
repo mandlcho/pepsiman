@@ -22,6 +22,9 @@ python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
   "$WORK/disc/CDDATA/4/4001" "$ROOT/assets/ripped/textures"
 python3 "$ROOT/tools/extract_pic.py" \
   "$WORK/disc/CDDATA/0/0003" "$ROOT/assets/ripped/ui"
+PYTHONPATH="$ROOT/tools" python3 "$ROOT/tools/extract_frontend.py" \
+  "$ROOT/assets/ripped/frontend" \
+  "$WORK/disc/CDDATA/1/1002" "$WORK/disc/CDDATA/1/1003"
 python3 "$ROOT/tools/extract_stage_tmd.py" \
   "$WORK/disc/CDDATA/2/2003" "$ROOT/assets/ripped/stages/2" \
   --tim "$WORK/disc/CDDATA/2/2001"
