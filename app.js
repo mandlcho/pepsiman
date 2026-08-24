@@ -286,19 +286,18 @@ async function loadRetailCourse(segmentIndex=0){
   if(setpieceTable){
     retailSetpieceFlow=setpieceTable;
     const definitionByType=new Map(setpieceDefinitions.map((definition,index)=>[index,definition]));
-    const setpieceMaterials=new Map(await Promise.all([...definitionByType].map(async([type])=>{
+    const controllerByType=new Map(setpieceTable.activeControllerMetadata.map(controller=>[controller.controllerType,controller]));
+    const setpieceMaterials=new Map(await Promise.all([...controllerByType.keys()].map(async type=>{
       const frameId=type+1,texture=await textureLoader.loadAsync(`${resources.spriteRoot}${resources.spritePack}-${String(frameId).padStart(3,"0")}.png`);
       texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
       return[type,new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:false})];
     })));
-    const controllerByType=new Map(setpieceTable.activeControllerMetadata.map(controller=>[controller.controllerType,controller]));
     for(const authored of setpieceTable.actors){
-      const definition=definitionByType.get(authored.controllerType),material=setpieceMaterials.get(authored.controllerType)?.clone();if(!definition||!material)continue;
-      const displayYOffset=[5,7].includes(authored.controllerType)?60:0;
+      const definition=definitionByType.get(authored.controllerType),controller=controllerByType.get(authored.controllerType),material=setpieceMaterials.get(authored.controllerType)?.clone();if(!controller||!material)continue;
+      const displayYOffset=controller.displayBrowserVerticalOffset||0;
       const sprite=new THREE.Sprite(material);sprite.name=`retail-setpiece-actor-${authored.id}`;sprite.position.set(authored.forward,-authored.vertical+displayYOffset,-authored.lateral);
-      const height=Math.abs(definition.field30),width=height*.5;sprite.scale.set(width,height,1);sprite.center.set(.5,0);group.add(sprite);
-      const controller=controllerByType.get(authored.controllerType);
-      retailSetpieceActors.push({id:authored.id,type:authored.controllerType,sprite,sourcePosition:new THREE.Vector3(authored.forward,-authored.vertical,-authored.lateral),basePosition:sprite.position.clone(),bounds:{forward:controller.collisionForwardRadius,lateral:controller.collisionLateralRadius,vertical:controller.collisionVerticalLowerExtent,damage:controller.collisionResponse==="damage",blockForwardOffset:controller.blockForwardOffset},state:0,frame:0});
+      const height=Math.abs(definition?.field30||controller.browserBillboardHeight),width=height*.5;sprite.scale.set(width,height,1);sprite.center.set(.5,0);group.add(sprite);
+      retailSetpieceActors.push({id:authored.id,type:authored.controllerType,sprite,sourcePosition:new THREE.Vector3(authored.forward,-authored.vertical,-authored.lateral),basePosition:sprite.position.clone(),bounds:{forward:controller.collisionForwardRadius,lateral:controller.collisionLateralRadius,lateralMin:controller.collisionLateralBrowserMin,lateralMax:controller.collisionLateralBrowserMax,vertical:controller.collisionVerticalLowerExtent,damage:controller.collisionResponse==="damage",blockForwardOffset:controller.blockForwardOffset},state:0,frame:0});
     }
     if(resources.chaseSprite&&setpieceTable.chaseCan){
       const texture=await textureLoader.loadAsync(`${resources.spriteRoot}${resources.chaseSprite}`);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
@@ -909,7 +908,7 @@ function updateRetailSetpieceActors(dt){
       actor.sprite.visible=delta<=2000&&delta>=-10000;
       const reactionBehindPlayer=retailSetpieceFlow.scrollingOriginBehindPlayer-retailSetpieceFlow.automaticReactionBehindScrollingOrigin;
       if(playerForward>actor.sourcePosition.x+reactionBehindPlayer){actor.state=1;actor.frame=0;}
-      else if(actor.sprite.visible&&Math.abs(setpiecePlayerLocal.x-actor.sourcePosition.x)<actor.bounds.forward&&Math.abs(setpiecePlayerLocal.z-actor.sourcePosition.z)<actor.bounds.lateral&&setpiecePlayerLocal.y<actor.sourcePosition.y+actor.bounds.vertical){
+      else if(actor.sprite.visible&&Math.abs(setpiecePlayerLocal.x-actor.sourcePosition.x)<actor.bounds.forward&&(actor.bounds.lateralMin==null?Math.abs(setpiecePlayerLocal.z-actor.sourcePosition.z)<actor.bounds.lateral:setpiecePlayerLocal.z-actor.sourcePosition.z>actor.bounds.lateralMin&&setpiecePlayerLocal.z-actor.sourcePosition.z<actor.bounds.lateralMax)&&setpiecePlayerLocal.y<actor.sourcePosition.y+actor.bounds.vertical){
         if(actor.bounds.damage){actor.state=1;actor.frame=0;hit();}
         else state.distance=Math.max(0,(actor.sourcePosition.x-actor.bounds.blockForwardOffset-retailSetpieceFlow.playerStartForward)*RETAIL_WORLD_SCALE);
       }

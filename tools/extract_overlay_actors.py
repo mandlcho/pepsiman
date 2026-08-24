@@ -12,14 +12,18 @@ import struct
 OVERLAY_BASE = 0x800F0000
 RECORD_SIZE = 16
 COLLISION_PROFILES = [
-    (20, 80, 80, "damage"),
-    (20, 60, 120, "damage"),
-    (20, 70, 200, "damage"),
-    (50, 60, 80, "damage"),
-    (20, 95, 100, "damage"),
-    (35, 45, 80, "damage"),
-    (20, 105, 90, "damage"),
-    (60, 70, 150, "block-forward"),
+    {"forward": 20, "lateral": 80, "vertical": 80, "response": "damage"},
+    {"forward": 20, "lateral": 60, "vertical": 120, "response": "damage"},
+    {"forward": 20, "lateral": 70, "vertical": 200, "response": "damage"},
+    {"forward": 50, "lateral": 60, "vertical": 80, "response": "damage"},
+    {"forward": 20, "lateral": 95, "vertical": 100, "response": "damage"},
+    {"forward": 35, "lateral": 45, "vertical": 80, "response": "damage"},
+    {"forward": 20, "lateral": 105, "vertical": 90, "response": "damage"},
+    {"forward": 60, "lateral": 70, "vertical": 150, "response": "block-forward"},
+    {"forward": 20, "lateral": 120, "lateralMin": -220, "lateralMax": 20, "vertical": 200, "response": "damage"},
+    {"forward": 20, "lateral": 120, "lateralMin": -20, "lateralMax": 220, "vertical": 200, "response": "damage"},
+    {"forward": 20, "lateral": 270, "lateralMin": -520, "lateralMax": 20, "vertical": 255, "response": "damage"},
+    {"forward": 20, "lateral": 270, "lateralMin": -20, "lateralMax": 520, "vertical": 255, "response": "damage"},
 ]
 
 
@@ -71,7 +75,7 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
             "raw": data[offset : offset + RECORD_SIZE].hex(),
         })
     controllers = []
-    for actor_type, (forward, lateral, vertical, response) in enumerate(COLLISION_PROFILES):
+    for actor_type, profile in enumerate(COLLISION_PROFILES):
         if actor_type >= len(handlers):
             break
         controllers.append({
@@ -79,13 +83,21 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
             "handlerAddress": f"0x{handlers[actor_type]:08x}",
             "spriteFrameId": actor_type + 1,
             "spriteTexture": f"{sprite_root}-{actor_type + 1:03d}.png",
-            "collisionForwardRadius": forward,
-            "collisionLateralRadius": lateral,
-            "collisionVerticalLowerExtent": vertical,
+            "collisionForwardRadius": profile["forward"],
+            "collisionLateralRadius": profile["lateral"],
+            **({
+                "collisionLateralBrowserMin": profile["lateralMin"],
+                "collisionLateralBrowserMax": profile["lateralMax"],
+            } if "lateralMin" in profile else {}),
+            "collisionVerticalLowerExtent": profile["vertical"],
             "displayBrowserVerticalOffset": 60 if actor_type in (5, 7) else 0,
-            "collisionResponse": response,
-            "blockForwardOffset": 60 if response == "block-forward" else None,
-            "collisionProfileProvenance": "instruction-equivalent CDDATA/4/4000 controller slot",
+            **({"browserBillboardHeight": 164} if actor_type >= 8 else {}),
+            "collisionResponse": profile["response"],
+            "blockForwardOffset": 60 if profile["response"] == "block-forward" else None,
+            "collisionProfileProvenance": (
+                "instruction-equivalent CDDATA/4/4000 controller slot"
+                if actor_type < 8 else "decoded from CDDATA/7/7000 controller slot"
+            ),
         })
     return {
         "format": "Pepsiman shared retail overlay actor table v1",
