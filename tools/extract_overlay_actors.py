@@ -11,7 +11,7 @@ import struct
 
 OVERLAY_BASE = 0x800F0000
 RECORD_SIZE = 16
-COLLISION_PROFILES = [
+REACTION_PROFILES = [
     {"forward": 20, "lateral": 80, "vertical": 80, "response": "damage"},
     {"forward": 20, "lateral": 60, "vertical": 120, "response": "damage"},
     {"forward": 20, "lateral": 70, "vertical": 200, "response": "damage"},
@@ -24,6 +24,10 @@ COLLISION_PROFILES = [
     {"forward": 20, "lateral": 120, "lateralMin": -20, "lateralMax": 220, "vertical": 200, "response": "damage"},
     {"forward": 20, "lateral": 270, "lateralMin": -520, "lateralMax": 20, "vertical": 255, "response": "damage"},
     {"forward": 20, "lateral": 270, "lateralMin": -20, "lateralMax": 520, "vertical": 255, "response": "damage"},
+]
+PURSUIT_PROFILES = [
+    {"forward": 35, "lateral": 140, "vertical": 205, "verticalMin": -205, "verticalMax": 25, "response": "damage", "renderAssetId": 30, "spriteFrameId": 31},
+    {"forward": 35, "lateral": 140, "vertical": 205, "verticalMin": -205, "verticalMax": 25, "response": "damage", "renderAssetId": 30, "spriteFrameId": 31, "bobAmplitude": 316},
 ]
 
 
@@ -48,7 +52,7 @@ def find_footer(data: bytes) -> tuple[int, int]:
     return matches[0]
 
 
-def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, finish_forward: int, automatic_reaction_behind: int) -> dict:
+def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, finish_forward: int, automatic_reaction_behind: int, mode: str = "reaction") -> dict:
     table, footer = find_footer(data)
     count = u32(data, footer)
     handlers = []
@@ -74,15 +78,17 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
             "lateral": lateral,
             "raw": data[offset : offset + RECORD_SIZE].hex(),
         })
+    profiles = PURSUIT_PROFILES if mode == "pursuit" else REACTION_PROFILES
     controllers = []
-    for actor_type, profile in enumerate(COLLISION_PROFILES):
+    for actor_type, profile in enumerate(profiles):
         if actor_type >= len(handlers):
             break
         controllers.append({
             "controllerType": actor_type,
             "handlerAddress": f"0x{handlers[actor_type]:08x}",
-            "spriteFrameId": actor_type + 1,
-            "spriteTexture": f"{sprite_root}-{actor_type + 1:03d}.png",
+            "spriteFrameId": profile.get("spriteFrameId", actor_type + 1),
+            "spriteTexture": f"{sprite_root}-{profile.get('spriteFrameId', actor_type + 1):03d}.png",
+            **({"renderAssetId": profile["renderAssetId"]} if "renderAssetId" in profile else {}),
             "collisionForwardRadius": profile["forward"],
             "collisionLateralRadius": profile["lateral"],
             **({
@@ -90,16 +96,21 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
                 "collisionLateralBrowserMax": profile["lateralMax"],
             } if "lateralMin" in profile else {}),
             "collisionVerticalLowerExtent": profile["vertical"],
+            **({
+                "collisionVerticalBrowserMin": profile["verticalMin"],
+                "collisionVerticalBrowserMax": profile["verticalMax"],
+            } if "verticalMin" in profile else {}),
             "displayBrowserVerticalOffset": 60 if actor_type in (5, 7) else 0,
-            **({"browserBillboardHeight": 164} if actor_type >= 8 else {}),
+            **({"browserBillboardHeight": 164} if actor_type >= 8 or mode == "pursuit" else {}),
+            **({"bobAmplitude": profile["bobAmplitude"]} if "bobAmplitude" in profile else {}),
             "collisionResponse": profile["response"],
             "blockForwardOffset": 60 if profile["response"] == "block-forward" else None,
-            "collisionProfileProvenance": (
+            "collisionProfileProvenance": "decoded from CDDATA/D/D000 controller slot" if mode == "pursuit" else (
                 "instruction-equivalent CDDATA/4/4000 controller slot"
                 if actor_type < 8 else "decoded from CDDATA/7/7000 controller slot"
             ),
         })
-    return {
+    result = {
         "format": "Pepsiman shared retail overlay actor table v1",
         "source": source_name,
         "sourceSize": len(data),
@@ -134,6 +145,22 @@ def extract(data: bytes, source_name: str, sprite_root: str, player_start: int, 
         "inferredFlowFields": ["playerStartForward", "finishForward", "retailAdvanceUnitsPerFrame", "chaseCamera"],
         "actors": actors,
     }
+    if mode == "pursuit":
+        for field in ("automaticReactionBehindScrollingOrigin", "scrollingOriginBehindPlayer", "reactionFrames", "reactionForwardUnitsPerFrame", "reactionLateralUnitsPerFrame", "reactionVerticalAmplitude"):
+            result.pop(field)
+        result.update({
+            "movementMode": "pursuit",
+            "activationBehindPlayer": 1200,
+            "spawnBehindPlayer": 1200,
+            "despawnAheadPlayer": 500,
+            "actorAdvanceUnitsPerFrame": 60,
+            "actorSpinDegreesPerFrame": 10,
+            "actorBaseBrowserVertical": 25,
+            "browserBillboardHeight": 164,
+            "controllerComparison": "both CDDATA/D/D000 handlers share asset ID 30; slot 1 adds the decoded vertical bob",
+            "inferredFlowFields": ["playerStartForward", "finishForward", "chaseCamera", "browserBillboardHeight"],
+        })
+    return result
 
 
 def main() -> None:
@@ -145,8 +172,9 @@ def main() -> None:
     parser.add_argument("--player-start", type=int, default=0)
     parser.add_argument("--finish-forward", type=int, required=True)
     parser.add_argument("--automatic-reaction-behind", type=int, default=120)
+    parser.add_argument("--mode", choices=("reaction", "pursuit"), default="reaction")
     args = parser.parse_args()
-    result = extract(args.source.read_bytes(), args.source_name, args.sprite_root, args.player_start, args.finish_forward, args.automatic_reaction_behind)
+    result = extract(args.source.read_bytes(), args.source_name, args.sprite_root, args.player_start, args.finish_forward, args.automatic_reaction_behind, args.mode)
     args.destination.parent.mkdir(parents=True, exist_ok=True)
     args.destination.write_text(json.dumps(result, indent=2) + "\n")
 

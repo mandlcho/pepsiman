@@ -14,7 +14,7 @@ const RETAIL_SEGMENTS = {
   8:{root:"./assets/ripped/stages/A/",world:"A002",inferredRouteEnd:true},
   9:{root:"./assets/ripped/stages/B/",world:"B003",props:"B004",entities:"B006-entities",spriteRoot:"./assets/ripped/textures/B/",spritePack:"B005"},
   10:{root:"./assets/ripped/stages/C/",world:"C003",props:"C004",entities:"C006-entities",spriteRoot:"./assets/ripped/textures/C/",spritePack:"C005"},
-  11:{root:"./assets/ripped/stages/D/",world:"D002",inferredRouteEnd:true},
+  11:{root:"./assets/ripped/stages/D/",world:"D002",overlayActors:"D000-overlay-actors",spriteRoot:"./assets/ripped/textures/D/",spritePack:"D001",setpiece:true,inferredRouteEnd:true},
   12:{root:"./assets/ripped/stages/E/",world:"E003",props:"E004",entities:"E006-entities",spriteRoot:"./assets/ripped/textures/E/",spritePack:"E005"},
   13:{root:"./assets/ripped/stages/F/",world:"F003",props:"F004",entities:"F006-entities",spriteRoot:"./assets/ripped/textures/F/",spritePack:"F005"}
 };
@@ -287,8 +287,8 @@ async function loadRetailCourse(segmentIndex=0){
     retailSetpieceFlow=setpieceTable;
     const definitionByType=new Map(setpieceDefinitions.map((definition,index)=>[index,definition]));
     const controllerByType=new Map(setpieceTable.activeControllerMetadata.map(controller=>[controller.controllerType,controller]));
-    const setpieceMaterials=new Map(await Promise.all([...controllerByType.keys()].map(async type=>{
-      const frameId=type+1,texture=await textureLoader.loadAsync(`${resources.spriteRoot}${resources.spritePack}-${String(frameId).padStart(3,"0")}.png`);
+    const setpieceMaterials=new Map(await Promise.all([...controllerByType].map(async([type,controller])=>{
+      const frameId=controller.spriteFrameId,texture=await textureLoader.loadAsync(`${resources.spriteRoot}${resources.spritePack}-${String(frameId).padStart(3,"0")}.png`);
       texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
       return[type,new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:false})];
     })));
@@ -297,7 +297,7 @@ async function loadRetailCourse(segmentIndex=0){
       const displayYOffset=controller.displayBrowserVerticalOffset||0;
       const sprite=new THREE.Sprite(material);sprite.name=`retail-setpiece-actor-${authored.id}`;sprite.position.set(authored.forward,-authored.vertical+displayYOffset,-authored.lateral);
       const height=Math.abs(definition?.field30||controller.browserBillboardHeight),width=height*.5;sprite.scale.set(width,height,1);sprite.center.set(.5,0);group.add(sprite);
-      retailSetpieceActors.push({id:authored.id,type:authored.controllerType,sprite,sourcePosition:new THREE.Vector3(authored.forward,-authored.vertical,-authored.lateral),basePosition:sprite.position.clone(),bounds:{forward:controller.collisionForwardRadius,lateral:controller.collisionLateralRadius,lateralMin:controller.collisionLateralBrowserMin,lateralMax:controller.collisionLateralBrowserMax,vertical:controller.collisionVerticalLowerExtent,damage:controller.collisionResponse==="damage",blockForwardOffset:controller.blockForwardOffset},state:0,frame:0});
+      retailSetpieceActors.push({id:authored.id,type:authored.controllerType,sprite,sourcePosition:new THREE.Vector3(authored.forward,-authored.vertical,-authored.lateral),basePosition:sprite.position.clone(),bobAmplitude:controller.bobAmplitude||0,currentForward:authored.forward,bounds:{forward:controller.collisionForwardRadius,lateral:controller.collisionLateralRadius,lateralMin:controller.collisionLateralBrowserMin,lateralMax:controller.collisionLateralBrowserMax,vertical:controller.collisionVerticalLowerExtent,verticalMin:controller.collisionVerticalBrowserMin,verticalMax:controller.collisionVerticalBrowserMax,damage:controller.collisionResponse==="damage",blockForwardOffset:controller.blockForwardOffset},state:0,frame:0});
     }
     if(resources.chaseSprite&&setpieceTable.chaseCan){
       const texture=await textureLoader.loadAsync(`${resources.spriteRoot}${resources.chaseSprite}`);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.NearestFilter;texture.minFilter=THREE.NearestFilter;
@@ -903,6 +903,18 @@ function updateRetailSetpieceActors(dt){
     if(playerForward<retailSetpieceCan.sourceForward+retailSetpieceFlow.chaseCatch.canForwardOffset)beginRetailChaseCatch();
   }
   for(const actor of retailSetpieceActors){
+    if(retailSetpieceFlow.movementMode==="pursuit"){
+      if(actor.state===0&&playerForward>=actor.sourcePosition.x+retailSetpieceFlow.activationBehindPlayer){actor.state=1;actor.frame=0;actor.currentForward=playerForward-retailSetpieceFlow.spawnBehindPlayer;}
+      if(actor.state===1){
+        actor.frame+=dt*RETAIL_FPS;actor.currentForward+=retailSetpieceFlow.actorAdvanceUnitsPerFrame*dt*RETAIL_FPS;
+        const bob=Math.abs(Math.sin(THREE.MathUtils.degToRad(actor.frame*5)))*actor.bobAmplitude;
+        actor.sprite.position.set(actor.currentForward,retailSetpieceFlow.actorBaseBrowserVertical+bob,actor.sourcePosition.z);actor.sprite.material.rotation=THREE.MathUtils.degToRad(actor.frame*retailSetpieceFlow.actorSpinDegreesPerFrame);actor.sprite.visible=true;
+        const verticalOffset=setpiecePlayerLocal.y-actor.sprite.position.y;
+        if(Math.abs(setpiecePlayerLocal.x-actor.currentForward)<actor.bounds.forward&&Math.abs(setpiecePlayerLocal.z-actor.sourcePosition.z)<actor.bounds.lateral&&verticalOffset>actor.bounds.verticalMin&&verticalOffset<actor.bounds.verticalMax)hit();
+        if(actor.currentForward>=playerForward+retailSetpieceFlow.despawnAheadPlayer){actor.state=2;actor.sprite.visible=false;}
+      }else actor.sprite.visible=false;
+      continue;
+    }
     const delta=actor.sourcePosition.x-playerForward;
     if(actor.state===0){
       actor.sprite.visible=delta<=2000&&delta>=-10000;

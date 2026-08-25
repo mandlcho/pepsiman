@@ -20,6 +20,8 @@ python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
   "$WORK/disc/CDDATA/3/3001" "$ROOT/assets/ripped/textures"
 python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
   "$WORK/disc/CDDATA/4/4001" "$ROOT/assets/ripped/textures"
+python3 "$ROOT/tools/extract_tim.py" --direct-sequence \
+  "$WORK/disc/CDDATA/D/D001" "$ROOT/assets/ripped/textures"
 python3 "$ROOT/tools/extract_pic.py" \
   "$WORK/disc/CDDATA/0/0003" "$ROOT/assets/ripped/ui"
 PYTHONPATH="$ROOT/tools" python3 "$ROOT/tools/extract_frontend.py" \
@@ -69,6 +71,10 @@ python3 "$ROOT/tools/extract_overlay_actors.py" \
   "$WORK/disc/CDDATA/7/7000" "$ROOT/assets/ripped/stages/7/7000-overlay-actors.json" \
   --source-name "CDDATA/7/7000" --sprite-root "assets/ripped/textures/7/7005" \
   --player-start 0 --finish-forward 40000 --automatic-reaction-behind 550
+python3 "$ROOT/tools/extract_overlay_actors.py" \
+  "$WORK/disc/CDDATA/D/D000" "$ROOT/assets/ripped/stages/D/D000-overlay-actors.json" \
+  --source-name "CDDATA/D/D000" --sprite-root "assets/ripped/textures/D/D001" \
+  --player-start 0 --finish-forward 40000 --mode pursuit
 for FAMILY in A D; do
   python3 "$ROOT/tools/extract_stage_tmd.py" \
     "$WORK/disc/CDDATA/$FAMILY/${FAMILY}002" "$ROOT/assets/ripped/stages/$FAMILY" \
